@@ -379,8 +379,18 @@ def combined_lower_bound(
     budget: int,
     eta: float,
     max_budget: int | None = None,
+    use_lagrangian: bool = True,
 ) -> dict:
     entropy_bound = (1.0 - eta) * entropy_lower_bound(weights) + eta * max_cost_lower_bound(len(weights), budget)
+    if not use_lagrangian:
+        return {
+            "lower_bound": entropy_bound,
+            "entropy_bound": entropy_bound,
+            "lagrangian_bound": None,
+            "dual_lambda": None,
+            "best_unconstrained_budget": None,
+            "source": "entropy_only",
+        }
     lagrangian = lagrangian_lower_bound(weights, budget, eta, max_budget=max_budget)
     lower_bound = max(entropy_bound, lagrangian["lower_bound"])
     source = "entropy" if entropy_bound >= lagrangian["lower_bound"] - EPS else "lagrangian"
@@ -632,7 +642,8 @@ def certify_tree(tree: Tree, weights: list[float], budget: int, eta: float) -> d
         raise CertificateError("root interval does not cover all ranks")
 
     evaluation = evaluate_tree(tree, weights, eta)
-    lower_bounds = combined_lower_bound(weights, budget, eta)
+    use_lagrangian = len(weights) <= 18
+    lower_bounds = combined_lower_bound(weights, budget, eta, use_lagrangian=use_lagrangian)
     exact_optimum = None
     exact_gap = None
     if len(weights) <= 18:

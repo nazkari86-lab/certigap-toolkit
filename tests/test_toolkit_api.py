@@ -25,6 +25,18 @@ class ToolkitApiTests(unittest.TestCase):
         suffix = library_path().suffix
         self.assertIn(suffix, {".dylib", ".so", ".dll"})
 
+    def test_large_certificate_uses_fast_valid_bound(self) -> None:
+        model = CertiGapToolkit().fit_distribution(
+            kind="hot_tail",
+            n=32,
+            budget=6,
+            eta=0.30,
+            solver="beam",
+        )
+        certificate = model.export_certificate()
+        self.assertEqual(certificate["bound_source"], "entropy_only")
+        self.assertIsNotNone(certificate["certified_gap"])
+
 
 if __name__ == "__main__":
     unittest.main()

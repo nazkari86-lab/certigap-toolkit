@@ -1,5 +1,8 @@
 # CertiGap Toolkit
 
+[![CI](https://github.com/nazkari86-lab/certigap-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/nazkari86-lab/certigap-toolkit/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 CertiGap is a toolkit for **budgeted robust partial search trees**.
 
 Instead of fully refining the whole key space, CertiGap decides **how much order is worth materializing at all** when:
@@ -16,6 +19,10 @@ It ships with:
 - lower bounds and certificate export;
 - benchmark, counterexample, and report-generation pipelines;
 - a C++ core plus Python bindings.
+
+License:
+
+- [MIT](LICENSE)
 
 ## Why Use It
 
