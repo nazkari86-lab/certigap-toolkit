@@ -149,23 +149,25 @@ Show that CertiGap is:
 ## Global Summary
 
 - Rows analyzed: `240`
-- Mean greedy gap vs exact: `0.0986`
-- Mean beam gap vs exact: `0.0006`
+- Mean greedy absolute objective gap vs exact: `0.0986`
+- Mean beam absolute objective gap vs exact: `0.0006`
+- Mean greedy relative objective gap vs exact: `2.80%`
+- Mean beam relative objective gap vs exact: `0.02%`
 - Beam strictly improves on greedy in `104` rows
 - Beam matches exact in `237` rows
 
 ## By Distribution
 
-| Distribution | Mean Greedy Gap | Mean Beam Gap | Beam Better Rows |
-|---|---:|---:|---:|
-| hot_middle | 0.2485 | 0.0000 | 40 |
-| hot_tail | 0.0446 | 0.0023 | 17 |
-| uniform | 0.0255 | 0.0000 | 9 |
-| zipf | 0.0758 | 0.0000 | 38 |
+| Distribution | Mean Greedy Absolute Gap | Mean Beam Absolute Gap | Mean Greedy Relative Gap | Mean Beam Relative Gap | Beam Better Rows |
+|---|---:|---:|---:|---:|
+| hot_middle | 0.2485 | 0.0000 | 7.13% | 0.00% | 40 |
+| hot_tail | 0.0446 | 0.0023 | 1.32% | 0.06% | 17 |
+| uniform | 0.0255 | 0.0000 | 0.57% | 0.00% | 9 |
+| zipf | 0.0758 | 0.0000 | 2.20% | 0.00% | 38 |
 
 ## Top Beam Improvements
 
-| Distribution | n | B | eta | Greedy Gap | Beam Gap |
+| Distribution | n | B | eta | Greedy Absolute Gap | Beam Absolute Gap |
 |---|---:|---:|---:|---:|---:|
 | hot_middle | 12 | 4 | 0.00 | 0.8750 | 0.0000 |
 | hot_middle | 24 | 4 | 0.00 | 0.8750 | 0.0000 |
@@ -188,27 +190,29 @@ See `counterexamples.md` for automatically discovered hot-block families where o
 
 ## Small Cases With Exact Reference
 
-- Exact mean time: `2.526 ms`
-- Beam mean time: `3.889 ms`
-- Greedy mean time: `0.166 ms`
-- Balanced mean time: `0.009 ms`
-- Weighted mean time: `0.013 ms`
-- Beam mean gap vs exact: `0.000979`
-- Greedy mean gap vs exact: `0.114157`
-- Balanced mean gap vs exact: `0.447373`
-- Weighted mean gap vs exact: `0.198609`
+- Exact mean time: `2.567 ms`
+- Beam mean time: `4.573 ms`
+- Greedy mean time: `0.212 ms`
+- Balanced mean time: `0.012 ms`
+- Weighted mean time: `0.017 ms`
+- Beam mean absolute objective gap vs exact: `0.000979`
+- Greedy mean absolute objective gap vs exact: `0.114157`
+- Balanced mean absolute objective gap vs exact: `0.447373`
+- Weighted mean absolute objective gap vs exact: `0.198609`
+- Beam mean relative objective gap vs exact: `0.03%`
+- Greedy mean relative objective gap vs exact: `3.48%`
 
 ## Large Cases Without Exact Reference
 
-- Beam mean time: `39.587 ms`
-- Greedy mean time: `0.927 ms`
-- Balanced mean time: `0.014 ms`
-- Weighted mean time: `0.028 ms`
+- Beam mean time: `50.828 ms`
+- Greedy mean time: `1.341 ms`
+- Balanced mean time: `0.022 ms`
+- Weighted mean time: `0.037 ms`
 
 ## Solver Tradeoff
 
-- `exact` is the reference solver for small and medium instances, but it is much slower.
-- `beam` is the strongest practical heuristic: near-exact quality on small cases with much lower runtime than `exact`.
+- `exact` is the reference solver for the measured small instances.
+- `beam` is near-exact on the measured small cases, but is not faster than exact there; this benchmark does not establish a crossover point.
 - `greedy` is usually faster but can be substantially worse on structured skewed tasks.
 - `balanced` and `weighted` are cheap baselines, but quality is systematically weaker on skewed workloads.
 
@@ -218,7 +222,7 @@ See `counterexamples.md` for automatically discovered hot-block families where o
 
 Top automatically discovered hot-block instances where one-step greedy is much worse than exact.
 
-| n | B | eta | hot start | hot width | hot weight | greedy gap | beam gap |
+| n | B | eta | hot start | hot width | hot weight | greedy absolute gap | beam absolute gap |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | 10 | 3 | 0.00 | 5 | 2 | 24.0 | 1.6429 | 0.0000 |
 | 10 | 4 | 0.00 | 5 | 2 | 24.0 | 1.6429 | 0.0000 |
@@ -245,8 +249,10 @@ Top automatically discovered hot-block instances where one-step greedy is much w
 
 - `n = 10`, `B = 3`, `eta = 0.00`
 - hot block: start `5`, width `2`, hot weight `24.0`
-- greedy gap: `1.642857`
-- beam gap: `0.000000`
+- greedy absolute objective gap: `1.642857`
+- beam absolute objective gap: `0.000000`
+- greedy relative objective gap: `71.88%`
+- beam relative objective gap: `0.00%`
 - exact tree: `{'type': 'split', 'interval': [1, 10], 'threshold': 5, 'left': {'type': 'split', 'interval': [1, 5], 'threshold': 4, 'left': {'type': 'leaf', 'interval': [1, 4]}, 'right': {'type': 'leaf', 'interval': [5, 5]}}, 'right': {'type': 'split', 'interval': [6, 10], 'threshold': 6, 'left': {'type': 'leaf', 'interval': [6, 6]}, 'right': {'type': 'leaf', 'interval': [7, 10]}}}`
 - greedy tree: `{'type': 'split', 'interval': [1, 10], 'threshold': 2, 'left': {'type': 'leaf', 'interval': [1, 2]}, 'right': {'type': 'leaf', 'interval': [3, 10]}}`
 - beam tree: `{'type': 'split', 'interval': [1, 10], 'threshold': 5, 'left': {'type': 'split', 'interval': [1, 5], 'threshold': 4, 'left': {'type': 'leaf', 'interval': [1, 4]}, 'right': {'type': 'leaf', 'interval': [5, 5]}}, 'right': {'type': 'split', 'interval': [6, 10], 'threshold': 6, 'left': {'type': 'leaf', 'interval': [6, 6]}, 'right': {'type': 'leaf', 'interval': [7, 10]}}}`

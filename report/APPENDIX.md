@@ -20,7 +20,7 @@
 - Certified gap: `0.000000`
 - Exact gap: `0.000000`
 - Bound source: `lagrangian`
-- Splits: `[{'interval': [1, 12], 'threshold': 6}, {'interval': [1, 6], 'threshold': 4}, {'interval': [7, 12], 'threshold': 8}]`
+- Splits: `[{'interval': [1, 12], 'threshold': 6}, {'interval': [7, 12], 'threshold': 8}, {'interval': [1, 6], 'threshold': 4}]`
 
 ## hot_tail, n=16, B=4, eta=0.30
 
@@ -29,33 +29,35 @@
 - Certified gap: `0.000000`
 - Exact gap: `0.000000`
 - Bound source: `lagrangian`
-- Splits: `[{'interval': [1, 16], 'threshold': 13}, {'interval': [1, 13], 'threshold': 8}, {'interval': [9, 13], 'threshold': 12}, {'interval': [14, 16], 'threshold': 14}]`
+- Splits: `[{'interval': [1, 16], 'threshold': 13}, {'interval': [14, 16], 'threshold': 14}, {'interval': [1, 13], 'threshold': 8}, {'interval': [9, 13], 'threshold': 12}]`
 
 # CertiGap Speed and Quality Summary
 
 ## Small Cases With Exact Reference
 
-- Exact mean time: `2.526 ms`
-- Beam mean time: `3.889 ms`
-- Greedy mean time: `0.166 ms`
-- Balanced mean time: `0.009 ms`
-- Weighted mean time: `0.013 ms`
-- Beam mean gap vs exact: `0.000979`
-- Greedy mean gap vs exact: `0.114157`
-- Balanced mean gap vs exact: `0.447373`
-- Weighted mean gap vs exact: `0.198609`
+- Exact mean time: `2.567 ms`
+- Beam mean time: `4.573 ms`
+- Greedy mean time: `0.212 ms`
+- Balanced mean time: `0.012 ms`
+- Weighted mean time: `0.017 ms`
+- Beam mean absolute objective gap vs exact: `0.000979`
+- Greedy mean absolute objective gap vs exact: `0.114157`
+- Balanced mean absolute objective gap vs exact: `0.447373`
+- Weighted mean absolute objective gap vs exact: `0.198609`
+- Beam mean relative objective gap vs exact: `0.03%`
+- Greedy mean relative objective gap vs exact: `3.48%`
 
 ## Large Cases Without Exact Reference
 
-- Beam mean time: `39.587 ms`
-- Greedy mean time: `0.927 ms`
-- Balanced mean time: `0.014 ms`
-- Weighted mean time: `0.028 ms`
+- Beam mean time: `50.828 ms`
+- Greedy mean time: `1.341 ms`
+- Balanced mean time: `0.022 ms`
+- Weighted mean time: `0.037 ms`
 
 ## Solver Tradeoff
 
-- `exact` is the reference solver for small and medium instances, but it is much slower.
-- `beam` is the strongest practical heuristic: near-exact quality on small cases with much lower runtime than `exact`.
+- `exact` is the reference solver for the measured small instances.
+- `beam` is near-exact on the measured small cases, but is not faster than exact there; this benchmark does not establish a crossover point.
 - `greedy` is usually faster but can be substantially worse on structured skewed tasks.
 - `balanced` and `weighted` are cheap baselines, but quality is systematically weaker on skewed workloads.
 
@@ -63,7 +65,7 @@
 
 Top automatically discovered hot-block instances where one-step greedy is much worse than exact.
 
-| n | B | eta | hot start | hot width | hot weight | greedy gap | beam gap |
+| n | B | eta | hot start | hot width | hot weight | greedy absolute gap | beam absolute gap |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | 10 | 3 | 0.00 | 5 | 2 | 24.0 | 1.6429 | 0.0000 |
 | 10 | 4 | 0.00 | 5 | 2 | 24.0 | 1.6429 | 0.0000 |
@@ -90,8 +92,10 @@ Top automatically discovered hot-block instances where one-step greedy is much w
 
 - `n = 10`, `B = 3`, `eta = 0.00`
 - hot block: start `5`, width `2`, hot weight `24.0`
-- greedy gap: `1.642857`
-- beam gap: `0.000000`
+- greedy absolute objective gap: `1.642857`
+- beam absolute objective gap: `0.000000`
+- greedy relative objective gap: `71.88%`
+- beam relative objective gap: `0.00%`
 - exact tree: `{'type': 'split', 'interval': [1, 10], 'threshold': 5, 'left': {'type': 'split', 'interval': [1, 5], 'threshold': 4, 'left': {'type': 'leaf', 'interval': [1, 4]}, 'right': {'type': 'leaf', 'interval': [5, 5]}}, 'right': {'type': 'split', 'interval': [6, 10], 'threshold': 6, 'left': {'type': 'leaf', 'interval': [6, 6]}, 'right': {'type': 'leaf', 'interval': [7, 10]}}}`
 - greedy tree: `{'type': 'split', 'interval': [1, 10], 'threshold': 2, 'left': {'type': 'leaf', 'interval': [1, 2]}, 'right': {'type': 'leaf', 'interval': [3, 10]}}`
 - beam tree: `{'type': 'split', 'interval': [1, 10], 'threshold': 5, 'left': {'type': 'split', 'interval': [1, 5], 'threshold': 4, 'left': {'type': 'leaf', 'interval': [1, 4]}, 'right': {'type': 'leaf', 'interval': [5, 5]}}, 'right': {'type': 'split', 'interval': [6, 10], 'threshold': 6, 'left': {'type': 'leaf', 'interval': [6, 6]}, 'right': {'type': 'leaf', 'interval': [7, 10]}}}`
@@ -179,14 +183,14 @@ The prototype currently combines:
 1. an entropy-style lower bound for the average-cost component;
 2. a Lagrangian lower bound obtained from unconstrained optima across budgets.
 
-For small instances, exact optimality is also computed directly, giving exact gaps.
+For small instances, the report generator also computes the exact optimum. This is a diagnostic comparison, not an independent certificate check. The standalone verifier only checks a submitted tree and certificate arithmetic; it does not run a search solver.
 
 ## Current Mathematical Status
 
-- exact solver: implemented and empirically verified against brute force on tiny cases;
-- robustness identity: straightforward and already proof-ready;
+- exact solver: implemented, checked against brute force on a systematic small-instance random family, and cross-checked against the C++ exact solver on reference cases;
+- robustness identity: proof draft included in `FORMAL_RESULTS.md`;
 - greedy counterexample family: empirical search implemented, formal asymptotic writeup still needed;
-- full theorem-grade writeup: partially packaged in `PROOF_SKETCHES.md`, still needs polished final prose.
+- Theorems A and B: proof drafts are included, but they are not machine-verified or externally peer-reviewed.
 
 ## Roadmap
 
@@ -209,8 +213,7 @@ For small instances, exact optimality is also computed directly, giving exact ga
 
 ## Phase 3: Strongest Theory Layer
 
-- write and prove Theorem A
-- formalize contamination lemma for Theorem B
+- complete the current proof drafts for Theorems A and B with external mathematical review
 - build one clean negative-result family
 
 ## Phase 4: Competition Package

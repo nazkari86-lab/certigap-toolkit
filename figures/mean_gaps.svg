@@ -1,16 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="250">
 <style>text{font-family:Menlo,monospace;font-size:14px;} .title{font-size:20px;font-weight:bold;} .bar{fill:#1f77b4;} .label{fill:#111;} .value{fill:#333;}</style>
-<text class="title" x="20" y="30">CertiGap Mean Gaps</text>
-<text class="label" x="20" y="68">Beam mean gap vs exact:</text>
+<text class="title" x="20" y="30">CertiGap Mean Absolute Objective Gaps</text>
+<text class="label" x="20" y="68">Beam mean absolute objective gap vs exact:</text>
 <rect class="bar" x="330" y="50" width="1.07" height="28" rx="4"/>
 <text class="value" x="339.07" y="68">0.000979</text>
-<text class="label" x="20" y="108">Greedy mean gap vs exact:</text>
+<text class="label" x="20" y="108">Greedy mean absolute objective gap vs exact:</text>
 <rect class="bar" x="330" y="90" width="125.03" height="28" rx="4"/>
 <text class="value" x="463.03" y="108">0.114157</text>
-<text class="label" x="20" y="148">Balanced mean gap vs exact:</text>
+<text class="label" x="20" y="148">Balanced mean absolute objective gap vs exact:</text>
 <rect class="bar" x="330" y="130" width="490.00" height="28" rx="4"/>
 <text class="value" x="828.00" y="148">0.447373</text>
-<text class="label" x="20" y="188">Weighted mean gap vs exact:</text>
+<text class="label" x="20" y="188">Weighted mean absolute objective gap vs exact:</text>
 <rect class="bar" x="330" y="170" width="217.53" height="28" rx="4"/>
 <text class="value" x="555.53" y="188">0.198609</text>
 </svg>

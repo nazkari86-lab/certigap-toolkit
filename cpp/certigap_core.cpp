@@ -196,10 +196,13 @@ extern "C" void certigap_free_string(void* ptr) {
 }
 
 extern "C" void* certigap_fit_json(const double* weights, int n, int budget, double eta) {
-    if (weights == nullptr || n <= 0 || budget < 0) return nullptr;
+    if (weights == nullptr || n <= 0 || budget < 0 || !std::isfinite(eta) || eta < 0.0 || eta > 1.0) return nullptr;
     std::vector<double> p(n + 1, 0.0);
     double total = 0.0;
-    for (int i = 0; i < n; ++i) total += weights[i];
+    for (int i = 0; i < n; ++i) {
+        if (!std::isfinite(weights[i]) || weights[i] < 0.0) return nullptr;
+        total += weights[i];
+    }
     if (total <= 0.0) return nullptr;
     for (int i = 1; i <= n; ++i) p[i] = weights[i - 1] / total;
 

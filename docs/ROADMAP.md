@@ -17,8 +17,7 @@
 
 ## Phase 3: Strongest Theory Layer
 
-- write and prove Theorem A
-- formalize contamination lemma for Theorem B
+- complete the current proof drafts for Theorems A and B with external mathematical review
 - build one clean negative-result family
 
 ## Phase 4: Competition Package

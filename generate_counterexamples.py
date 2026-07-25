@@ -64,23 +64,42 @@ def main() -> None:
                 "start",
                 "width",
                 "hot_weight",
-                "greedy_gap",
-                "beam_gap",
+                "greedy_absolute_objective_gap",
+                "beam_absolute_objective_gap",
+                "greedy_relative_objective_gap",
+                "beam_relative_objective_gap",
                 "exact_objective",
                 "greedy_objective",
                 "beam_objective",
             ],
+            lineterminator="\n",
         )
         writer.writeheader()
         for row in top:
-            writer.writerow({key: row[key] for key in writer.fieldnames})
+            writer.writerow(
+                {
+                    "n": row["n"],
+                    "budget": row["budget"],
+                    "eta": row["eta"],
+                    "start": row["start"],
+                    "width": row["width"],
+                    "hot_weight": row["hot_weight"],
+                    "greedy_absolute_objective_gap": row["greedy_gap"],
+                    "beam_absolute_objective_gap": row["beam_gap"],
+                    "greedy_relative_objective_gap": row["greedy_relative_gap"],
+                    "beam_relative_objective_gap": row["beam_relative_gap"],
+                    "exact_objective": row["exact_objective"],
+                    "greedy_objective": row["greedy_objective"],
+                    "beam_objective": row["beam_objective"],
+                }
+            )
 
     lines = [
         "# Greedy Counterexamples",
         "",
         "Top automatically discovered hot-block instances where one-step greedy is much worse than exact.",
         "",
-        "| n | B | eta | hot start | hot width | hot weight | greedy gap | beam gap |",
+        "| n | B | eta | hot start | hot width | hot weight | greedy absolute gap | beam absolute gap |",
         "|---|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in top:
@@ -98,8 +117,10 @@ def main() -> None:
                 "",
                 f"- `n = {best['n']}`, `B = {best['budget']}`, `eta = {best['eta']:.2f}`",
                 f"- hot block: start `{best['start']}`, width `{best['width']}`, hot weight `{best['hot_weight']:.1f}`",
-                f"- greedy gap: `{best['greedy_gap']:.6f}`",
-                f"- beam gap: `{best['beam_gap']:.6f}`",
+                f"- greedy absolute objective gap: `{best['greedy_gap']:.6f}`",
+                f"- beam absolute objective gap: `{best['beam_gap']:.6f}`",
+                f"- greedy relative objective gap: `{best['greedy_relative_gap']:.2%}`",
+                f"- beam relative objective gap: `{best['beam_relative_gap']:.2%}`",
                 f"- exact tree: `{best['exact_tree']}`",
                 f"- greedy tree: `{best['greedy_tree']}`",
                 f"- beam tree: `{best['beam_tree']}`",

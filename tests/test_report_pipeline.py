@@ -10,15 +10,15 @@ class ReportPipelineTests(unittest.TestCase):
 ## Global Summary
 
 - Rows analyzed: `240`
-- Mean greedy gap vs exact: `0.0986`
-- Mean beam gap vs exact: `0.0006`
+- Mean greedy absolute objective gap vs exact: `0.0986`
+- Mean beam absolute objective gap vs exact: `0.0006`
 - Beam strictly improves on greedy in `104` rows
 - Beam matches exact in `237` rows
 
 ## By Distribution
 """
         abstract = build_report.build_abstract(summary)
-        self.assertIn("Mean beam gap vs exact", abstract)
+        self.assertIn("Mean beam absolute objective gap vs exact", abstract)
         self.assertIn("CertiGap studies", abstract)
 
     def test_build_report_includes_current_results(self) -> None:

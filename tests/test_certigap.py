@@ -15,6 +15,8 @@ from certigap import (
     hot_block_distribution,
     make_distribution,
     normalize_weights,
+    verify_certificate_artifact,
+    verify_tree,
 )
 
 
@@ -81,6 +83,27 @@ class CertiGapTests(unittest.TestCase):
     def test_normalize_weights(self) -> None:
         weights = normalize_weights([2, 3, 5])
         self.assertAlmostEqual(sum(weights), 1.0, places=9)
+
+    def test_problem_validation_rejects_invalid_parameters(self) -> None:
+        with self.assertRaises(ValueError):
+            frontier_dp_best([0.5, -0.5], budget=1, eta=0.2)
+        with self.assertRaises(ValueError):
+            frontier_dp_best([0.5, 0.5], budget=-1, eta=0.2)
+        with self.assertRaises(ValueError):
+            frontier_dp_best([0.5, 0.5], budget=1, eta=1.1)
+
+    def test_verifier_rejects_inconsistent_certificate_arithmetic(self) -> None:
+        weights = [0.5, 0.5]
+        tree = SplitNode(1, 2, 1, IntervalLeaf(1, 1), IntervalLeaf(2, 2))
+        evaluation = verify_tree(tree, weights, budget=1, eta=0.0)
+        with self.assertRaises(ValueError):
+            verify_certificate_artifact(
+                tree,
+                weights,
+                budget=1,
+                eta=0.0,
+                artifact={"upper_bound": evaluation["objective"], "lower_bound": evaluation["objective"] + 1.0, "certified_gap": 0.0},
+            )
 
     def test_hot_block_distribution(self) -> None:
         weights = hot_block_distribution(8, start=3, width=2, hot_weight=10.0)

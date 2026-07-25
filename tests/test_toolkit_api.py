@@ -17,9 +17,10 @@ class ToolkitApiTests(unittest.TestCase):
         self.assertEqual(rows[0]["objective"], min(row["objective"] for row in rows))
 
     def test_learned_segment_baseline(self) -> None:
-        result = baseline_learned_segment([0.25, 0.25, 0.25, 0.25], budget=1, eta=0.0)
+        result = baseline_learned_segment([0.125] * 8, budget=7, eta=0.0)
         self.assertIn("objective", result)
-        self.assertEqual(result["split_count"], 1)
+        self.assertEqual(result["split_count"], 7)
+        self.assertEqual(result["max_cost"], 3)
 
     def test_cpp_library_path_suffix(self) -> None:
         suffix = library_path().suffix

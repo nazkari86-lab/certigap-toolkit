@@ -14,8 +14,10 @@
 Текущее состояние прототипа подтверждается следующими результатами:
 
 - Rows analyzed: `240`
-- Mean greedy gap vs exact: `0.0986`
-- Mean beam gap vs exact: `0.0006`
+- Mean greedy absolute objective gap vs exact: `0.0986`
+- Mean beam absolute objective gap vs exact: `0.0006`
+- Mean greedy relative objective gap vs exact: `2.80%`
+- Mean beam relative objective gap vs exact: `0.02%`
 - Beam strictly improves on greedy in `104` rows
 - Beam matches exact in `237` rows
 

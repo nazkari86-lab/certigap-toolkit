@@ -81,11 +81,11 @@ The prototype currently combines:
 1. an entropy-style lower bound for the average-cost component;
 2. a Lagrangian lower bound obtained from unconstrained optima across budgets.
 
-For small instances, exact optimality is also computed directly, giving exact gaps.
+For small instances, the report generator also computes the exact optimum. This is a diagnostic comparison, not an independent certificate check. The standalone verifier only checks a submitted tree and certificate arithmetic; it does not run a search solver.
 
 ## Current Mathematical Status
 
-- exact solver: implemented and empirically verified against brute force on tiny cases;
-- robustness identity: straightforward and already proof-ready;
+- exact solver: implemented, checked against brute force on a systematic small-instance random family, and cross-checked against the C++ exact solver on reference cases;
+- robustness identity: proof draft included in `FORMAL_RESULTS.md`;
 - greedy counterexample family: empirical search implemented, formal asymptotic writeup still needed;
-- full theorem-grade writeup: partially packaged in `PROOF_SKETCHES.md`, still needs polished final prose.
+- Theorems A and B: proof drafts are included, but they are not machine-verified or externally peer-reviewed.

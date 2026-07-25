@@ -2,7 +2,7 @@
 
 Top automatically discovered hot-block instances where one-step greedy is much worse than exact.
 
-| n | B | eta | hot start | hot width | hot weight | greedy gap | beam gap |
+| n | B | eta | hot start | hot width | hot weight | greedy absolute gap | beam absolute gap |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | 10 | 3 | 0.00 | 5 | 2 | 24.0 | 1.6429 | 0.0000 |
 | 10 | 4 | 0.00 | 5 | 2 | 24.0 | 1.6429 | 0.0000 |
@@ -29,8 +29,10 @@ Top automatically discovered hot-block instances where one-step greedy is much w
 
 - `n = 10`, `B = 3`, `eta = 0.00`
 - hot block: start `5`, width `2`, hot weight `24.0`
-- greedy gap: `1.642857`
-- beam gap: `0.000000`
+- greedy absolute objective gap: `1.642857`
+- beam absolute objective gap: `0.000000`
+- greedy relative objective gap: `71.88%`
+- beam relative objective gap: `0.00%`
 - exact tree: `{'type': 'split', 'interval': [1, 10], 'threshold': 5, 'left': {'type': 'split', 'interval': [1, 5], 'threshold': 4, 'left': {'type': 'leaf', 'interval': [1, 4]}, 'right': {'type': 'leaf', 'interval': [5, 5]}}, 'right': {'type': 'split', 'interval': [6, 10], 'threshold': 6, 'left': {'type': 'leaf', 'interval': [6, 6]}, 'right': {'type': 'leaf', 'interval': [7, 10]}}}`
 - greedy tree: `{'type': 'split', 'interval': [1, 10], 'threshold': 2, 'left': {'type': 'leaf', 'interval': [1, 2]}, 'right': {'type': 'leaf', 'interval': [3, 10]}}`
 - beam tree: `{'type': 'split', 'interval': [1, 10], 'threshold': 5, 'left': {'type': 'split', 'interval': [1, 5], 'threshold': 4, 'left': {'type': 'leaf', 'interval': [1, 4]}, 'right': {'type': 'leaf', 'interval': [5, 5]}}, 'right': {'type': 'split', 'interval': [6, 10], 'threshold': 6, 'left': {'type': 'leaf', 'interval': [6, 6]}, 'right': {'type': 'leaf', 'interval': [7, 10]}}}`

@@ -28,12 +28,14 @@ def write_sweep() -> None:
         "beam",
         "balanced",
         "weighted",
-        "greedy_gap",
-        "beam_gap",
+        "greedy_absolute_objective_gap",
+        "beam_absolute_objective_gap",
+        "greedy_relative_objective_gap",
+        "beam_relative_objective_gap",
     ]
 
     with CSV_PATH.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         for distribution in distributions:
             for n in sizes:
@@ -53,8 +55,10 @@ def write_sweep() -> None:
                                 "beam": f"{result['beam_objective']:.6f}",
                                 "balanced": f"{result['balanced_objective']:.6f}",
                                 "weighted": f"{result['weighted_objective']:.6f}",
-                                "greedy_gap": f"{result['greedy_gap_vs_exact']:.6f}",
-                                "beam_gap": f"{result['beam_gap_vs_exact']:.6f}",
+                                "greedy_absolute_objective_gap": f"{result['greedy_absolute_objective_gap']:.6f}",
+                                "beam_absolute_objective_gap": f"{result['beam_absolute_objective_gap']:.6f}",
+                                "greedy_relative_objective_gap": f"{result['greedy_relative_objective_gap']:.6f}",
+                                "beam_relative_objective_gap": f"{result['beam_relative_objective_gap']:.6f}",
                             }
                         )
 

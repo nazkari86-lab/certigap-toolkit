@@ -13,7 +13,7 @@ def read_speed_quality_summary_rows() -> list[tuple[str, float]]:
     mapping = []
     summary = (RESULTS_DIR / "speed_quality_summary.md").read_text(encoding="utf-8")
     for line in summary.splitlines():
-        if "mean gap vs exact" in line:
+        if "mean absolute objective gap vs exact" in line:
             label, value = line.split("`")[0], line.split("`")[1]
             mapping.append((label.strip("- ").strip(), float(value)))
         if "mean time:" in line:
@@ -51,7 +51,7 @@ def main() -> None:
     rows = read_speed_quality_summary_rows()
     gap_rows = [row for row in rows if "gap" in row[0]]
     time_rows = [row for row in rows if "time" in row[0]]
-    bar_svg("CertiGap Mean Gaps", gap_rows, FIGURES_DIR / "mean_gaps.svg")
+    bar_svg("CertiGap Mean Absolute Objective Gaps", gap_rows, FIGURES_DIR / "mean_gaps.svg")
     bar_svg("CertiGap Mean Times (ms)", time_rows, FIGURES_DIR / "mean_times.svg")
     print(f"Wrote {FIGURES_DIR / 'mean_gaps.svg'}")
     print(f"Wrote {FIGURES_DIR / 'mean_times.svg'}")

@@ -19,8 +19,10 @@ class ResultsPipelineTests(unittest.TestCase):
                 "beam": "2.000000",
                 "balanced": "2.300000",
                 "weighted": "2.250000",
-                "greedy_gap": "0.200000",
-                "beam_gap": "0.000000",
+                "greedy_absolute_objective_gap": "0.200000",
+                "beam_absolute_objective_gap": "0.000000",
+                "greedy_relative_objective_gap": "0.100000",
+                "beam_relative_objective_gap": "0.000000",
             },
             {
                 "distribution": "uniform",
@@ -32,12 +34,15 @@ class ResultsPipelineTests(unittest.TestCase):
                 "beam": "3.000000",
                 "balanced": "3.100000",
                 "weighted": "3.100000",
-                "greedy_gap": "0.000000",
-                "beam_gap": "0.000000",
+                "greedy_absolute_objective_gap": "0.000000",
+                "beam_absolute_objective_gap": "0.000000",
+                "greedy_relative_objective_gap": "0.000000",
+                "beam_relative_objective_gap": "0.000000",
             },
         ]
         summary = analyze_experiments.summarize(rows)
-        self.assertIn("Mean greedy gap vs exact", summary)
+        self.assertIn("Mean greedy absolute objective gap vs exact", summary)
+        self.assertIn("Mean greedy relative objective gap vs exact", summary)
         self.assertIn("zipf", summary)
         self.assertIn("Top Beam Improvements", summary)
 

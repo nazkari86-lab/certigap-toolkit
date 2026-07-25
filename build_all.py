@@ -14,8 +14,8 @@ def run(cmd: list[str]) -> None:
 
 def main() -> None:
     python = sys.executable
-    run([python, "-m", "unittest", "discover", "-s", "tests", "-v"])
     run([python, "build_cpp_core.py"])
+    run([python, "-m", "unittest", "discover", "-s", "tests", "-v"])
     run([python, "generate_results.py"])
     run([python, "analyze_experiments.py"])
     run([python, "generate_speed_quality.py", "--mode", "fast"])

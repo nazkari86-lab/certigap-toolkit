@@ -84,11 +84,12 @@ def write_csv(mode: str) -> list[dict]:
         "average_cost",
         "max_cost",
         "time_ms",
-        "quality_gap_vs_exact",
+        "absolute_objective_gap_vs_exact",
+        "relative_objective_gap_vs_exact",
     ]
 
     with CSV_PATH.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
 
         for distribution in distributions:
@@ -109,7 +110,8 @@ def write_csv(mode: str) -> list[dict]:
                             "average_cost": exact["average_cost"],
                             "max_cost": exact["max_cost"],
                             "time_ms": exact_seconds * 1000.0,
-                            "quality_gap_vs_exact": 0.0,
+                            "absolute_objective_gap_vs_exact": 0.0,
+                            "relative_objective_gap_vs_exact": 0.0,
                         }
                         cases.append(exact_row)
                         writer.writerow(_format_row(exact_row))
@@ -131,7 +133,8 @@ def write_csv(mode: str) -> list[dict]:
                                 "average_cost": result["average_cost"],
                                 "max_cost": result["max_cost"],
                                 "time_ms": seconds * 1000.0,
-                                "quality_gap_vs_exact": result["objective"] - exact["objective"],
+                                "absolute_objective_gap_vs_exact": result["objective"] - exact["objective"],
+                                "relative_objective_gap_vs_exact": 0.0 if exact["objective"] == 0.0 else (result["objective"] - exact["objective"]) / exact["objective"],
                             }
                             cases.append(row)
                             writer.writerow(_format_row(row))
@@ -163,7 +166,8 @@ def write_csv(mode: str) -> list[dict]:
                                 "average_cost": result["average_cost"],
                                 "max_cost": result["max_cost"],
                                 "time_ms": seconds * 1000.0,
-                                "quality_gap_vs_exact": None,
+                                "absolute_objective_gap_vs_exact": None,
+                                "relative_objective_gap_vs_exact": None,
                             }
                             cases.append(row)
                             writer.writerow(_format_row(row))
@@ -182,13 +186,14 @@ def _format_row(row: dict) -> dict[str, str]:
         "average_cost": f"{float(row['average_cost']):.6f}",
         "max_cost": f"{float(row['max_cost']):.6f}",
         "time_ms": f"{float(row['time_ms']):.6f}",
-        "quality_gap_vs_exact": "" if row["quality_gap_vs_exact"] is None else f"{float(row['quality_gap_vs_exact']):.6f}",
+        "absolute_objective_gap_vs_exact": "" if row["absolute_objective_gap_vs_exact"] is None else f"{float(row['absolute_objective_gap_vs_exact']):.6f}",
+        "relative_objective_gap_vs_exact": "" if row["relative_objective_gap_vs_exact"] is None else f"{float(row['relative_objective_gap_vs_exact']):.6f}",
     }
 
 
 def build_summary(rows: list[dict]) -> str:
-    small_rows = [row for row in rows if row["quality_gap_vs_exact"] is not None]
-    large_rows = [row for row in rows if row["quality_gap_vs_exact"] is None]
+    small_rows = [row for row in rows if row["absolute_objective_gap_vs_exact"] is not None]
+    large_rows = [row for row in rows if row["absolute_objective_gap_vs_exact"] is None]
 
     def avg(values):
         return sum(values) / len(values) if values else 0.0
@@ -214,10 +219,12 @@ def build_summary(rows: list[dict]) -> str:
         f"- Greedy mean time: `{avg([row['time_ms'] for row in greedy_small]):.3f} ms`",
         f"- Balanced mean time: `{avg([row['time_ms'] for row in balanced_small]):.3f} ms`",
         f"- Weighted mean time: `{avg([row['time_ms'] for row in weighted_small]):.3f} ms`",
-        f"- Beam mean gap vs exact: `{avg([row['quality_gap_vs_exact'] for row in beam_small]):.6f}`",
-        f"- Greedy mean gap vs exact: `{avg([row['quality_gap_vs_exact'] for row in greedy_small]):.6f}`",
-        f"- Balanced mean gap vs exact: `{avg([row['quality_gap_vs_exact'] for row in balanced_small]):.6f}`",
-        f"- Weighted mean gap vs exact: `{avg([row['quality_gap_vs_exact'] for row in weighted_small]):.6f}`",
+        f"- Beam mean absolute objective gap vs exact: `{avg([row['absolute_objective_gap_vs_exact'] for row in beam_small]):.6f}`",
+        f"- Greedy mean absolute objective gap vs exact: `{avg([row['absolute_objective_gap_vs_exact'] for row in greedy_small]):.6f}`",
+        f"- Balanced mean absolute objective gap vs exact: `{avg([row['absolute_objective_gap_vs_exact'] for row in balanced_small]):.6f}`",
+        f"- Weighted mean absolute objective gap vs exact: `{avg([row['absolute_objective_gap_vs_exact'] for row in weighted_small]):.6f}`",
+        f"- Beam mean relative objective gap vs exact: `{avg([row['relative_objective_gap_vs_exact'] for row in beam_small]):.2%}`",
+        f"- Greedy mean relative objective gap vs exact: `{avg([row['relative_objective_gap_vs_exact'] for row in greedy_small]):.2%}`",
         "",
         "## Large Cases Without Exact Reference",
         "",
@@ -228,8 +235,8 @@ def build_summary(rows: list[dict]) -> str:
         "",
         "## Solver Tradeoff",
         "",
-        "- `exact` is the reference solver for small and medium instances, but it is much slower.",
-        "- `beam` is the strongest practical heuristic: near-exact quality on small cases with much lower runtime than `exact`.",
+        "- `exact` is the reference solver for the measured small instances.",
+        "- `beam` is near-exact on the measured small cases, but is not faster than exact there; this benchmark does not establish a crossover point.",
         "- `greedy` is usually faster but can be substantially worse on structured skewed tasks.",
         "- `balanced` and `weighted` are cheap baselines, but quality is systematically weaker on skewed workloads.",
     ]

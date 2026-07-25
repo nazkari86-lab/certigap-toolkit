@@ -16,7 +16,7 @@
 - Certified gap: `0.000000`
 - Exact gap: `0.000000`
 - Bound source: `lagrangian`
-- Splits: `[{'interval': [1, 12], 'threshold': 6}, {'interval': [1, 6], 'threshold': 4}, {'interval': [7, 12], 'threshold': 8}]`
+- Splits: `[{'interval': [1, 12], 'threshold': 6}, {'interval': [7, 12], 'threshold': 8}, {'interval': [1, 6], 'threshold': 4}]`
 
 ## hot_tail, n=16, B=4, eta=0.30
 
@@ -25,5 +25,5 @@
 - Certified gap: `0.000000`
 - Exact gap: `0.000000`
 - Bound source: `lagrangian`
-- Splits: `[{'interval': [1, 16], 'threshold': 13}, {'interval': [1, 13], 'threshold': 8}, {'interval': [9, 13], 'threshold': 12}, {'interval': [14, 16], 'threshold': 14}]`
+- Splits: `[{'interval': [1, 16], 'threshold': 13}, {'interval': [14, 16], 'threshold': 14}, {'interval': [1, 13], 'threshold': 8}, {'interval': [9, 13], 'threshold': 12}]`
 

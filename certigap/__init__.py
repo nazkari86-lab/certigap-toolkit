@@ -25,10 +25,13 @@ from .core import (
     max_cost_lower_bound,
     normalize_weights,
     split_count,
+    validate_problem,
 )
+from .verifier import VerificationError, verify_certificate_artifact, verify_tree
 
 __all__ = [
     "CertificateError",
+    "VerificationError",
     "IntervalLeaf",
     "SplitNode",
     "all_budget_optima",
@@ -56,4 +59,7 @@ __all__ = [
     "max_cost_lower_bound",
     "normalize_weights",
     "split_count",
+    "validate_problem",
+    "verify_certificate_artifact",
+    "verify_tree",
 ]

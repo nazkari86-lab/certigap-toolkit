@@ -8,10 +8,13 @@ from .core import (
     baseline_weighted_median,
     beam_search_best,
     certify_tree,
+    evaluate_tree,
     frontier_dp_best,
     greedy_best,
+    IntervalLeaf,
     make_distribution,
-    split_count,
+    SplitNode,
+    validate_problem,
 )
 
 
@@ -50,10 +53,9 @@ class FitResult:
 
 
 def _normalize_weights(weights: list[float]) -> list[float]:
-    total = float(sum(weights))
-    if total <= 0:
-        raise ValueError("weights must have positive total mass")
-    return [float(weight) / total for weight in weights]
+    values = validate_problem(weights, budget=0, eta=0.0)
+    total = float(sum(values))
+    return [weight / total for weight in values]
 
 
 def _solver_dispatch(weights: list[float], budget: int, eta: float, solver: SolverName) -> dict:
@@ -75,35 +77,37 @@ def _solver_dispatch(weights: list[float], budget: int, eta: float, solver: Solv
 
 
 def baseline_learned_segment(weights: list[float], budget: int, eta: float) -> dict:
+    weights = validate_problem(weights, budget, eta)
     n = len(weights)
     segment_count = min(budget + 1, n)
-    cuts = []
-    for i in range(1, segment_count):
-        cuts.append((i * n) // segment_count)
-    costs = [0] * n
+    endpoints = [(index * n) // segment_count for index in range(1, segment_count)]
+    ranges: list[tuple[int, int]] = []
     left = 1
-    depth = 1 if cuts else 0
-    for cut in cuts + [n]:
-        segment_size = cut - left + 1
-        cost = depth + (0 if segment_size <= 1 else (segment_size - 1).bit_length())
-        for idx in range(left - 1, cut):
-            costs[idx] = cost
-        left = cut + 1
-    average = sum(weight * cost for weight, cost in zip(weights, costs))
-    max_cost = max(costs) if costs else 0
-    return {
-        "average_cost": average,
-        "max_cost": max_cost,
-        "objective": (1.0 - eta) * average + eta * max_cost,
-        "per_key_costs": costs,
-        "split_count": max(0, segment_count - 1),
-        "tree": None,
-        "serialized_tree": {
-            "type": "learned_segment",
-            "segments": segment_count,
-            "cuts": cuts,
-        },
-    }
+    for right in endpoints + [n]:
+        ranges.append((left, right))
+        left = right + 1
+
+    def build(first: int, last: int):
+        if first == last:
+            left_bound, right_bound = ranges[first]
+            return IntervalLeaf(left_bound, right_bound)
+        middle = (first + last) // 2
+        left_child = build(first, middle)
+        right_child = build(middle + 1, last)
+        return SplitNode(
+            left=left_child.left,
+            right=right_child.right,
+            threshold=left_child.right,
+            left_child=left_child,
+            right_child=right_child,
+        )
+
+    result = evaluate_tree(build(0, len(ranges) - 1), weights, eta)
+    result["budget"] = budget
+    result["eta"] = eta
+    result["segments"] = segment_count
+    result["segment_endpoints"] = endpoints
+    return result
 
 
 class CertiGapToolkit:

@@ -22,8 +22,10 @@ def mean(values: list[float]) -> float:
 
 
 def summarize(rows: list[dict[str, str]]) -> str:
-    beam_gaps = [float(row["beam_gap"]) for row in rows]
-    greedy_gaps = [float(row["greedy_gap"]) for row in rows]
+    beam_gaps = [float(row["beam_absolute_objective_gap"]) for row in rows]
+    greedy_gaps = [float(row["greedy_absolute_objective_gap"]) for row in rows]
+    beam_relative_gaps = [float(row["beam_relative_objective_gap"]) for row in rows]
+    greedy_relative_gaps = [float(row["greedy_relative_objective_gap"]) for row in rows]
 
     by_distribution: dict[str, list[dict[str, str]]] = defaultdict(list)
     for row in rows:
@@ -35,29 +37,33 @@ def summarize(rows: list[dict[str, str]]) -> str:
         "## Global Summary",
         "",
         f"- Rows analyzed: `{len(rows)}`",
-        f"- Mean greedy gap vs exact: `{mean(greedy_gaps):.4f}`",
-        f"- Mean beam gap vs exact: `{mean(beam_gaps):.4f}`",
+        f"- Mean greedy absolute objective gap vs exact: `{mean(greedy_gaps):.4f}`",
+        f"- Mean beam absolute objective gap vs exact: `{mean(beam_gaps):.4f}`",
+        f"- Mean greedy relative objective gap vs exact: `{mean(greedy_relative_gaps):.2%}`",
+        f"- Mean beam relative objective gap vs exact: `{mean(beam_relative_gaps):.2%}`",
         f"- Beam strictly improves on greedy in `{sum(1 for g, b in zip(greedy_gaps, beam_gaps) if b < g - 1e-9)}` rows",
         f"- Beam matches exact in `{sum(1 for gap in beam_gaps if abs(gap) <= 1e-9)}` rows",
         "",
         "## By Distribution",
         "",
-        "| Distribution | Mean Greedy Gap | Mean Beam Gap | Beam Better Rows |",
-        "|---|---:|---:|---:|",
+        "| Distribution | Mean Greedy Absolute Gap | Mean Beam Absolute Gap | Mean Greedy Relative Gap | Mean Beam Relative Gap | Beam Better Rows |",
+        "|---|---:|---:|---:|---:|",
     ]
 
     for distribution in sorted(by_distribution):
         rows_here = by_distribution[distribution]
-        greedy_here = [float(row["greedy_gap"]) for row in rows_here]
-        beam_here = [float(row["beam_gap"]) for row in rows_here]
+        greedy_here = [float(row["greedy_absolute_objective_gap"]) for row in rows_here]
+        beam_here = [float(row["beam_absolute_objective_gap"]) for row in rows_here]
+        greedy_relative_here = [float(row["greedy_relative_objective_gap"]) for row in rows_here]
+        beam_relative_here = [float(row["beam_relative_objective_gap"]) for row in rows_here]
         beam_better = sum(1 for g, b in zip(greedy_here, beam_here) if b < g - 1e-9)
         lines.append(
-            f"| {distribution} | {mean(greedy_here):.4f} | {mean(beam_here):.4f} | {beam_better} |"
+            f"| {distribution} | {mean(greedy_here):.4f} | {mean(beam_here):.4f} | {mean(greedy_relative_here):.2%} | {mean(beam_relative_here):.2%} | {beam_better} |"
         )
 
     best_rows = sorted(
         rows,
-        key=lambda row: float(row["greedy_gap"]) - float(row["beam_gap"]),
+        key=lambda row: float(row["greedy_absolute_objective_gap"]) - float(row["beam_absolute_objective_gap"]),
         reverse=True,
     )[:10]
 
@@ -66,14 +72,14 @@ def summarize(rows: list[dict[str, str]]) -> str:
             "",
             "## Top Beam Improvements",
             "",
-            "| Distribution | n | B | eta | Greedy Gap | Beam Gap |",
+            "| Distribution | n | B | eta | Greedy Absolute Gap | Beam Absolute Gap |",
             "|---|---:|---:|---:|---:|---:|",
         ]
     )
     for row in best_rows:
         lines.append(
             f"| {row['distribution']} | {row['n']} | {row['budget']} | {row['eta']} | "
-            f"{float(row['greedy_gap']):.4f} | {float(row['beam_gap']):.4f} |"
+            f"{float(row['greedy_absolute_objective_gap']):.4f} | {float(row['beam_absolute_objective_gap']):.4f} |"
         )
 
     if COUNTEREXAMPLE_MD_PATH.exists():

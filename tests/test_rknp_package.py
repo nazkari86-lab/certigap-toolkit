@@ -10,7 +10,7 @@ class RknpPackageTests(unittest.TestCase):
 ## Global Summary
 
 - Rows analyzed: `10`
-- Mean beam gap vs exact: `0.1`
+- Mean beam absolute objective gap vs exact: `0.1`
 
 ## By Distribution
 """
@@ -24,7 +24,7 @@ class RknpPackageTests(unittest.TestCase):
 ## Global Summary
 
 - Rows analyzed: `10`
-- Mean beam gap vs exact: `0.1`
+- Mean beam absolute objective gap vs exact: `0.1`
 
 ## By Distribution
 """

@@ -3,8 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import lru_cache
 from itertools import product
-from math import ceil, log2
+from math import ceil, isfinite, log2
 from typing import Iterable
+
+from .verifier import VerificationError, verify_certificate_artifact, verify_tree
 
 
 EPS = 1e-9
@@ -48,6 +50,21 @@ class CertificateError(ValueError):
     pass
 
 
+def validate_problem(weights: Iterable[float], budget: int, eta: float) -> list[float]:
+    values = [float(weight) for weight in weights]
+    if not values:
+        raise ValueError("weights must be non-empty")
+    if budget < 0:
+        raise ValueError("budget must be non-negative")
+    if not isfinite(eta) or not 0.0 <= eta <= 1.0:
+        raise ValueError("eta must lie in [0, 1]")
+    if any(not isfinite(value) or value < 0.0 for value in values):
+        raise ValueError("weights must be finite and non-negative")
+    if sum(values) <= EPS:
+        raise ValueError("weights must have positive total mass")
+    return values
+
+
 def interval_cost(size: int) -> int:
     if size <= 1:
         return 0
@@ -66,6 +83,8 @@ def _mass(prefix: tuple[float, ...], left: int, right: int) -> float:
 
 
 def make_distribution(kind: str, n: int) -> list[float]:
+    if n <= 0:
+        raise ValueError("n must be positive")
     if kind == "uniform":
         base = [1.0] * n
     elif kind == "zipf":
@@ -87,7 +106,7 @@ def make_distribution(kind: str, n: int) -> list[float]:
 
 
 def normalize_weights(weights: Iterable[float]) -> list[float]:
-    values = [float(weight) for weight in weights]
+    values = validate_problem(weights, budget=0, eta=0.0)
     total = sum(values)
     if total <= EPS:
         raise ValueError("weights must have positive total mass")
@@ -95,6 +114,8 @@ def normalize_weights(weights: Iterable[float]) -> list[float]:
 
 
 def hot_block_distribution(n: int, start: int, width: int, hot_weight: float, cold_weight: float = 1.0) -> list[float]:
+    if n <= 0:
+        raise ValueError("n must be positive")
     if not (1 <= start <= n):
         raise ValueError("start must lie inside the key range")
     if width <= 0 or start + width - 1 > n:
@@ -154,6 +175,7 @@ def _collect_leaves(tree: Tree) -> list[tuple[int, int]]:
 
 
 def evaluate_tree(tree: Tree, weights: list[float], eta: float) -> dict:
+    weights = validate_problem(weights, budget=0, eta=eta)
     per_key = [0] * len(weights)
 
     def walk(node: Tree, depth: int) -> None:
@@ -181,6 +203,7 @@ def evaluate_tree(tree: Tree, weights: list[float], eta: float) -> dict:
 
 
 def frontier_dp_best(weights: list[float], budget: int, eta: float) -> dict:
+    weights = validate_problem(weights, budget, eta)
     prefix = _prefix(weights)
     n = len(weights)
 
@@ -229,6 +252,7 @@ def frontier_dp_best(weights: list[float], budget: int, eta: float) -> dict:
 
 
 def brute_force_best(weights: list[float], budget: int, eta: float) -> dict:
+    weights = validate_problem(weights, budget, eta)
     n = len(weights)
 
     @lru_cache(maxsize=None)
@@ -258,7 +282,16 @@ def brute_force_best(weights: list[float], budget: int, eta: float) -> dict:
     best_eval = None
     for tree in build(1, n, budget):
         current = evaluate_tree(tree, weights, eta)
-        if best_eval is None or current["objective"] < best_eval["objective"] - EPS:
+        if best_eval is None or current["objective"] < best_eval["objective"] - EPS or (
+            abs(current["objective"] - best_eval["objective"]) <= EPS
+            and (
+                current["max_cost"] < best_eval["max_cost"]
+                or (
+                    current["max_cost"] == best_eval["max_cost"]
+                    and current["average_cost"] < best_eval["average_cost"] - EPS
+                )
+            )
+        ):
             best_eval = current
     assert best_eval is not None
     best_eval["budget"] = budget
@@ -267,6 +300,7 @@ def brute_force_best(weights: list[float], budget: int, eta: float) -> dict:
 
 
 def baseline_balanced(weights: list[float], budget: int, eta: float) -> dict:
+    weights = validate_problem(weights, budget, eta)
     n = len(weights)
 
     def build(left: int, right: int, remaining_budget: int) -> Tree:
@@ -287,6 +321,7 @@ def baseline_balanced(weights: list[float], budget: int, eta: float) -> dict:
 
 
 def baseline_weighted_median(weights: list[float], budget: int, eta: float) -> dict:
+    weights = validate_problem(weights, budget, eta)
     prefix = _prefix(weights)
     n = len(weights)
 
@@ -324,6 +359,7 @@ def baseline_weighted_median(weights: list[float], budget: int, eta: float) -> d
 
 
 def entropy_lower_bound(weights: list[float]) -> float:
+    weights = validate_problem(weights, budget=0, eta=0.0)
     total = 0.0
     for weight in weights:
         if weight > EPS:
@@ -332,11 +368,16 @@ def entropy_lower_bound(weights: list[float]) -> float:
 
 
 def max_cost_lower_bound(n: int, budget: int) -> int:
+    if n <= 0:
+        raise ValueError("n must be positive")
+    if budget < 0:
+        raise ValueError("budget must be non-negative")
     largest_leaf = ceil(n / (budget + 1))
     return interval_cost(largest_leaf)
 
 
 def all_budget_optima(weights: list[float], eta: float, max_budget: int | None = None) -> list[dict]:
+    weights = validate_problem(weights, budget=0, eta=eta)
     n = len(weights)
     upper_budget = min(n - 1, max_budget if max_budget is not None else n - 1)
     return [frontier_dp_best(weights, budget, eta) for budget in range(upper_budget + 1)]
@@ -349,6 +390,7 @@ def lagrangian_lower_bound(
     max_budget: int | None = None,
     lambda_grid: Iterable[float] | None = None,
 ) -> dict:
+    weights = validate_problem(weights, budget, eta)
     optima = all_budget_optima(weights, eta, max_budget=max_budget)
     if lambda_grid is None:
         lambda_grid = [step / 8.0 for step in range(0, 49)]
@@ -381,6 +423,7 @@ def combined_lower_bound(
     max_budget: int | None = None,
     use_lagrangian: bool = True,
 ) -> dict:
+    weights = validate_problem(weights, budget, eta)
     entropy_bound = (1.0 - eta) * entropy_lower_bound(weights) + eta * max_cost_lower_bound(len(weights), budget)
     if not use_lagrangian:
         return {
@@ -474,6 +517,7 @@ def _single_split_expansions(tree: Tree, weights: list[float], eta: float, used_
 
 
 def greedy_best(weights: list[float], budget: int, eta: float) -> dict:
+    weights = validate_problem(weights, budget, eta)
     n = len(weights)
     tree: Tree = IntervalLeaf(1, n)
     current = evaluate_tree(tree, weights, eta) | {"budget": 0, "eta": eta}
@@ -502,6 +546,9 @@ def greedy_best(weights: list[float], budget: int, eta: float) -> dict:
 
 
 def beam_search_best(weights: list[float], budget: int, eta: float, beam_width: int = 16) -> dict:
+    weights = validate_problem(weights, budget, eta)
+    if beam_width <= 0:
+        raise ValueError("beam_width must be positive")
     n = len(weights)
     start = evaluate_tree(IntervalLeaf(1, n), weights, eta)
     start_candidate = SearchCandidate(
@@ -548,6 +595,7 @@ def beam_search_best(weights: list[float], budget: int, eta: float, beam_width: 
 
 
 def heuristic_best(weights: list[float], budget: int, eta: float, beam_width: int = 16) -> dict:
+    weights = validate_problem(weights, budget, eta)
     exact_budget_threshold = 24
     if len(weights) <= exact_budget_threshold:
         result = frontier_dp_best(weights, budget, eta)
@@ -592,6 +640,8 @@ def counterexample_search(
                                     "hot_weight": hot_weight,
                                     "greedy_gap": greedy_gap,
                                     "beam_gap": beam_gap,
+                                    "greedy_relative_gap": 0.0 if exact["objective"] <= EPS else greedy_gap / exact["objective"],
+                                    "beam_relative_gap": 0.0 if exact["objective"] <= EPS else beam_gap / exact["objective"],
                                     "exact_objective": exact["objective"],
                                     "greedy_objective": greedy["objective"],
                                     "beam_objective": beam["objective"],
@@ -606,42 +656,12 @@ def counterexample_search(
 
 
 def certify_tree(tree: Tree, weights: list[float], budget: int, eta: float) -> dict:
+    weights = validate_problem(weights, budget, eta)
     n = len(weights)
-    leaves = sorted(_collect_leaves(tree))
-    if not leaves:
-        raise CertificateError("tree has no leaves")
-    expected_left = 1
-    for left, right in leaves:
-        if left > right:
-            raise CertificateError(f"invalid leaf interval [{left}, {right}]")
-        if left != expected_left:
-            raise CertificateError("leaves do not form a contiguous partition")
-        expected_left = right + 1
-    if expected_left != n + 1:
-        raise CertificateError("leaves do not cover all ranks")
-
-    split_count = len(_collect_splits(tree))
-    if split_count > budget:
-        raise CertificateError("tree exceeds split budget")
-
-    def validate(node: Tree) -> tuple[int, int]:
-        if isinstance(node, IntervalLeaf):
-            return node.left, node.right
-        if not (node.left <= node.threshold < node.right):
-            raise CertificateError("threshold is outside its interval")
-        left_bounds = validate(node.left_child)
-        right_bounds = validate(node.right_child)
-        if left_bounds != (node.left, node.threshold):
-            raise CertificateError("left child interval does not match threshold")
-        if right_bounds != (node.threshold + 1, node.right):
-            raise CertificateError("right child interval does not match threshold")
-        return node.left, node.right
-
-    root_bounds = validate(tree)
-    if root_bounds != (1, n):
-        raise CertificateError("root interval does not cover all ranks")
-
-    evaluation = evaluate_tree(tree, weights, eta)
+    try:
+        evaluation = verify_tree(tree, weights, budget, eta)
+    except VerificationError as error:
+        raise CertificateError(str(error)) from error
     use_lagrangian = len(weights) <= 18
     lower_bounds = combined_lower_bound(weights, budget, eta, use_lagrangian=use_lagrangian)
     exact_optimum = None
@@ -652,15 +672,12 @@ def certify_tree(tree: Tree, weights: list[float], budget: int, eta: float) -> d
     certified_gap = None
     if lower_bounds["lower_bound"] > EPS:
         certified_gap = (evaluation["objective"] - lower_bounds["lower_bound"]) / lower_bounds["lower_bound"]
-    return {
+    certificate = {
         "n": n,
         "budget": budget,
         "eta": eta,
-        "splits": [
-            {"interval": [left, right], "threshold": threshold}
-            for left, right, threshold in _collect_splits(tree)
-        ],
-        "leaves": [[left, right] for left, right in leaves],
+        "splits": evaluation["splits"],
+        "leaves": evaluation["leaves"],
         "upper_bound": evaluation["objective"],
         "lower_bound": lower_bounds["lower_bound"],
         "entropy_bound": lower_bounds["entropy_bound"],
@@ -675,6 +692,11 @@ def certify_tree(tree: Tree, weights: list[float], budget: int, eta: float) -> d
         "max_cost": evaluation["max_cost"],
         "per_key_costs": evaluation["per_key_costs"],
     }
+    try:
+        verify_certificate_artifact(tree, weights, budget, eta, certificate)
+    except VerificationError as error:
+        raise CertificateError(str(error)) from error
+    return certificate
 
 
 def benchmark_case(
@@ -700,11 +722,16 @@ def benchmark_case(
         "beam_objective": beam["objective"],
         "balanced_objective": balanced["objective"],
         "weighted_objective": weighted["objective"],
-        "greedy_gap_vs_exact": greedy["objective"] - exact["objective"],
-        "beam_gap_vs_exact": beam["objective"] - exact["objective"],
+        "greedy_absolute_objective_gap": greedy["objective"] - exact["objective"],
+        "beam_absolute_objective_gap": beam["objective"] - exact["objective"],
+        "greedy_relative_objective_gap": 0.0 if exact["objective"] <= EPS else (greedy["objective"] - exact["objective"]) / exact["objective"],
+        "beam_relative_objective_gap": 0.0 if exact["objective"] <= EPS else (beam["objective"] - exact["objective"]) / exact["objective"],
         "exact_gain_vs_balanced": balanced["objective"] - exact["objective"],
         "exact_gain_vs_weighted": weighted["objective"] - exact["objective"],
     }
+    # Backward-compatible aliases for downstream users of the prototype API.
+    result["greedy_gap_vs_exact"] = result["greedy_absolute_objective_gap"]
+    result["beam_gap_vs_exact"] = result["beam_absolute_objective_gap"]
     if include_certificate:
         certificate = certify_tree(beam["tree"], weights, budget, eta)
         result["beam_certified_gap"] = certificate["certified_gap"]
