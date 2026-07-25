@@ -1,0 +1,91 @@
+# CertiGap Technical Note
+
+## Formal Model
+
+Let the sorted keys be `x_1 < x_2 < ... < x_n`.
+A valid CertiGap tree consists of:
+
+- internal split nodes of the form `x <= x_k?`;
+- interval leaves `[l, r]`, each representing an unresolved contiguous rank interval.
+
+If key `x_i` lands in interval leaf `I = [l, r]` at depth `d`, then
+
+`C_T(i) = d + ceil(log2(|I|))`.
+
+For a predicted query distribution `p_hat` and distrust parameter `eta`, the robust objective is
+
+`J_eta(T) = (1 - eta) * sum_i p_hat_i C_T(i) + eta * max_i C_T(i)`.
+
+The budget constraint is
+
+`|T| <= B`,
+
+where `|T|` is the number of split nodes.
+
+## Frontier DP State
+
+For interval `[l, r]` and split budget `b`, define the Pareto frontier
+
+`F(l, r, b)`
+
+as the set of nondominated pairs `(A, M)` where:
+
+- `A` is achievable average cost contribution on `[l, r]`;
+- `M` is achievable worst-case cost contribution on `[l, r]`.
+
+A pair `(A1, M1)` dominates `(A2, M2)` if:
+
+- `A1 <= A2`,
+- `M1 <= M2`,
+- and at least one inequality is strict.
+
+Only nondominated states need to be kept, because for every `eta in [0,1]`,
+
+`(1 - eta) * A1 + eta * M1 <= (1 - eta) * A2 + eta * M2`.
+
+## DP Recurrence
+
+Every valid solution is either:
+
+1. a stop state:
+   - one leaf `[l, r]`;
+2. or a split at `k` with budgets `b_L + b_R = b - 1`.
+
+Therefore:
+
+- stop state contributes
+  `A = P(l, r) * ceil(log2(r - l + 1))`,
+  `M = ceil(log2(r - l + 1))`;
+- split state contributes
+  `A = P(l, r) + A_L + A_R`,
+  `M = 1 + max(M_L, M_R)`.
+
+This is exactly the recurrence implemented in the prototype.
+
+## Why Greedy Fails
+
+A one-step greedy policy asks whether a split is immediately beneficial.
+But CertiGap has complementarities:
+
+- a first split can look weak or neutral by itself;
+- after that split, a second split may isolate a hot interval and become highly profitable.
+
+Therefore local gain is not sufficient to recover the global optimum.
+
+The automatically generated counterexample search in `generate_counterexamples.py` is intended to turn this into a formal proposition family.
+
+## Lower Bounds
+
+The prototype currently combines:
+
+1. an entropy-style lower bound for the average-cost component;
+2. a Lagrangian lower bound obtained from unconstrained optima across budgets.
+
+For small instances, exact optimality is also computed directly, giving exact gaps.
+
+## Current Mathematical Status
+
+- exact solver: implemented and empirically verified against brute force on tiny cases;
+- robustness identity: straightforward and already proof-ready;
+- greedy counterexample family: empirical search implemented, formal asymptotic writeup still needed;
+- full theorem-grade writeup: partially packaged in `PROOF_SKETCHES.md`, still needs polished final prose.
