@@ -56,15 +56,15 @@ Why it matters:
 - it justifies the robustness parameter mathematically;
 - it turns `eta` from a tuning knob into a formal model parameter.
 
-## Best Negative Result
+## Proven Negative Result
 
-**Theorem C or Proposition C: A natural greedy baseline can be arbitrarily suboptimal**
+**Theorem C: The implemented one-step greedy baseline can be arbitrarily suboptimal**
 
-Construct an instance family where a simple prediction-only or balanced-splitting strategy wastes the split budget and incurs asymptotically worse cost than the CertiGap optimum.
+The proved family uses `n=2^m`, two central hot keys of weight `n*m`, `B=3`, and `eta=0`. Greedy rejects every first split, while an explicit three-split tree has an absolute gap lower bound asymptotic to `m-2`.
 
 Why it matters:
 
-- it proves the problem is not trivial;
+- it proves the problem is not solved by local improvement;
 - it makes the project look like research, not engineering.
 
 ## Strong Optional Result

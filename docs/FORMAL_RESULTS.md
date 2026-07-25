@@ -166,6 +166,54 @@ This is exactly the CertiGap robust objective. `QED`
 
 ## Current Formal Status
 
-Theorems A and B are now proof-complete at the mathematical level used by the prototype.
-What still remains open is not the correctness of the implemented exact DP or the contamination identity,
-but the strongest negative and asymptotic statements about greedy baselines and larger structural families.
+Theorems A and B are proof-complete at the mathematical level used by the prototype.
+Theorem C below gives a concrete asymptotic negative result for the implemented one-step greedy rule.
+The remaining open work is stronger approximation/structural results and external or machine-assisted formal review.
+
+## Theorem C: An Infinite Family Where One-Step Greedy Is Arbitrarily Suboptimal
+
+For every integer `m >= 3`, let `n = 2^m`, let `B = 3`, let `eta = 0`, and assign weight
+`W = n*m` to keys `n/2` and `n/2 + 1` and weight `1` to every other key.
+Then the implemented one-step greedy algorithm makes no split, while a valid three-split tree has objective at least
+
+`[2W(m - 2) - (n - 2)] / [2W + n - 2]`
+
+smaller than greedy. Consequently the greedy absolute objective gap grows without bound as `m` grows.
+
+### Proof
+
+The unsplit leaf has cost `m` for every key because `n = 2^m`.
+Consider any first split at threshold `k`.
+
+If `k = n/2`, both children have size `n/2`, so every key still has cost `1 + log2(n/2) = m`; this split has zero gain.
+
+If `k < n/2`, both hot keys lie in the larger right child and their cost rises to `m + 1`.
+Let `c = 1 + ceil(log2(k))` be the left-child cost. The unnormalized change in average cost is
+
+`k(c - m) + (n - k - 2) + 2W`.
+
+Since `c >= 1` and `k <= n/2 - 1`, this is at least
+
+`2W - (n/2 - 1)(m - 2) > 0`
+
+for `W = n*m`. The case `k > n/2` is symmetric. Thus no first split strictly improves the objective, and the greedy rule stops at the unsplit leaf.
+
+Now use the explicit tree with root split at `n/2`, a left split at `n/2 - 1`, and a right split at `n/2 + 1`.
+Both hot keys have cost `2`; each cold key has cost `m + 1`.
+Its objective is therefore
+
+`[4W + (n - 2)(m + 1)] / [2W + n - 2]`.
+
+Subtracting this from greedy's cost `m` gives exactly
+
+`[2W(m - 2) - (n - 2)] / [2W + n - 2]`.
+
+This is positive for every `m >= 3` and is asymptotic to `m - 2`, so the gap is unbounded. Since the optimum is no worse than this explicit tree, the same expression is a valid lower bound on greedy's gap to optimum. `QED`
+
+## Proposition D: Cost-Cap DP Exactness
+
+For a fixed cap `h`, the cost-cap recurrence stores the minimum average cost over all valid trees whose relative maximum cost is at most `h`.
+The leaf case is feasible exactly when `ceil(log2(|I|)) <= h`; every split decreases the remaining cap by one for both children.
+Induction on interval length and budget proves the recurrence. Minimizing the resulting candidates over `h` recovers the optimum of `J_eta`, because every tree appears at its own maximum cost cap.
+
+The repository cross-validates this recurrence against both the Pareto-frontier DP and brute force on the generated small-instance suite.

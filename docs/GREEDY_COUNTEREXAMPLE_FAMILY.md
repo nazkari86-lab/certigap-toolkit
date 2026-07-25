@@ -1,6 +1,26 @@
 # Greedy Counterexample Family
 
-## Informal Family
+## Proven Infinite Family
+
+For every `m >= 3`, set:
+
+- `n = 2^m`;
+- split budget `B = 3`;
+- `eta = 0`;
+- hot block `[n/2, n/2 + 1]` with each hot key weight `W = n*m`;
+- all other keys weight `1`.
+
+The one-step greedy implementation makes no split: the central split is neutral and every off-centre split makes the two hot keys one comparison more expensive. A three-split witness isolates both hot keys at depth two.
+
+The resulting greedy-to-optimum absolute objective gap is at least
+
+`[2W(m - 2) - (n - 2)] / [2W + n - 2]`,
+
+which is positive for every `m >= 3` and grows asymptotically as `m - 2`.
+
+The executable construction is `power_of_two_greedy_family(m)`; generated rows for `m=3..10` are in `results/power_of_two_greedy_family.csv`.
+
+## Historical Empirical Family
 
 The most important discovered family has the following structure:
 

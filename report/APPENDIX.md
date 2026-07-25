@@ -164,6 +164,14 @@ Therefore:
 
 This is exactly the recurrence implemented in the prototype.
 
+## Independent Cost-Cap DP
+
+The second exact solver stores `A[l, r, b, h]`: the minimum average-cost contribution for interval `[l, r]`, budget `b`, and relative maximum-cost cap `h`. For a split, both children receive cap `h - 1`; no Cartesian product of Pareto states is required. Minimizing across feasible caps recovers the robust objective.
+
+## Proof-Carrying Branch And Bound
+
+For proof-sized instances, `branch_and_bound_exact` returns an exhaustive trace. Every state either terminates one open leaf, branches on every legal threshold of that leaf, or is pruned only when its local depth-based lower bound is no better than the submitted incumbent. `verify_branch_and_bound_certificate` reconstructs all legal branches and validates every pruning inequality without importing a search solver.
+
 ## Why Greedy Fails
 
 A one-step greedy policy asks whether a split is immediately beneficial.
@@ -189,7 +197,7 @@ For small instances, the report generator also computes the exact optimum. This 
 
 - exact solver: implemented, checked against brute force on a systematic small-instance random family, and cross-checked against the C++ exact solver on reference cases;
 - robustness identity: proof draft included in `FORMAL_RESULTS.md`;
-- greedy counterexample family: empirical search implemented, formal asymptotic writeup still needed;
+- greedy counterexample family: Theorem C proves an unbounded absolute-gap family for the implemented one-step rule;
 - Theorems A and B: proof drafts are included, but they are not machine-verified or externally peer-reviewed.
 
 ## Roadmap
@@ -213,8 +221,9 @@ For small instances, the report generator also computes the exact optimum. This 
 
 ## Phase 3: Strongest Theory Layer
 
-- complete the current proof drafts for Theorems A and B with external mathematical review
-- build one clean negative-result family
+- Theorems A and B proof drafts
+- Theorem C proved infinite greedy counterexample family
+- independent cost-cap DP and proof-carrying branch-and-bound
 
 ## Phase 4: Competition Package
 

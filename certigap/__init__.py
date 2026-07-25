@@ -1,4 +1,5 @@
 from .api import CertiGapToolkit, FitResult, baseline_learned_segment
+from .branch_and_bound import branch_and_bound_exact
 from .cpp_bindings import CppCertiGap
 from .core import (
     CertificateError,
@@ -11,6 +12,7 @@ from .core import (
     benchmark_case,
     brute_force_best,
     combined_lower_bound,
+    cost_cap_dp_best,
     counterexample_search,
     certify_tree,
     entropy_lower_bound,
@@ -24,10 +26,11 @@ from .core import (
     make_distribution,
     max_cost_lower_bound,
     normalize_weights,
+    power_of_two_greedy_family,
     split_count,
     validate_problem,
 )
-from .verifier import VerificationError, verify_certificate_artifact, verify_tree
+from .verifier import VerificationError, verify_branch_and_bound_certificate, verify_certificate_artifact, verify_tree
 
 __all__ = [
     "CertificateError",
@@ -39,10 +42,12 @@ __all__ = [
     "baseline_balanced",
     "baseline_weighted_median",
     "beam_search_best",
+    "branch_and_bound_exact",
     "benchmark_case",
     "brute_force_best",
     "CertiGapToolkit",
     "combined_lower_bound",
+    "cost_cap_dp_best",
     "counterexample_search",
     "CppCertiGap",
     "certify_tree",
@@ -58,8 +63,10 @@ __all__ = [
     "make_distribution",
     "max_cost_lower_bound",
     "normalize_weights",
+    "power_of_two_greedy_family",
     "split_count",
     "validate_problem",
     "verify_certificate_artifact",
+    "verify_branch_and_bound_certificate",
     "verify_tree",
 ]

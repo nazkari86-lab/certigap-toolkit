@@ -17,8 +17,9 @@
 
 ## Phase 3: Strongest Theory Layer
 
-- complete the current proof drafts for Theorems A and B with external mathematical review
-- build one clean negative-result family
+- Theorems A and B proof drafts
+- Theorem C proved infinite greedy counterexample family
+- independent cost-cap DP and proof-carrying branch-and-bound
 
 ## Phase 4: Competition Package
 

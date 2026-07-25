@@ -14,6 +14,7 @@ Instead of fully refining the whole key space, CertiGap decides **how much order
 It ships with:
 
 - an exact dynamic program for small and medium instances;
+- an independent exact cost-cap dynamic program for cross-validation;
 - a stronger beam-search heuristic for practical use;
 - greedy and simple baseline solvers;
 - lower bounds and certificate export;
@@ -63,6 +64,7 @@ print(model.compare_baselines())
 Available solver modes:
 
 - `exact`
+- `cost_cap`
 - `beam`
 - `greedy`
 - `balanced`
@@ -82,6 +84,12 @@ Run the test suite:
 
 ```bash
 PYTHONPATH=. python3 -m unittest discover -s tests -v
+```
+
+Run the large-instance heuristic scaling benchmark (not part of fast CI):
+
+```bash
+PYTHONPATH=. python3 generate_scaling_benchmark.py --mode full
 ```
 
 Build the C++ core:
@@ -124,6 +132,8 @@ Generated artifacts live in [`results/`](results):
 - [`speed_quality_summary.md`](results/speed_quality_summary.md): solver quality/time tradeoff
 - [`counterexamples.md`](results/counterexamples.md): automatically discovered greedy-failure cases
 - [`certificate_examples.md`](results/certificate_examples.md): report-ready certificate examples
+- [`scientific_validation.md`](results/scientific_validation.md): exact cross-validation, BnB trace, and theorem-family artifacts
+- [`scaling_benchmark.md`](results/scaling_benchmark.md): median/p95 runtime and peak-memory scaling evidence
 
 Figures live in [`figures/`](figures):
 
@@ -175,6 +185,8 @@ This repository is a **reproducible research prototype and reusable toolkit**.
 What is already done:
 
 - exact solver
+- independent cost-cap exact solver
+- proof-carrying branch-and-bound for proof-sized instances
 - beam heuristic
 - baseline integrations
 - certificates
@@ -184,12 +196,13 @@ What is already done:
 - report generation
 - independent structural and certificate-arithmetic verifier
 - systematic small-instance exact validation and Python/C++ reference equivalence checks
+- a proved infinite family with an unbounded absolute gap for one-step greedy
 
 Current limits and open research work:
 
-- a fully formal asymptotic greedy-counterexample family;
 - stronger approximation or structural theorems beyond the current package.
 - large-scale performance evidence beyond the documented synthetic benchmark range.
+- external or machine-assisted formal review of the written proofs.
 
 ## Repository Map
 

@@ -15,6 +15,7 @@ from certigap import (
     hot_block_distribution,
     make_distribution,
     normalize_weights,
+    power_of_two_greedy_family,
     verify_certificate_artifact,
     verify_tree,
 )
@@ -121,6 +122,14 @@ class CertiGapTests(unittest.TestCase):
         )
         self.assertTrue(findings)
         self.assertGreaterEqual(findings[0]["greedy_gap"], findings[0]["beam_gap"] - 1e-9)
+
+    def test_power_of_two_family_has_proven_greedy_gap(self) -> None:
+        for m in range(3, 8):
+            family = power_of_two_greedy_family(m)
+            self.assertEqual(family["greedy"]["split_count"], 0)
+            observed_witness_gap = family["greedy"]["objective"] - family["witness"]["objective"]
+            self.assertAlmostEqual(observed_witness_gap, family["proven_gap_lower_bound"], places=9)
+            self.assertGreater(family["proven_gap_lower_bound"], 0.0)
 
 
 if __name__ == "__main__":

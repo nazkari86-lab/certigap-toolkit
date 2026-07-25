@@ -38,6 +38,12 @@ class FrontierState:
 
 
 @dataclass(frozen=True)
+class CostCapState:
+    average_cost: float
+    tree: Tree
+
+
+@dataclass(frozen=True)
 class SearchCandidate:
     objective: float
     average_cost: float
@@ -248,6 +254,72 @@ def frontier_dp_best(weights: list[float], budget: int, eta: float) -> dict:
     result["budget"] = budget
     result["eta"] = eta
     result["frontier_size"] = len(frontier)
+    return result
+
+
+def cost_cap_dp_best(weights: list[float], budget: int, eta: float) -> dict:
+    """Exact DP indexed by an explicit cap on the worst-case search cost.
+
+    ``solve(l, r, b, h)`` stores the minimum average-cost contribution for a
+    subtree on ``[l, r]`` using at most ``b`` splits whose relative maximum
+    cost is at most ``h``. Unlike the Pareto DP, this recurrence never takes
+    a Cartesian product of frontier states.
+    """
+    weights = validate_problem(weights, budget, eta)
+    prefix = _prefix(weights)
+    n = len(weights)
+    max_cap = budget + interval_cost(n)
+
+    @lru_cache(maxsize=None)
+    def solve(left: int, right: int, remaining_budget: int, cost_cap: int) -> CostCapState | None:
+        size = right - left + 1
+        leaf_cost = interval_cost(size)
+        best: CostCapState | None = None
+        if leaf_cost <= cost_cap:
+            best = CostCapState(
+                average_cost=_mass(prefix, left, right) * leaf_cost,
+                tree=IntervalLeaf(left, right),
+            )
+        if remaining_budget <= 0 or size <= 1 or cost_cap <= 0:
+            return best
+
+        total_mass = _mass(prefix, left, right)
+        for threshold in range(left, right):
+            for left_budget in range(remaining_budget):
+                right_budget = remaining_budget - 1 - left_budget
+                left_state = solve(left, threshold, left_budget, cost_cap - 1)
+                right_state = solve(threshold + 1, right, right_budget, cost_cap - 1)
+                if left_state is None or right_state is None:
+                    continue
+                candidate = CostCapState(
+                    average_cost=total_mass + left_state.average_cost + right_state.average_cost,
+                    tree=SplitNode(
+                        left=left,
+                        right=right,
+                        threshold=threshold,
+                        left_child=left_state.tree,
+                        right_child=right_state.tree,
+                    ),
+                )
+                if best is None or candidate.average_cost < best.average_cost - EPS:
+                    best = candidate
+        return best
+
+    candidates: list[dict] = []
+    for cost_cap in range(interval_cost(n), max_cap + 1):
+        state = solve(1, n, budget, cost_cap)
+        if state is None:
+            continue
+        evaluation = evaluate_tree(state.tree, weights, eta)
+        evaluation["cost_cap"] = cost_cap
+        candidates.append(evaluation)
+    if not candidates:
+        raise RuntimeError("cost-cap DP failed to construct a feasible tree")
+    result = min(candidates, key=lambda item: (item["objective"], item["max_cost"], item["average_cost"]))
+    result["budget"] = budget
+    result["eta"] = eta
+    result["solver"] = "cost_cap_dp"
+    result["cost_cap_states"] = solve.cache_info().currsize
     return result
 
 
@@ -653,6 +725,55 @@ def counterexample_search(
                             )
     findings.sort(key=lambda row: (row["greedy_gap"] - row["beam_gap"], row["greedy_gap"]), reverse=True)
     return findings
+
+
+def power_of_two_greedy_family(m: int) -> dict:
+    """Construct the provable infinite family where one-step greedy stops early.
+
+    For ``n=2^m``, two central keys have weight ``W=n*m``, ``B=3``, and
+    ``eta=0``. Every first split is non-improving, while a three-split tree
+    isolates both hot keys at depth two.
+    """
+    if m < 3:
+        raise ValueError("m must be at least 3")
+    n = 1 << m
+    hot_weight = float(n * m)
+    weights = hot_block_distribution(n, start=n // 2, width=2, hot_weight=hot_weight)
+    midpoint = n // 2
+    witness_tree = SplitNode(
+        left=1,
+        right=n,
+        threshold=midpoint,
+        left_child=SplitNode(
+            left=1,
+            right=midpoint,
+            threshold=midpoint - 1,
+            left_child=IntervalLeaf(1, midpoint - 1),
+            right_child=IntervalLeaf(midpoint, midpoint),
+        ),
+        right_child=SplitNode(
+            left=midpoint + 1,
+            right=n,
+            threshold=midpoint + 1,
+            left_child=IntervalLeaf(midpoint + 1, midpoint + 1),
+            right_child=IntervalLeaf(midpoint + 2, n),
+        ),
+    )
+    greedy = greedy_best(weights, budget=3, eta=0.0)
+    witness = evaluate_tree(witness_tree, weights, eta=0.0)
+    denominator = 2.0 * hot_weight + n - 2
+    proven_gap_lower_bound = (2.0 * hot_weight * (m - 2) - (n - 2)) / denominator
+    return {
+        "m": m,
+        "n": n,
+        "budget": 3,
+        "eta": 0.0,
+        "hot_weight": hot_weight,
+        "weights": weights,
+        "greedy": greedy,
+        "witness": witness,
+        "proven_gap_lower_bound": proven_gap_lower_bound,
+    }
 
 
 def certify_tree(tree: Tree, weights: list[float], budget: int, eta: float) -> dict:

@@ -8,6 +8,7 @@ from .core import (
     baseline_weighted_median,
     beam_search_best,
     certify_tree,
+    cost_cap_dp_best,
     evaluate_tree,
     frontier_dp_best,
     greedy_best,
@@ -18,7 +19,7 @@ from .core import (
 )
 
 
-SolverName = Literal["exact", "beam", "greedy", "balanced", "weighted", "binary_search", "learned_segment"]
+SolverName = Literal["exact", "cost_cap", "beam", "greedy", "balanced", "weighted", "binary_search", "learned_segment"]
 
 
 @dataclass
@@ -61,6 +62,8 @@ def _normalize_weights(weights: list[float]) -> list[float]:
 def _solver_dispatch(weights: list[float], budget: int, eta: float, solver: SolverName) -> dict:
     if solver == "exact":
         return frontier_dp_best(weights, budget, eta)
+    if solver == "cost_cap":
+        return cost_cap_dp_best(weights, budget, eta)
     if solver == "beam":
         return beam_search_best(weights, budget, eta)
     if solver == "greedy":

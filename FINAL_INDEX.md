@@ -13,6 +13,8 @@
 - [generate_counterexamples.py](generate_counterexamples.py)
 - [build_report.py](build_report.py)
 - [build_rknp_package.py](build_rknp_package.py)
+- [generate_proof_artifacts.py](generate_proof_artifacts.py)
+- [generate_scaling_benchmark.py](generate_scaling_benchmark.py)
 - [build_all.py](build_all.py)
 
 ## Main Results
@@ -21,6 +23,10 @@
 - [speed_quality_summary.md](results/speed_quality_summary.md)
 - [counterexamples.md](results/counterexamples.md)
 - [certificate_examples.md](results/certificate_examples.md)
+- [scientific_validation.md](results/scientific_validation.md)
+- [branch_and_bound_certificate.json](results/branch_and_bound_certificate.json)
+- [power_of_two_greedy_family.csv](results/power_of_two_greedy_family.csv)
+- [scaling_benchmark.md](results/scaling_benchmark.md)
 
 ## English Package
 

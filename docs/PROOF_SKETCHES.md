@@ -30,11 +30,9 @@ among all valid trees with at most `B` splits.
 7. Since compression removes only dominated states, the Pareto frontier is preserved exactly.
 8. Minimizing `(1 - eta) * average_cost + eta * max_cost` over the preserved frontier yields the true optimum.
 
-### What Still Needs To Be Written Formally
+### Formal Status
 
-- precise induction over interval length and split budget;
-- explicit domination lemma for frontier compression;
-- tie-handling and boundary cases for singleton intervals.
+The complete induction, dominance lemma, tie handling, and singleton boundary cases are written in `FORMAL_RESULTS.md`.
 
 ## Theorem B: Contamination Robustness
 
@@ -62,29 +60,9 @@ where `q` is arbitrary, then the worst-case expected cost of tree `T` under this
 - it turns `eta` into a mathematically meaningful distrust parameter;
 - it justifies the objective without informal “trade-off” language.
 
-## Proposition C: A Greedy Baseline Can Be Arbitrarily Suboptimal
+## Theorem C: A Greedy Baseline Can Be Arbitrarily Suboptimal
 
-### Intended Family
+The proved family uses `n=2^m`, `B=3`, `eta=0`, and two central hot keys of weight `W=n*m`.
+Every first split is either neutral or strictly worse, so one-step greedy stops. A fixed three-split witness isolates the two hot keys at depth two and yields an absolute gap lower bound asymptotic to `m-2`.
 
-Use a family with:
-
-- a medium-sized hot interval;
-- a cold surrounding region;
-- a split budget large enough that the best solution requires an initially neutral split followed by highly profitable refinement.
-
-### Proof Strategy
-
-1. Construct instances where no single root split improves the objective enough locally.
-2. Show that after one specific preparatory split, a second split creates a large gain by isolating the hot region.
-3. A one-step greedy algorithm refuses the first split because it evaluates only immediate improvement.
-4. The global optimum uses both splits and beats the greedy solution by a gap bounded away from zero.
-5. Scale the family so that the absolute or relative gap grows with the instance size.
-
-### Prototype Evidence
-
-The current benchmark already exposes this behavior on `hot_middle` instances:
-
-- many rows where greedy has a substantial gap;
-- beam search recovers the exact optimum.
-
-That empirical pattern is the starting point for the formal counterexample family.
+The full derivation and code generator are in `FORMAL_RESULTS.md` and `power_of_two_greedy_family`.
