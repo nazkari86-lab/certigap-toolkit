@@ -9,7 +9,7 @@
 
 - Build a partial search tree with interval leaves.
 - Optimize `(1 - eta) * average_cost + eta * max_cost`.
-- Return a solution with a checker and certified bounds.
+- Return a solution with a checker and independently recomputed entropy bounds.
 
 ## Panel 3: Algorithms
 

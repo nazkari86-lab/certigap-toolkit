@@ -32,9 +32,23 @@ def _validate_inputs(weights: list[float], budget: int, eta: float) -> None:
         raise VerificationError("weights must have positive total mass")
 
 
+def _normalized_weights(weights: list[float]) -> list[float]:
+    _validate_inputs(weights, budget=0, eta=0.0)
+    total = sum(weights)
+    return [weight / total for weight in weights]
+
+
+def _entropy_bound(weights: list[float], budget: int, eta: float) -> float:
+    probabilities = _normalized_weights(weights)
+    entropy = -sum(weight * log2(weight) for weight in probabilities if weight > EPS)
+    largest_leaf = ceil(len(probabilities) / (budget + 1))
+    return (1.0 - eta) * entropy + eta * _interval_cost(largest_leaf)
+
+
 def verify_tree(tree: Any, weights: list[float], budget: int, eta: float) -> dict:
     """Validate a tree and recompute its search costs without using a solver."""
     _validate_inputs(weights, budget, eta)
+    weights = _normalized_weights(weights)
     n = len(weights)
     per_key_costs = [0] * n
     covered = [False] * n
@@ -97,10 +111,15 @@ def verify_certificate_artifact(
     eta: float,
     artifact: dict,
 ) -> dict:
-    """Check certificate arithmetic supplied by a solver-produced witness artifact."""
+    """Independently verify an entropy-bound witness and its reported gap."""
     evaluation = verify_tree(tree, weights, budget, eta)
     upper_bound = float(artifact["upper_bound"])
     lower_bound = float(artifact["lower_bound"])
+    if artifact.get("bound_type") != "entropy":
+        raise VerificationError("ordinary certificates support only recomputable entropy bounds")
+    recomputed_bound = _entropy_bound(weights, budget, eta)
+    if abs(lower_bound - recomputed_bound) > EPS:
+        raise VerificationError("lower bound does not match the recomputed entropy bound")
     if not isfinite(lower_bound) or lower_bound < -EPS:
         raise VerificationError("lower bound must be finite and non-negative")
     if abs(upper_bound - evaluation["objective"]) > EPS:
@@ -108,13 +127,13 @@ def verify_certificate_artifact(
     if lower_bound > upper_bound + EPS:
         raise VerificationError("lower bound exceeds upper bound")
     expected_gap = None if lower_bound <= EPS else (upper_bound - lower_bound) / lower_bound
-    supplied_gap = artifact.get("certified_gap")
+    supplied_gap = artifact.get("reported_bound_gap")
     if expected_gap is None:
         if supplied_gap is not None:
             raise VerificationError("certificate gap must be null for a zero lower bound")
     elif supplied_gap is None or abs(float(supplied_gap) - expected_gap) > EPS:
         raise VerificationError("certificate gap does not match its bounds")
-    return evaluation | {"certified_gap": expected_gap}
+    return evaluation | {"reported_bound_gap": expected_gap, "bound_type": "entropy"}
 
 
 def _serialized_leaf_depths(tree: dict, n: int, depth: int = 0) -> list[tuple[int, int, int]]:
@@ -188,6 +207,7 @@ def verify_branch_and_bound_certificate(weights: list[float], budget: int, eta: 
     bound at least as large as the submitted incumbent.
     """
     _validate_inputs(weights, budget, eta)
+    weights = _normalized_weights(weights)
     n = len(weights)
     incumbent = artifact.get("incumbent")
     if not isinstance(incumbent, dict) or not isinstance(incumbent.get("tree"), dict):

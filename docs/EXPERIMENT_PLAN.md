@@ -7,7 +7,7 @@ Show that CertiGap is:
 1. correct on small instances;
 2. competitive on medium instances;
 3. meaningfully better than simple baselines on skewed workloads;
-4. honest about uncertainty through certified gaps.
+4. honest about uncertainty through independently recomputed entropy bounds.
 
 ## Instance Families
 
@@ -30,7 +30,7 @@ Show that CertiGap is:
 
 - `n = 12..32`
 - compare exact DP, greedy, balanced, weighted median
-- report certified gaps
+- report entropy-bound gaps and label them as bounds, not optimality certificates
 
 ### Large Prototype Regime
 
@@ -44,7 +44,7 @@ Show that CertiGap is:
 - average cost
 - worst-case cost
 - lower bound
-- certified gap
+- reported entropy-bound gap
 - exact gap when exact optimum is available
 - build time
 
@@ -61,4 +61,4 @@ Show that CertiGap is:
 - exact DP matches brute force on all tiny cases;
 - exact beats or matches simple baselines on skewed families;
 - gains disappear or shrink on uniform workloads;
-- certified gaps stay reasonably small on medium cases.
+- entropy-bound gaps stay reasonably small on medium cases.

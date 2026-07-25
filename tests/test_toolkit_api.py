@@ -36,7 +36,7 @@ class ToolkitApiTests(unittest.TestCase):
         )
         certificate = model.export_certificate()
         self.assertEqual(certificate["bound_source"], "entropy_only")
-        self.assertIsNotNone(certificate["certified_gap"])
+        self.assertIsNotNone(certificate["reported_bound_gap"])
 
 
 if __name__ == "__main__":

@@ -85,6 +85,13 @@ class CertiGapTests(unittest.TestCase):
         weights = normalize_weights([2, 3, 5])
         self.assertAlmostEqual(sum(weights), 1.0, places=9)
 
+    def test_solvers_normalize_frequency_counts(self) -> None:
+        counts = [2, 3, 5]
+        probabilities = normalize_weights(counts)
+        counted = frontier_dp_best(counts, budget=1, eta=0.15)
+        normalized = frontier_dp_best(probabilities, budget=1, eta=0.15)
+        self.assertAlmostEqual(counted["objective"], normalized["objective"], places=9)
+
     def test_problem_validation_rejects_invalid_parameters(self) -> None:
         with self.assertRaises(ValueError):
             frontier_dp_best([0.5, -0.5], budget=1, eta=0.2)
@@ -103,7 +110,17 @@ class CertiGapTests(unittest.TestCase):
                 weights,
                 budget=1,
                 eta=0.0,
-                artifact={"upper_bound": evaluation["objective"], "lower_bound": evaluation["objective"] + 1.0, "certified_gap": 0.0},
+                artifact={"upper_bound": evaluation["objective"], "lower_bound": evaluation["objective"] + 1.0, "bound_type": "entropy", "reported_bound_gap": 0.0},
+            )
+
+    def test_verifier_rejects_unrecomputed_lower_bound(self) -> None:
+        weights = [1, 3, 2, 4]
+        tree = IntervalLeaf(1, 4)
+        evaluation = verify_tree(tree, weights, budget=0, eta=0.0)
+        with self.assertRaises(ValueError):
+            verify_certificate_artifact(
+                tree, weights, budget=0, eta=0.0,
+                artifact={"upper_bound": evaluation["objective"], "lower_bound": evaluation["objective"], "bound_type": "entropy", "reported_bound_gap": 0.0},
             )
 
     def test_hot_block_distribution(self) -> None:

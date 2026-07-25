@@ -7,7 +7,7 @@ The project contributes:
 
 1. an exact frontier dynamic program for the budgeted robust partial-search model;
 2. a stronger beam-search heuristic for larger instances;
-3. a structural checker that recomputes the objective and attaches lower bounds plus certified gaps;
+3. a structural checker that recomputes the objective and an entropy lower bound;
 4. a reproducible synthetic benchmark suite.
 
 Current prototype evidence:

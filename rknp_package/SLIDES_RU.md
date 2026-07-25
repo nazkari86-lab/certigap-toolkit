@@ -37,7 +37,7 @@ CertiGap: робастные частичные поисковые деревь�
 
 - upper bound;
 - lower bound;
-- certified gap;
+- independently recomputed entropy bound;
 - exact gap на малых случаях.
 
 ## Слайд 7. Вывод

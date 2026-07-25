@@ -193,6 +193,8 @@ Russian RKNP package:
 - [`docs/PRACTITIONER_GUIDE.md`](docs/PRACTITIONER_GUIDE.md)
 - [`docs/TECHNICAL_BLOG.md`](docs/TECHNICAL_BLOG.md)
 - [`docs/ARXIV_NOTE.md`](docs/ARXIV_NOTE.md)
+- [`docs/COMPLEXITY.md`](docs/COMPLEXITY.md)
+- [`docs/RELATED_WORK.md`](docs/RELATED_WORK.md)
 
 ## Project Status
 
@@ -205,6 +207,7 @@ What is already done:
 - proof-carrying branch-and-bound for proof-sized instances
 - beam heuristic
 - baseline integrations
+- `binary_search` is an unbudgeted full-reference line, not a budget-matched competitor
 - certificates
 - benchmarks
 - counterexample search

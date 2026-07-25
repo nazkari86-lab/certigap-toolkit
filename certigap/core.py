@@ -66,9 +66,12 @@ def validate_problem(weights: Iterable[float], budget: int, eta: float) -> list[
         raise ValueError("eta must lie in [0, 1]")
     if any(not isfinite(value) or value < 0.0 for value in values):
         raise ValueError("weights must be finite and non-negative")
-    if sum(values) <= EPS:
+    total = sum(values)
+    if total <= EPS:
         raise ValueError("weights must have positive total mass")
-    return values
+    # All public solvers accept counts or probabilities, but internally the
+    # contamination model is defined only on a probability distribution.
+    return [value / total for value in values]
 
 
 def interval_cost(size: int) -> int:
@@ -112,11 +115,7 @@ def make_distribution(kind: str, n: int) -> list[float]:
 
 
 def normalize_weights(weights: Iterable[float]) -> list[float]:
-    values = validate_problem(weights, budget=0, eta=0.0)
-    total = sum(values)
-    if total <= EPS:
-        raise ValueError("weights must have positive total mass")
-    return [value / total for value in values]
+    return validate_problem(weights, budget=0, eta=0.0)
 
 
 def hot_block_distribution(n: int, start: int, width: int, hot_weight: float, cold_weight: float = 1.0) -> list[float]:
@@ -783,16 +782,17 @@ def certify_tree(tree: Tree, weights: list[float], budget: int, eta: float) -> d
         evaluation = verify_tree(tree, weights, budget, eta)
     except VerificationError as error:
         raise CertificateError(str(error)) from error
-    use_lagrangian = len(weights) <= 18
-    lower_bounds = combined_lower_bound(weights, budget, eta, use_lagrangian=use_lagrangian)
+    # A normal certificate may claim only a bound that the standalone verifier
+    # can recompute from the input. Lagrangian/exact gaps remain report values.
+    lower_bounds = combined_lower_bound(weights, budget, eta, use_lagrangian=False)
     exact_optimum = None
     exact_gap = None
     if len(weights) <= 18:
         exact_optimum = frontier_dp_best(weights, budget, eta)["objective"]
         exact_gap = 0.0 if exact_optimum <= EPS else (evaluation["objective"] - exact_optimum) / exact_optimum
-    certified_gap = None
+    reported_bound_gap = None
     if lower_bounds["lower_bound"] > EPS:
-        certified_gap = (evaluation["objective"] - lower_bounds["lower_bound"]) / lower_bounds["lower_bound"]
+        reported_bound_gap = (evaluation["objective"] - lower_bounds["lower_bound"]) / lower_bounds["lower_bound"]
     certificate = {
         "n": n,
         "budget": budget,
@@ -801,12 +801,13 @@ def certify_tree(tree: Tree, weights: list[float], budget: int, eta: float) -> d
         "leaves": evaluation["leaves"],
         "upper_bound": evaluation["objective"],
         "lower_bound": lower_bounds["lower_bound"],
+        "bound_type": "entropy",
         "entropy_bound": lower_bounds["entropy_bound"],
         "lagrangian_bound": lower_bounds["lagrangian_bound"],
         "dual_lambda": lower_bounds["dual_lambda"],
         "best_unconstrained_budget": lower_bounds["best_unconstrained_budget"],
         "bound_source": lower_bounds["source"],
-        "certified_gap": certified_gap,
+        "reported_bound_gap": reported_bound_gap,
         "exact_optimum": exact_optimum,
         "exact_gap": exact_gap,
         "average_cost": evaluation["average_cost"],
@@ -855,6 +856,6 @@ def benchmark_case(
     result["beam_gap_vs_exact"] = result["beam_absolute_objective_gap"]
     if include_certificate:
         certificate = certify_tree(beam["tree"], weights, budget, eta)
-        result["beam_certified_gap"] = certificate["certified_gap"]
+        result["beam_reported_entropy_bound_gap"] = certificate["reported_bound_gap"]
         result["beam_lower_bound"] = certificate["lower_bound"]
     return result

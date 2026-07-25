@@ -86,7 +86,7 @@ Show that CertiGap is:
 1. correct on small instances;
 2. competitive on medium instances;
 3. meaningfully better than simple baselines on skewed workloads;
-4. honest about uncertainty through certified gaps.
+4. honest about uncertainty through independently recomputed entropy bounds.
 
 ## Instance Families
 
@@ -109,7 +109,7 @@ Show that CertiGap is:
 
 - `n = 12..32`
 - compare exact DP, greedy, balanced, weighted median
-- report certified gaps
+- report entropy-bound gaps and label them as bounds, not optimality certificates
 
 ### Large Prototype Regime
 
@@ -123,7 +123,7 @@ Show that CertiGap is:
 - average cost
 - worst-case cost
 - lower bound
-- certified gap
+- reported entropy-bound gap
 - exact gap when exact optimum is available
 - build time
 
@@ -140,7 +140,7 @@ Show that CertiGap is:
 - exact DP matches brute force on all tiny cases;
 - exact beats or matches simple baselines on skewed families;
 - gains disappear or shrink on uniform workloads;
-- certified gaps stay reasonably small on medium cases.
+- entropy-bound gaps stay reasonably small on medium cases.
 
 ## Current Results
 
@@ -190,11 +190,11 @@ See `counterexamples.md` for automatically discovered hot-block families where o
 
 ## Small Cases With Exact Reference
 
-- Exact mean time: `2.567 ms`
-- Beam mean time: `4.573 ms`
-- Greedy mean time: `0.212 ms`
-- Balanced mean time: `0.012 ms`
-- Weighted mean time: `0.017 ms`
+- Exact mean time: `3.028 ms`
+- Beam mean time: `5.181 ms`
+- Greedy mean time: `0.242 ms`
+- Balanced mean time: `0.014 ms`
+- Weighted mean time: `0.019 ms`
 - Beam mean absolute objective gap vs exact: `0.000979`
 - Greedy mean absolute objective gap vs exact: `0.114157`
 - Balanced mean absolute objective gap vs exact: `0.447373`
@@ -204,10 +204,10 @@ See `counterexamples.md` for automatically discovered hot-block families where o
 
 ## Large Cases Without Exact Reference
 
-- Beam mean time: `50.828 ms`
-- Greedy mean time: `1.341 ms`
-- Balanced mean time: `0.022 ms`
-- Weighted mean time: `0.037 ms`
+- Beam mean time: `53.550 ms`
+- Greedy mean time: `1.452 ms`
+- Balanced mean time: `0.024 ms`
+- Weighted mean time: `0.040 ms`
 
 ## Solver Tradeoff
 
