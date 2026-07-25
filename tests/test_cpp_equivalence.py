@@ -13,8 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 class CppEquivalenceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        if not library_path().exists():
-            subprocess.run([sys.executable, "build_cpp_core.py"], cwd=ROOT, check=True)
+        # Rebuild so this test cannot accidentally exercise a stale local dylib.
+        subprocess.run([sys.executable, "build_cpp_core.py"], cwd=ROOT, check=True)
         cls.cpp = CppCertiGap()
 
     def test_cpp_matches_python_exact_on_reference_cases(self) -> None:
@@ -38,3 +38,4 @@ class CppEquivalenceTests(unittest.TestCase):
         python_result = frontier_dp_best(weights, budget=3, eta=0.15)
         self.assertLessEqual(python_result["objective"], result["objective"] + 1e-5)
         self.assertEqual(len(result["per_key_costs"]), len(weights))
+        self.assertEqual(result["tree"]["interval"], [1, len(weights)])

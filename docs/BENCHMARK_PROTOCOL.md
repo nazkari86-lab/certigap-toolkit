@@ -69,3 +69,16 @@ It evaluates all thresholds on small leaves and deterministic endpoints,
 uniform positions, and mass quantiles on larger leaves. This is a scalable
 heuristic, not an exact or proof-carrying solver: it has no approximation
 guarantee and does not export a certificate.
+
+## Post-Build Lookup Latency
+
+`generate_lookup_benchmark.py` compiles an executable routing benchmark and
+measures only lookup after construction. It compares the exported pruned
+CertiGap tree with balanced and weighted-median decision trees plus
+`std::lower_bound`, reporting median/p95 nanoseconds per query and a scoped
+routing-node footprint. The generated report records CPU-level and allocator
+limits; it is not a hardware-routing or external-library claim.
+
+```bash
+PYTHONPATH=. python3 generate_lookup_benchmark.py
+```

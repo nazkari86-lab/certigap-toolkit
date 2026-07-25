@@ -110,6 +110,12 @@ Run the C++ large-n scaling artifact:
 PYTHONPATH=. python3 generate_cpp_scaling.py
 ```
 
+Run the post-build C++ lookup-latency microbenchmark:
+
+```bash
+PYTHONPATH=. python3 generate_lookup_benchmark.py
+```
+
 ## C++ Core And Bindings
 
 The C++ shared library is built from:
@@ -148,6 +154,7 @@ Generated artifacts live in [`results/`](results):
 - [`scaling_benchmark.md`](results/scaling_benchmark.md): median/p95 runtime and peak-memory scaling evidence
 - [`benchmark_provenance.json`](results/benchmark_provenance.json): dataset source, checksum, aggregation, and measurement plan
 - [`cpp_pruned_scaling.md`](results/cpp_pruned_scaling.md): C++ pruned-beam measurements through 100,000 keys
+- [`cpp_lookup_latency.md`](results/cpp_lookup_latency.md): post-build lookup latency and routing-footprint microbenchmark
 - [`pruning_validation.md`](results/pruning_validation.md): candidate-limit ablation against the exact oracle
 - [`temporal_holdout.md`](results/temporal_holdout.md): early-to-late MovieLens shift evaluation
 

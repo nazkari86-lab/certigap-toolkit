@@ -16,6 +16,7 @@
 - [generate_proof_artifacts.py](generate_proof_artifacts.py)
 - [generate_scaling_benchmark.py](generate_scaling_benchmark.py)
 - [generate_cpp_scaling.py](generate_cpp_scaling.py)
+- [generate_lookup_benchmark.py](generate_lookup_benchmark.py)
 - [generate_pruning_validation.py](generate_pruning_validation.py)
 - [generate_temporal_holdout.py](generate_temporal_holdout.py)
 - [benchmark_datasets.py](certigap/benchmark_datasets.py)
@@ -33,6 +34,7 @@
 - [scaling_benchmark.md](results/scaling_benchmark.md)
 - [benchmark_provenance.json](results/benchmark_provenance.json)
 - [cpp_pruned_scaling.md](results/cpp_pruned_scaling.md)
+- [cpp_lookup_latency.md](results/cpp_lookup_latency.md)
 - [pruning_validation.md](results/pruning_validation.md)
 - [temporal_holdout.md](results/temporal_holdout.md)
 

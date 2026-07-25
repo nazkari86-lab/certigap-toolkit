@@ -179,7 +179,39 @@ private:
 };
 
 struct FastLeaf { int l; int r; int depth; };
-struct FastCandidate { std::vector<FastLeaf> leaves; double average; int maximum; };
+struct FastCandidate {
+    std::vector<FastLeaf> leaves;
+    double average;
+    int maximum;
+    std::shared_ptr<Node> tree;
+};
+
+static void dump_tree(const std::shared_ptr<Node>& node, std::ostringstream& out);
+
+// Return a fresh immutable path from root to the leaf being split.  Keeping
+// this tree alongside the beam state makes the heuristic result executable.
+static std::shared_ptr<Node> replace_leaf_with_split(
+    const std::shared_ptr<Node>& node, int l, int r, int threshold
+) {
+    if (node->is_leaf) {
+        if (node->l != l || node->r != r) return node;
+        auto left = std::make_shared<Node>();
+        left->l = l; left->r = threshold;
+        auto right = std::make_shared<Node>();
+        right->l = threshold + 1; right->r = r;
+        auto split = std::make_shared<Node>();
+        split->l = l; split->r = r; split->threshold = threshold; split->is_leaf = false;
+        split->left = std::move(left); split->right = std::move(right);
+        return split;
+    }
+    auto left = replace_leaf_with_split(node->left, l, r, threshold);
+    auto right = replace_leaf_with_split(node->right, l, r, threshold);
+    if (left == node->left && right == node->right) return node;
+    auto copy = std::make_shared<Node>();
+    copy->l = node->l; copy->r = node->r; copy->threshold = node->threshold; copy->is_leaf = false;
+    copy->left = std::move(left); copy->right = std::move(right);
+    return copy;
+}
 
 static std::vector<int> pruned_thresholds(const std::vector<double>& pref, const FastLeaf& leaf, int limit) {
     std::set<int> points;
@@ -200,16 +232,15 @@ static std::vector<int> pruned_thresholds(const std::vector<double>& pref, const
     return out;
 }
 
-extern "C" void* certigap_pruned_beam_json(const double* weights, int n, int budget, double eta, int beam_width, int candidate_limit) {
-    if (weights == nullptr || n <= 0 || budget < 0 || beam_width <= 0 || candidate_limit < 4 || !std::isfinite(eta) || eta < 0.0 || eta > 1.0) return nullptr;
-    int requested_budget = budget;
-    budget = std::min(budget, n - 1);
+static FastCandidate pruned_beam_solve(
+    const std::vector<double>& normalized, int budget, double eta, int beam_width, int candidate_limit
+) {
+    int n = static_cast<int>(normalized.size()) - 1;
     std::vector<double> pref(n + 1, 0.0);
-    for (int i = 1; i <= n; ++i) { if (!std::isfinite(weights[i - 1]) || weights[i - 1] < 0.0) return nullptr; pref[i] = pref[i - 1] + weights[i - 1]; }
-    if (pref[n] <= 0.0) return nullptr;
-    for (int i = 1; i <= n; ++i) pref[i] /= pref[n];
+    for (int i = 1; i <= n; ++i) pref[i] = pref[i - 1] + normalized[i];
     auto cost = [](const FastLeaf& leaf) { return leaf.depth + interval_cost(leaf.r - leaf.l + 1); };
-    FastCandidate start{{{1, n, 0}}, static_cast<double>(interval_cost(n)), interval_cost(n)};
+    auto root = std::make_shared<Node>(); root->l = 1; root->r = n;
+    FastCandidate start{{{1, n, 0}}, static_cast<double>(interval_cost(n)), interval_cost(n), root};
     std::vector<FastCandidate> beam{start}; FastCandidate best = start;
     auto objective = [eta](const FastCandidate& c) { return (1.0 - eta) * c.average + eta * c.maximum; };
     for (int used = 0; used < budget; ++used) {
@@ -220,6 +251,7 @@ extern "C" void* certigap_pruned_beam_json(const double* weights, int n, int bud
             for (int k : pruned_thresholds(pref, leaf, candidate_limit)) {
                 FastLeaf left{leaf.l, k, leaf.depth + 1}, right{k + 1, leaf.r, leaf.depth + 1};
                 FastCandidate child = candidate; child.leaves[index] = left; child.leaves.insert(child.leaves.begin() + index + 1, right);
+                child.tree = replace_leaf_with_split(candidate.tree, leaf.l, leaf.r, k);
                 child.average += (pref[k] - pref[leaf.l - 1]) * cost(left) + (pref[leaf.r] - pref[k]) * cost(right) - old_mass * old_cost;
                 child.maximum = 0; for (const auto& item : child.leaves) child.maximum = std::max(child.maximum, cost(item));
                 next.push_back(std::move(child));
@@ -230,10 +262,26 @@ extern "C" void* certigap_pruned_beam_json(const double* weights, int n, int bud
         if (static_cast<int>(next.size()) > beam_width) next.resize(beam_width);
         beam = std::move(next); if (objective(beam.front()) + EPS < objective(best)) best = beam.front();
     }
+    return best;
+}
+
+extern "C" void* certigap_pruned_beam_json(const double* weights, int n, int budget, double eta, int beam_width, int candidate_limit) {
+    if (weights == nullptr || n <= 0 || budget < 0 || beam_width <= 0 || candidate_limit < 4 || !std::isfinite(eta) || eta < 0.0 || eta > 1.0) return nullptr;
+    int requested_budget = budget;
+    budget = std::min(budget, n - 1);
+    std::vector<double> normalized(n + 1, 0.0);
+    for (int i = 1; i <= n; ++i) { if (!std::isfinite(weights[i - 1]) || weights[i - 1] < 0.0) return nullptr; normalized[i] = normalized[i - 1] + weights[i - 1]; }
+    if (normalized[n] <= 0.0) return nullptr;
+    double total = normalized[n];
+    for (int i = n; i >= 1; --i) normalized[i] = weights[i - 1] / total;
+    auto cost = [](const FastLeaf& leaf) { return leaf.depth + interval_cost(leaf.r - leaf.l + 1); };
+    FastCandidate best = pruned_beam_solve(normalized, budget, eta, beam_width, candidate_limit);
+    auto objective = [eta](const FastCandidate& c) { return (1.0 - eta) * c.average + eta * c.maximum; };
     std::vector<int> per_key(n + 1, 0); for (const auto& leaf : best.leaves) for (int i = leaf.l; i <= leaf.r; ++i) per_key[i] = cost(leaf);
     std::ostringstream out; out.setf(std::ios::fixed); out.precision(6);
     out << "{\"n\":" << n << ",\"budget\":" << budget << ",\"requested_budget\":" << requested_budget << ",\"eta\":" << eta << ",\"average_cost\":" << best.average << ",\"max_cost\":" << best.maximum << ",\"objective\":" << objective(best) << ",\"beam_width\":" << beam_width << ",\"candidate_limit\":" << candidate_limit << ",\"per_key_costs\":[";
-    for (int i = 1; i <= n; ++i) { if (i > 1) out << ","; out << per_key[i]; } out << "]}";
+    for (int i = 1; i <= n; ++i) { if (i > 1) out << ","; out << per_key[i]; }
+    out << "],\"tree\":"; dump_tree(best.tree, out); out << "}";
     std::string payload = out.str(); char* raw = static_cast<char*>(std::malloc(payload.size() + 1)); if (!raw) return nullptr; std::memcpy(raw, payload.c_str(), payload.size() + 1); return raw;
 }
 
