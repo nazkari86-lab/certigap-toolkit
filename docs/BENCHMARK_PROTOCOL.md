@@ -61,3 +61,11 @@ PYTHONPATH=. python3 generate_scaling_benchmark.py --mode max --datasets all
 Use `--datasets real` to fail closed when any real source cannot be fetched.
 Use `--datasets synthetic` only for offline stress testing; it must not be
 described as a real-data result.
+
+## C++ Large-N Heuristic
+
+`generate_cpp_scaling.py` measures a separate candidate-pruned C++ beam path.
+It evaluates all thresholds on small leaves and deterministic endpoints,
+uniform positions, and mass quantiles on larger leaves. This is a scalable
+heuristic, not an exact or proof-carrying solver: it has no approximation
+guarantee and does not export a certificate.

@@ -15,6 +15,7 @@
 - [build_rknp_package.py](build_rknp_package.py)
 - [generate_proof_artifacts.py](generate_proof_artifacts.py)
 - [generate_scaling_benchmark.py](generate_scaling_benchmark.py)
+- [generate_cpp_scaling.py](generate_cpp_scaling.py)
 - [benchmark_datasets.py](certigap/benchmark_datasets.py)
 - [build_all.py](build_all.py)
 
@@ -29,6 +30,7 @@
 - [power_of_two_greedy_family.csv](results/power_of_two_greedy_family.csv)
 - [scaling_benchmark.md](results/scaling_benchmark.md)
 - [benchmark_provenance.json](results/benchmark_provenance.json)
+- [cpp_pruned_scaling.md](results/cpp_pruned_scaling.md)
 
 ## English Package
 

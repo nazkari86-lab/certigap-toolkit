@@ -20,6 +20,7 @@ It ships with:
 - lower bounds and certificate export;
 - benchmark, counterexample, and report-generation pipelines;
 - a C++ core plus Python bindings.
+- a candidate-pruned C++ beam heuristic for large ordered workloads.
 
 License:
 
@@ -103,6 +104,12 @@ Build the C++ core:
 PYTHONPATH=. python3 build_cpp_core.py
 ```
 
+Run the C++ large-n scaling artifact:
+
+```bash
+PYTHONPATH=. python3 generate_cpp_scaling.py
+```
+
 ## C++ Core And Bindings
 
 The C++ shared library is built from:
@@ -140,6 +147,7 @@ Generated artifacts live in [`results/`](results):
 - [`scientific_validation.md`](results/scientific_validation.md): exact cross-validation, BnB trace, and theorem-family artifacts
 - [`scaling_benchmark.md`](results/scaling_benchmark.md): median/p95 runtime and peak-memory scaling evidence
 - [`benchmark_provenance.json`](results/benchmark_provenance.json): dataset source, checksum, aggregation, and measurement plan
+- [`cpp_pruned_scaling.md`](results/cpp_pruned_scaling.md): C++ pruned-beam measurements through 100,000 keys
 
 Figures live in [`figures/`](figures):
 

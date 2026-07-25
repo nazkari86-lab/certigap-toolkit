@@ -31,3 +31,10 @@ class CppEquivalenceTests(unittest.TestCase):
             self.assertAlmostEqual(cpp_result["objective"], python_result["objective"], places=5)
             self.assertAlmostEqual(cpp_result["average_cost"], python_result["average_cost"], places=5)
             self.assertEqual(cpp_result["max_cost"], python_result["max_cost"])
+
+    def test_cpp_pruned_beam_matches_full_candidates_on_small_case(self) -> None:
+        weights = normalize_weights([1, 4, 2, 7, 3, 5, 1, 9])
+        result = self.cpp.pruned_beam(weights, budget=3, eta=0.15, beam_width=16, candidate_limit=32)
+        python_result = frontier_dp_best(weights, budget=3, eta=0.15)
+        self.assertLessEqual(python_result["objective"], result["objective"] + 1e-5)
+        self.assertEqual(len(result["per_key_costs"]), len(weights))
