@@ -16,6 +16,8 @@
 - [generate_proof_artifacts.py](generate_proof_artifacts.py)
 - [generate_scaling_benchmark.py](generate_scaling_benchmark.py)
 - [generate_cpp_scaling.py](generate_cpp_scaling.py)
+- [generate_pruning_validation.py](generate_pruning_validation.py)
+- [generate_temporal_holdout.py](generate_temporal_holdout.py)
 - [benchmark_datasets.py](certigap/benchmark_datasets.py)
 - [build_all.py](build_all.py)
 
@@ -31,6 +33,8 @@
 - [scaling_benchmark.md](results/scaling_benchmark.md)
 - [benchmark_provenance.json](results/benchmark_provenance.json)
 - [cpp_pruned_scaling.md](results/cpp_pruned_scaling.md)
+- [pruning_validation.md](results/pruning_validation.md)
+- [temporal_holdout.md](results/temporal_holdout.md)
 
 ## English Package
 
@@ -56,6 +60,7 @@
 - [THEOREM_GOALS.md](docs/THEOREM_GOALS.md)
 - [EXPERIMENT_PLAN.md](docs/EXPERIMENT_PLAN.md)
 - [BENCHMARK_PROTOCOL.md](docs/BENCHMARK_PROTOCOL.md)
+- [SCIENTIFIC_CLOSURE.md](docs/SCIENTIFIC_CLOSURE.md)
 - [RKNP_ISEF_POSITIONING.md](docs/RKNP_ISEF_POSITIONING.md)
 
 ## Status

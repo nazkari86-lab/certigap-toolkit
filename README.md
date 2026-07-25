@@ -148,6 +148,8 @@ Generated artifacts live in [`results/`](results):
 - [`scaling_benchmark.md`](results/scaling_benchmark.md): median/p95 runtime and peak-memory scaling evidence
 - [`benchmark_provenance.json`](results/benchmark_provenance.json): dataset source, checksum, aggregation, and measurement plan
 - [`cpp_pruned_scaling.md`](results/cpp_pruned_scaling.md): C++ pruned-beam measurements through 100,000 keys
+- [`pruning_validation.md`](results/pruning_validation.md): candidate-limit ablation against the exact oracle
+- [`temporal_holdout.md`](results/temporal_holdout.md): early-to-late MovieLens shift evaluation
 
 Figures live in [`figures/`](figures):
 
@@ -217,6 +219,7 @@ Current limits and open research work:
 - stronger approximation or structural theorems beyond the current package.
 - large-scale performance evidence beyond the documented synthetic benchmark range.
 - external or machine-assisted formal review of the written proofs.
+- approximation guarantees for the candidate-pruned C++ heuristic.
 
 ## Repository Map
 
