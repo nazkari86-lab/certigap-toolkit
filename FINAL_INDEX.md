@@ -15,6 +15,7 @@
 - [build_rknp_package.py](build_rknp_package.py)
 - [generate_proof_artifacts.py](generate_proof_artifacts.py)
 - [generate_scaling_benchmark.py](generate_scaling_benchmark.py)
+- [benchmark_datasets.py](certigap/benchmark_datasets.py)
 - [build_all.py](build_all.py)
 
 ## Main Results
@@ -27,6 +28,7 @@
 - [branch_and_bound_certificate.json](results/branch_and_bound_certificate.json)
 - [power_of_two_greedy_family.csv](results/power_of_two_greedy_family.csv)
 - [scaling_benchmark.md](results/scaling_benchmark.md)
+- [benchmark_provenance.json](results/benchmark_provenance.json)
 
 ## English Package
 
@@ -51,14 +53,15 @@
 - [THEME.md](docs/THEME.md)
 - [THEOREM_GOALS.md](docs/THEOREM_GOALS.md)
 - [EXPERIMENT_PLAN.md](docs/EXPERIMENT_PLAN.md)
+- [BENCHMARK_PROTOCOL.md](docs/BENCHMARK_PROTOCOL.md)
 - [RKNP_ISEF_POSITIONING.md](docs/RKNP_ISEF_POSITIONING.md)
 
 ## Status
 
-The package is a reproducible research prototype. Its claims are limited to the documented synthetic benchmark range and its checked small-instance validation suite.
+The package is a reproducible research prototype. Its claims are limited to the documented benchmark protocol, real-workload key ordering, and checked small-instance validation suite.
 
 Open research work:
 
 - a fully formal asymptotic greedy-counterexample family;
 - any stronger approximation or structural theorem beyond the current prototype.
-- large-scale runtime and memory evidence beyond the current benchmark range.
+- independent replication of the runtime and memory benchmark on other machines.

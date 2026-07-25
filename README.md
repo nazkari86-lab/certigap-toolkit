@@ -89,8 +89,13 @@ PYTHONPATH=. python3 -m unittest discover -s tests -v
 Run the large-instance heuristic scaling benchmark (not part of fast CI):
 
 ```bash
-PYTHONPATH=. python3 generate_scaling_benchmark.py --mode full
+PYTHONPATH=. python3 generate_scaling_benchmark.py --mode max --datasets all
 ```
+
+This runs deterministic stress distributions and public observed-popularity
+workloads from MovieLens, UCI Online Retail, and Wikimedia. Raw data is cached
+locally; every result records URL, SHA-256, aggregation rule, and key ordering.
+See [`docs/BENCHMARK_PROTOCOL.md`](docs/BENCHMARK_PROTOCOL.md) for limitations.
 
 Build the C++ core:
 
@@ -134,6 +139,7 @@ Generated artifacts live in [`results/`](results):
 - [`certificate_examples.md`](results/certificate_examples.md): report-ready certificate examples
 - [`scientific_validation.md`](results/scientific_validation.md): exact cross-validation, BnB trace, and theorem-family artifacts
 - [`scaling_benchmark.md`](results/scaling_benchmark.md): median/p95 runtime and peak-memory scaling evidence
+- [`benchmark_provenance.json`](results/benchmark_provenance.json): dataset source, checksum, aggregation, and measurement plan
 
 Figures live in [`figures/`](figures):
 

@@ -21,6 +21,7 @@ def main() -> None:
     run([python, "generate_speed_quality.py", "--mode", "fast"])
     run([python, "generate_counterexamples.py", "--mode", "fast"])
     run([python, "generate_proof_artifacts.py"])
+    run([python, "generate_scaling_benchmark.py", "--mode", "quick", "--datasets", "all"])
     run([python, "generate_figures.py"])
     run([python, "build_report.py"])
     run([python, "build_rknp_package.py"])

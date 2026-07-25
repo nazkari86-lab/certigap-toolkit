@@ -1,0 +1,112 @@
+{
+  "movielens_100k": {
+    "aggregation": "frequency count normalized to probability mass",
+    "bytes": 1979173,
+    "description": "MovieLens 100K ratings aggregated by numeric movie identifier.",
+    "filename": "movielens_100k_u.data",
+    "key_order": "ascending numeric movie id",
+    "keys": 1682,
+    "retrieved_utc": "2026-07-25T03:45:28.387013+00:00",
+    "sha256": "06416e597f82b7342361e41163890c81036900f418ad91315590814211dca490",
+    "status": "loaded",
+    "url": "https://files.grouplens.org/datasets/movielens/ml-100k/u.data"
+  },
+  "run": {
+    "base_repeats": 5,
+    "budget": "min(6, n-1)",
+    "dataset_selection": "all",
+    "eta": 0.15,
+    "measurement_plan": {
+      "128": {
+        "beams": [
+          1,
+          4,
+          16,
+          32
+        ],
+        "repeats": 5
+      },
+      "256": {
+        "beams": [
+          1,
+          4,
+          16,
+          32
+        ],
+        "repeats": 5
+      },
+      "32": {
+        "beams": [
+          1,
+          4,
+          16,
+          32
+        ],
+        "repeats": 5
+      },
+      "512": {
+        "beams": [
+          1,
+          4,
+          16,
+          32
+        ],
+        "repeats": 5
+      },
+      "64": {
+        "beams": [
+          1,
+          4,
+          16,
+          32
+        ],
+        "repeats": 5
+      }
+    },
+    "mode": "max",
+    "raw_cache_manifest": "data/external/manifest.json",
+    "sizes": [
+      32,
+      64,
+      128,
+      256,
+      512
+    ]
+  },
+  "synthetic": {
+    "families": [
+      "uniform",
+      "zipf",
+      "hot_middle",
+      "hot_tail",
+      "dirichlet",
+      "two_hot_blocks",
+      "alternating_hot"
+    ],
+    "generator_seed": 20260725
+  },
+  "uci_online_retail": {
+    "aggregation": "frequency count normalized to probability mass",
+    "bytes": 23715344,
+    "description": "UCI Online Retail completed purchase rows aggregated by lexical StockCode.",
+    "filename": "uci_online_retail.xlsx",
+    "key_order": "ascending lexical StockCode",
+    "keys": 3941,
+    "retrieved_utc": "2026-07-25T03:46:09.625226+00:00",
+    "sha256": "43465a06f2ccf7c8b5bd2892bc7defb52f97487934fe93b16ae4c3936424676d",
+    "status": "loaded",
+    "url": "https://archive.ics.uci.edu/ml/machine-learning-databases/00352/Online%20Retail.xlsx"
+  },
+  "wikimedia_pageviews": {
+    "aggregation": "frequency count normalized to probability mass",
+    "bytes": 55903,
+    "description": "English Wikipedia all-access top pages for a pinned day, aggregated by API article count.",
+    "filename": "wikimedia_top_en_2025-07-01.json",
+    "key_order": "API top-pages rank (descending observed views)",
+    "keys": 999,
+    "retrieved_utc": "2026-07-25T03:46:19.893417+00:00",
+    "sha256": "6d51c39dfbd4d4cdaa6f0c669f0e396b522bb9ceacd8477af704fe87725d237d",
+    "status": "loaded",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2025/07/01"
+  }
+}
