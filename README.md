@@ -1,35 +1,41 @@
-# CertiGap Prototype
+# CertiGap Toolkit
 
-Research prototype for a high-potential informatics project:
+CertiGap is a toolkit for **budgeted robust partial search trees**.
 
-- exact frontier dynamic programming for the budgeted partial search-tree problem;
-- greedy baseline and stronger beam-search heuristic for larger instances;
-- brute-force oracle for tiny instances;
-- two simple baselines;
-- independent structural checker that validates a candidate tree, recomputes its cost, and attaches lower bounds plus certified gaps;
-- synthetic benchmark script.
+Instead of fully refining the whole key space, CertiGap decides **how much order is worth materializing at all** when:
 
-## Toolkit Story
+- the split budget is tight;
+- access is skewed;
+- the predicted query distribution may be wrong.
 
-CertiGap is now usable as a small toolkit, not only as paper code.
+It ships with:
+
+- an exact dynamic program for small and medium instances;
+- a stronger beam-search heuristic for practical use;
+- greedy and simple baseline solvers;
+- lower bounds and certificate export;
+- benchmark, counterexample, and report-generation pipelines;
+- a C++ core plus Python bindings.
+
+## Why Use It
 
 Simple practitioner story:
 
-> when memory or split budget is tight and access is skewed, CertiGap beats naive structures by spending structure only where queries are concentrated.
+> When memory or split budget is tight and access is skewed, CertiGap beats naive structures by spending structural effort only where queries are concentrated.
 
-Main use cases:
+Good fits:
 
-1. skewed key-value lookup;
-2. static hot/cold catalogs;
-3. read-heavy embedded indexes.
+1. Skewed key-value lookup
+2. Static hot/cold catalogs
+3. Read-heavy embedded indexes
 
-Examples:
+Less useful:
 
-- [skewed_kv_lookup.py](/Users/dulatnurlanuly/Downloads/certigap-prototype/examples/skewed_kv_lookup.py)
-- [static_hot_cold_catalog.py](/Users/dulatnurlanuly/Downloads/certigap-prototype/examples/static_hot_cold_catalog.py)
-- [read_heavy_embedded_index.py](/Users/dulatnurlanuly/Downloads/certigap-prototype/examples/read_heavy_embedded_index.py)
+1. Fully uniform access
+2. Highly dynamic insert/delete-heavy settings
+3. Situations where a full high-quality index is cheap enough already
 
-Python API:
+## Python API
 
 ```python
 from certigap import CertiGapToolkit
@@ -41,6 +47,7 @@ model = CertiGapToolkit().fit(
     solver="beam",
 )
 
+print(model.summary())
 print(model.query_cost(4))
 print(model.export_certificate())
 print(model.compare_baselines())
@@ -56,87 +63,131 @@ Available solver modes:
 - `binary_search`
 - `learned_segment`
 
-## Model
+## Quick Start
 
-Keys are ranks `1..n`. A split node stores a threshold `k` and asks `x <= x_k?`.
-Each leaf is an unresolved interval `[l, r]` with fallback cost `ceil(log2(|I|))`.
-
-For a tree `T`:
-
-- `average_cost(T) = sum_i p_i * C_T(i)`
-- `max_cost(T) = max_i C_T(i)`
-- `objective(T) = (1 - eta) * average_cost(T) + eta * max_cost(T)`
-
-The prototype computes the exact Pareto frontier `(average_cost, max_cost)` for each interval and budget, then picks the best point for a chosen `eta`.
-
-## What Is New In This Full Build
-
-- `frontier_dp_best`: exact optimizer for a fixed split budget;
-- `greedy_best`: simple one-step local baseline;
-- `beam_search_best`: stronger multi-step heuristic that can keep temporarily worse trees if they lead to better later allocations;
-- `heuristic_best`: exact on small instances, beam search otherwise;
-- `combined_lower_bound`: entropy + Lagrangian lower bounds;
-- `certify_tree`: structural validation plus `upper_bound`, `lower_bound`, `certified_gap`, and exact gap on small instances.
-
-## Run
+Run the full project build:
 
 ```bash
-cd /Users/dulatnurlanuly/Downloads/certigap-prototype
+PYTHONPATH=. python3 build_all.py
+```
+
+Run the test suite:
+
+```bash
 PYTHONPATH=. python3 -m unittest discover -s tests -v
-PYTHONPATH=. python3 benchmark.py
-PYTHONPATH=. python3 run_experiments.py
-PYTHONPATH=. python3 generate_results.py
-PYTHONPATH=. python3 analyze_experiments.py
-PYTHONPATH=. python3 generate_speed_quality.py
-PYTHONPATH=. python3 build_report.py
-PYTHONPATH=. python3 build_rknp_package.py
-PYTHONPATH=. python3 generate_counterexamples.py
-PYTHONPATH=. python3 build_cpp_core.py
-PYTHONPATH=. python3 generate_figures.py
-PYTHONPATH=. python3 build_all.py
 ```
 
-## Results Artifacts
-
-Generated files land in `/Users/dulatnurlanuly/Downloads/certigap-prototype/results`:
-
-- `experiment_sweep.csv`: exact/greedy/beam/baseline values over a fixed grid;
-- `summary.md`: aggregated beam-vs-greedy summary for the report;
-- `certificate_examples.md`: report-ready certified examples.
-- `speed_quality.csv` and `speed_quality_summary.md`: timing and quality tradeoff across different task families.
-- `counterexamples.csv` and `counterexamples.md`: automatically discovered greedy-failure instances.
-
-Generated files land in `/Users/dulatnurlanuly/Downloads/certigap-prototype/figures`:
-
-- `mean_gaps.svg`
-- `mean_times.svg`
-
-Generated files land in `/Users/dulatnurlanuly/Downloads/certigap-prototype/report`:
-
-- `ABSTRACT.md`: concise contest abstract built from real metrics;
-- `REPORT.md`: main report draft assembled from docs plus generated results;
-- `APPENDIX.md`: certificate examples and roadmap;
-- `FORMAL_RESULTS.md`: formal theorem writeup for Theorem A and Theorem B;
-- `POSTER_OUTLINE.md`: report-ready poster structure.
-
-Generated files land in `/Users/dulatnurlanuly/Downloads/certigap-prototype/rknp_package`:
-
-- `ABSTRACT_RU.md`: русская аннотация;
-- `REPORT_RU.md`: русскоязычный черновик отчёта;
-- `THESES_RU.md`: тезисы для защиты;
-- `SLIDES_RU.md`: план слайдов.
-
-For a one-command rebuild of the whole project package, run:
+Build the C++ core:
 
 ```bash
-cd /Users/dulatnurlanuly/Downloads/certigap-prototype
-PYTHONPATH=. python3 build_all.py
+PYTHONPATH=. python3 build_cpp_core.py
 ```
 
-## Scope limits
+## C++ Core And Bindings
 
-This is a prototype, not a full paper implementation:
+The C++ shared library is built from:
 
-- no full large-scale experimental harness yet;
-- no advanced repair heuristic for big `n`;
-- synthetic benchmarks only.
+- [`cpp/certigap_core.cpp`](cpp/certigap_core.cpp)
+
+Python loads it through:
+
+- [`certigap/cpp_bindings.py`](certigap/cpp_bindings.py)
+
+Smoke-test example:
+
+```python
+from certigap.cpp_bindings import CppCertiGap
+
+core = CppCertiGap()
+result = core.fit([0.1, 0.2, 0.3, 0.4], budget=2, eta=0.15)
+print(result["objective"])
+```
+
+## Example Use Cases
+
+- [`examples/skewed_kv_lookup.py`](examples/skewed_kv_lookup.py)
+- [`examples/static_hot_cold_catalog.py`](examples/static_hot_cold_catalog.py)
+- [`examples/read_heavy_embedded_index.py`](examples/read_heavy_embedded_index.py)
+
+## Main Results
+
+Generated artifacts live in [`results/`](results):
+
+- [`summary.md`](results/summary.md): beam vs greedy quality summary
+- [`speed_quality_summary.md`](results/speed_quality_summary.md): solver quality/time tradeoff
+- [`counterexamples.md`](results/counterexamples.md): automatically discovered greedy-failure cases
+- [`certificate_examples.md`](results/certificate_examples.md): report-ready certificate examples
+
+Figures live in [`figures/`](figures):
+
+- [`mean_gaps.svg`](figures/mean_gaps.svg)
+- [`mean_times.svg`](figures/mean_times.svg)
+
+As of **Saturday, July 25, 2026**:
+
+- `240` benchmark rows were analyzed in the main exact-referenced sweep;
+- beam mean gap vs exact is `0.0006`;
+- greedy mean gap vs exact is `0.0986`;
+- beam strictly improves on greedy in `104` cases;
+- beam matches exact in `237` of `240` cases.
+
+Speed/quality summary on the fast benchmark:
+
+- exact mean time on small cases: `2.513 ms`
+- beam mean time on small cases: `3.897 ms`
+- greedy mean time on small cases: `0.167 ms`
+- beam mean gap vs exact on small cases: `0.000979`
+- greedy mean gap vs exact on small cases: `0.114157`
+
+## Reports
+
+English package:
+
+- [`report/ABSTRACT.md`](report/ABSTRACT.md)
+- [`report/REPORT.md`](report/REPORT.md)
+- [`report/APPENDIX.md`](report/APPENDIX.md)
+- [`report/FORMAL_RESULTS.md`](report/FORMAL_RESULTS.md)
+- [`report/POSTER_OUTLINE.md`](report/POSTER_OUTLINE.md)
+
+Russian RKNP package:
+
+- [`rknp_package/ABSTRACT_RU.md`](rknp_package/ABSTRACT_RU.md)
+- [`rknp_package/REPORT_RU.md`](rknp_package/REPORT_RU.md)
+- [`rknp_package/THESES_RU.md`](rknp_package/THESES_RU.md)
+- [`rknp_package/SLIDES_RU.md`](rknp_package/SLIDES_RU.md)
+- [`rknp_package/FORMAL_RESULTS_EN.md`](rknp_package/FORMAL_RESULTS_EN.md)
+
+## Theory Notes
+
+- [`docs/FORMAL_RESULTS.md`](docs/FORMAL_RESULTS.md)
+- [`docs/PROOF_SKETCHES.md`](docs/PROOF_SKETCHES.md)
+- [`docs/TECHNICAL_NOTE.md`](docs/TECHNICAL_NOTE.md)
+- [`docs/GREEDY_COUNTEREXAMPLE_FAMILY.md`](docs/GREEDY_COUNTEREXAMPLE_FAMILY.md)
+- [`docs/PRACTITIONER_GUIDE.md`](docs/PRACTITIONER_GUIDE.md)
+- [`docs/TECHNICAL_BLOG.md`](docs/TECHNICAL_BLOG.md)
+- [`docs/ARXIV_NOTE.md`](docs/ARXIV_NOTE.md)
+
+## Project Status
+
+This repository is complete as a **reproducible research prototype and reusable toolkit**.
+
+What is already done:
+
+- exact solver
+- beam heuristic
+- baseline integrations
+- certificates
+- benchmarks
+- counterexample search
+- C++ core + Python bindings
+- report generation
+
+What remains open is purely higher-level research:
+
+- a polished publication-grade writeup of Theorem A;
+- a fully formal asymptotic greedy-counterexample family;
+- stronger approximation or structural theorems beyond the current package.
+
+## Repository Map
+
+See [`FINAL_INDEX.md`](FINAL_INDEX.md) for a full index of the package.
