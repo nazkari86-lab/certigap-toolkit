@@ -12,7 +12,7 @@ def main() -> None:
     print("Read-heavy embedded index")
     print(model.summary())
     cert = model.export_certificate()
-    print("Certified gap:", cert["certified_gap"])
+    print("Reported entropy-bound gap:", cert["reported_bound_gap"])
 
 
 if __name__ == "__main__":
