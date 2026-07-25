@@ -42,7 +42,7 @@ class CertiGapTests(unittest.TestCase):
         certificate = certify_tree(exact["tree"], weights, budget=2, eta=0.1)
         self.assertEqual(certificate["budget"], 2)
         self.assertTrue(certificate["splits"])
-        self.assertAlmostEqual(certificate["exact_gap"], 0.0, places=9)
+        self.assertAlmostEqual(certificate["diagnostics"]["reported_exact_gap"], 0.0, places=9)
 
     def test_certificate_rejects_invalid_partition(self) -> None:
         weights = [0.25, 0.25, 0.25, 0.25]
@@ -91,6 +91,14 @@ class CertiGapTests(unittest.TestCase):
         counted = frontier_dp_best(counts, budget=1, eta=0.15)
         normalized = frontier_dp_best(probabilities, budget=1, eta=0.15)
         self.assertAlmostEqual(counted["objective"], normalized["objective"], places=9)
+
+    def test_requested_budget_is_capped_at_tree_limit(self) -> None:
+        weights = [1, 2, 3, 4]
+        capped = frontier_dp_best(weights, budget=3, eta=0.15)
+        oversized = frontier_dp_best(weights, budget=10_000, eta=0.15)
+        self.assertEqual(oversized["budget"], 3)
+        self.assertEqual(oversized["requested_budget"], 10_000)
+        self.assertAlmostEqual(capped["objective"], oversized["objective"], places=9)
 
     def test_problem_validation_rejects_invalid_parameters(self) -> None:
         with self.assertRaises(ValueError):

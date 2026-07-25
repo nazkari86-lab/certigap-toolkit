@@ -11,8 +11,18 @@ and at most `O(D^2)` pairs of frontier states. Therefore its arithmetic time
 is `O(n^3 B^2 D^2)` and its compressed-state storage is `O(n^2 B D)`, not
 counting persistent tree objects used for witness export.
 
-These are conservative worst-case bounds for the implemented Pareto-frontier
-reference solver. They establish fixed-parameter tractability in `B` only when
-`D` is treated as a parameter as well; they are not a claim that the current
-Python implementation is practical for large `n`. The candidate-pruned C++
-path is a separate heuristic and has no exactness guarantee.
+Substituting `D = B + O(log n)` gives
+`O(n^3 B^2 (B + log n)^2)`. Thus the reference frontier DP is fixed-parameter
+tractable in `B`: its exponent of `n` is independent of `B` (the logarithmic
+factor can be absorbed into a polynomial bound). For fixed `B`, this coarse
+bound is `O(n^3 log^2 n)`.
+
+The independent cost-cap DP has the same `O(n^2 B D)` state count, but each
+state considers `O(n B)` threshold/budget choices without a Cartesian product
+of two frontiers. Its corresponding conservative arithmetic bound is
+`O(n^3 B^2 D)` with `O(n^2 B D)` memo storage.
+
+These are worst-case bounds for numerically validated floating-point reference
+implementations; the recurrence is mathematically exact, but finite `EPS`
+dominance comparisons are not rational-arithmetic proofs. The candidate-pruned
+C++ path is a separate heuristic and has no exactness guarantee.

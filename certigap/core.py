@@ -74,6 +74,11 @@ def validate_problem(weights: Iterable[float], budget: int, eta: float) -> list[
     return [value / total for value in values]
 
 
+def effective_budget(budget: int, n: int) -> int:
+    """Cap a requested split budget at the n-1 splits any binary tree can use."""
+    return min(budget, n - 1)
+
+
 def interval_cost(size: int) -> int:
     if size <= 1:
         return 0
@@ -211,6 +216,7 @@ def frontier_dp_best(weights: list[float], budget: int, eta: float) -> dict:
     weights = validate_problem(weights, budget, eta)
     prefix = _prefix(weights)
     n = len(weights)
+    requested_budget, budget = budget, effective_budget(budget, n)
 
     @lru_cache(maxsize=None)
     def solve(left: int, right: int, remaining_budget: int) -> tuple[FrontierState, ...]:
@@ -251,6 +257,7 @@ def frontier_dp_best(weights: list[float], budget: int, eta: float) -> dict:
     best = min(frontier, key=lambda item: ((1.0 - eta) * item.average_cost + eta * item.max_cost, item.max_cost))
     result = evaluate_tree(best.tree, weights, eta)
     result["budget"] = budget
+    result["requested_budget"] = requested_budget
     result["eta"] = eta
     result["frontier_size"] = len(frontier)
     return result
@@ -267,6 +274,7 @@ def cost_cap_dp_best(weights: list[float], budget: int, eta: float) -> dict:
     weights = validate_problem(weights, budget, eta)
     prefix = _prefix(weights)
     n = len(weights)
+    requested_budget, budget = budget, effective_budget(budget, n)
     max_cap = budget + interval_cost(n)
 
     @lru_cache(maxsize=None)
@@ -316,6 +324,7 @@ def cost_cap_dp_best(weights: list[float], budget: int, eta: float) -> dict:
         raise RuntimeError("cost-cap DP failed to construct a feasible tree")
     result = min(candidates, key=lambda item: (item["objective"], item["max_cost"], item["average_cost"]))
     result["budget"] = budget
+    result["requested_budget"] = requested_budget
     result["eta"] = eta
     result["solver"] = "cost_cap_dp"
     result["cost_cap_states"] = solve.cache_info().currsize
@@ -325,6 +334,7 @@ def cost_cap_dp_best(weights: list[float], budget: int, eta: float) -> dict:
 def brute_force_best(weights: list[float], budget: int, eta: float) -> dict:
     weights = validate_problem(weights, budget, eta)
     n = len(weights)
+    requested_budget, budget = budget, effective_budget(budget, n)
 
     @lru_cache(maxsize=None)
     def build(left: int, right: int, remaining_budget: int) -> tuple[Tree, ...]:
@@ -366,6 +376,7 @@ def brute_force_best(weights: list[float], budget: int, eta: float) -> dict:
             best_eval = current
     assert best_eval is not None
     best_eval["budget"] = budget
+    best_eval["requested_budget"] = requested_budget
     best_eval["eta"] = eta
     return best_eval
 
@@ -373,6 +384,7 @@ def brute_force_best(weights: list[float], budget: int, eta: float) -> dict:
 def baseline_balanced(weights: list[float], budget: int, eta: float) -> dict:
     weights = validate_problem(weights, budget, eta)
     n = len(weights)
+    requested_budget, budget = budget, effective_budget(budget, n)
 
     def build(left: int, right: int, remaining_budget: int) -> Tree:
         if remaining_budget <= 0 or left >= right:
@@ -388,13 +400,14 @@ def baseline_balanced(weights: list[float], budget: int, eta: float) -> dict:
             right_child=build(threshold + 1, right, right_budget),
         )
 
-    return evaluate_tree(build(1, n, budget), weights, eta) | {"budget": budget, "eta": eta}
+    return evaluate_tree(build(1, n, budget), weights, eta) | {"budget": budget, "requested_budget": requested_budget, "eta": eta}
 
 
 def baseline_weighted_median(weights: list[float], budget: int, eta: float) -> dict:
     weights = validate_problem(weights, budget, eta)
     prefix = _prefix(weights)
     n = len(weights)
+    requested_budget, budget = budget, effective_budget(budget, n)
 
     def choose_threshold(left: int, right: int) -> int:
         total = _mass(prefix, left, right)
@@ -426,7 +439,7 @@ def baseline_weighted_median(weights: list[float], budget: int, eta: float) -> d
             right_child=build(threshold + 1, right, right_budget),
         )
 
-    return evaluate_tree(build(1, n, budget), weights, eta) | {"budget": budget, "eta": eta}
+    return evaluate_tree(build(1, n, budget), weights, eta) | {"budget": budget, "requested_budget": requested_budget, "eta": eta}
 
 
 def entropy_lower_bound(weights: list[float]) -> float:
@@ -443,14 +456,15 @@ def max_cost_lower_bound(n: int, budget: int) -> int:
         raise ValueError("n must be positive")
     if budget < 0:
         raise ValueError("budget must be non-negative")
-    largest_leaf = ceil(n / (budget + 1))
+    largest_leaf = ceil(n / (effective_budget(budget, n) + 1))
     return interval_cost(largest_leaf)
 
 
 def all_budget_optima(weights: list[float], eta: float, max_budget: int | None = None) -> list[dict]:
     weights = validate_problem(weights, budget=0, eta=eta)
     n = len(weights)
-    upper_budget = min(n - 1, max_budget if max_budget is not None else n - 1)
+    max_budget = effective_budget(n - 1 if max_budget is None else max_budget, n)
+    upper_budget = max_budget
     return [frontier_dp_best(weights, budget, eta) for budget in range(upper_budget + 1)]
 
 
@@ -462,6 +476,7 @@ def lagrangian_lower_bound(
     lambda_grid: Iterable[float] | None = None,
 ) -> dict:
     weights = validate_problem(weights, budget, eta)
+    budget = effective_budget(budget, len(weights))
     optima = all_budget_optima(weights, eta, max_budget=max_budget)
     if lambda_grid is None:
         lambda_grid = [step / 8.0 for step in range(0, 49)]
@@ -495,6 +510,7 @@ def combined_lower_bound(
     use_lagrangian: bool = True,
 ) -> dict:
     weights = validate_problem(weights, budget, eta)
+    budget = effective_budget(budget, len(weights))
     entropy_bound = (1.0 - eta) * entropy_lower_bound(weights) + eta * max_cost_lower_bound(len(weights), budget)
     if not use_lagrangian:
         return {
@@ -590,6 +606,7 @@ def _single_split_expansions(tree: Tree, weights: list[float], eta: float, used_
 def greedy_best(weights: list[float], budget: int, eta: float) -> dict:
     weights = validate_problem(weights, budget, eta)
     n = len(weights)
+    requested_budget, budget = budget, effective_budget(budget, n)
     tree: Tree = IntervalLeaf(1, n)
     current = evaluate_tree(tree, weights, eta) | {"budget": 0, "eta": eta}
 
@@ -612,6 +629,7 @@ def greedy_best(weights: list[float], budget: int, eta: float) -> dict:
         tree = best_candidate["tree"]
         current = best_candidate["evaluation"]
     current["budget"] = budget
+    current["requested_budget"] = requested_budget
     current["eta"] = eta
     return current
 
@@ -621,6 +639,7 @@ def beam_search_best(weights: list[float], budget: int, eta: float, beam_width: 
     if beam_width <= 0:
         raise ValueError("beam_width must be positive")
     n = len(weights)
+    requested_budget, budget = budget, effective_budget(budget, n)
     start = evaluate_tree(IntervalLeaf(1, n), weights, eta)
     start_candidate = SearchCandidate(
         objective=start["objective"],
@@ -659,6 +678,7 @@ def beam_search_best(weights: list[float], budget: int, eta: float, beam_width: 
 
     result = evaluate_tree(best_overall.tree, weights, eta)
     result["budget"] = budget
+    result["requested_budget"] = requested_budget
     result["eta"] = eta
     result["used_budget"] = best_overall.used_budget
     result["beam_width"] = beam_width
@@ -778,6 +798,7 @@ def power_of_two_greedy_family(m: int) -> dict:
 def certify_tree(tree: Tree, weights: list[float], budget: int, eta: float) -> dict:
     weights = validate_problem(weights, budget, eta)
     n = len(weights)
+    requested_budget, budget = budget, effective_budget(budget, n)
     try:
         evaluation = verify_tree(tree, weights, budget, eta)
     except VerificationError as error:
@@ -785,17 +806,18 @@ def certify_tree(tree: Tree, weights: list[float], budget: int, eta: float) -> d
     # A normal certificate may claim only a bound that the standalone verifier
     # can recompute from the input. Lagrangian/exact gaps remain report values.
     lower_bounds = combined_lower_bound(weights, budget, eta, use_lagrangian=False)
-    exact_optimum = None
-    exact_gap = None
+    reported_exact_optimum = None
+    reported_exact_gap = None
     if len(weights) <= 18:
-        exact_optimum = frontier_dp_best(weights, budget, eta)["objective"]
-        exact_gap = 0.0 if exact_optimum <= EPS else (evaluation["objective"] - exact_optimum) / exact_optimum
+        reported_exact_optimum = frontier_dp_best(weights, budget, eta)["objective"]
+        reported_exact_gap = 0.0 if reported_exact_optimum <= EPS else (evaluation["objective"] - reported_exact_optimum) / reported_exact_optimum
     reported_bound_gap = None
     if lower_bounds["lower_bound"] > EPS:
         reported_bound_gap = (evaluation["objective"] - lower_bounds["lower_bound"]) / lower_bounds["lower_bound"]
     certificate = {
         "n": n,
         "budget": budget,
+        "requested_budget": requested_budget,
         "eta": eta,
         "splits": evaluation["splits"],
         "leaves": evaluation["leaves"],
@@ -808,8 +830,11 @@ def certify_tree(tree: Tree, weights: list[float], budget: int, eta: float) -> d
         "best_unconstrained_budget": lower_bounds["best_unconstrained_budget"],
         "bound_source": lower_bounds["source"],
         "reported_bound_gap": reported_bound_gap,
-        "exact_optimum": exact_optimum,
-        "exact_gap": exact_gap,
+        "diagnostics": {
+            "reported_exact_optimum": reported_exact_optimum,
+            "reported_exact_gap": reported_exact_gap,
+            "diagnostic_note": "Not verified by the ordinary certificate verifier; use branch-and-bound trace for proof-carrying optimality.",
+        },
         "average_cost": evaluation["average_cost"],
         "max_cost": evaluation["max_cost"],
         "per_key_costs": evaluation["per_key_costs"],

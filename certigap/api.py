@@ -10,6 +10,7 @@ from .core import (
     certify_tree,
     cost_cap_dp_best,
     evaluate_tree,
+    effective_budget,
     frontier_dp_best,
     greedy_best,
     IntervalLeaf,
@@ -26,6 +27,7 @@ SolverName = Literal["exact", "cost_cap", "beam", "greedy", "balanced", "weighte
 class FitResult:
     weights: list[float]
     budget: int
+    requested_budget: int
     eta: float
     solver: str
     result: dict
@@ -45,6 +47,7 @@ class FitResult:
         return {
             "solver": self.solver,
             "budget": self.budget,
+            "requested_budget": self.requested_budget,
             "eta": self.eta,
             "objective": self.result["objective"],
             "average_cost": self.result["average_cost"],
@@ -125,10 +128,12 @@ class CertiGapToolkit:
         solver: SolverName = "beam",
     ) -> "CertiGapToolkit":
         normalized = _normalize_weights(weights)
-        result = _solver_dispatch(normalized, budget, eta, solver)
+        effective = effective_budget(budget, len(normalized))
+        result = _solver_dispatch(normalized, effective, eta, solver)
         self._fit = FitResult(
             weights=normalized,
-            budget=budget,
+            budget=effective,
+            requested_budget=budget,
             eta=eta,
             solver=solver,
             result=result,

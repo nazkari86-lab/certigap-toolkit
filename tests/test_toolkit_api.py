@@ -10,6 +10,11 @@ class ToolkitApiTests(unittest.TestCase):
         self.assertGreaterEqual(model.query_cost(1), 0)
         self.assertIn("objective", model.summary())
 
+    def test_toolkit_reports_effective_budget(self) -> None:
+        model = CertiGapToolkit().fit([1, 2, 3], budget=999, eta=0.15, solver="beam")
+        self.assertEqual(model.summary()["budget"], 2)
+        self.assertEqual(model.summary()["requested_budget"], 999)
+
     def test_compare_baselines(self) -> None:
         model = CertiGapToolkit().fit([0.1, 0.2, 0.3, 0.4], budget=2, eta=0.15, solver="beam")
         rows = model.compare_baselines(["beam", "greedy", "balanced", "learned_segment"])

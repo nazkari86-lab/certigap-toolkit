@@ -84,7 +84,7 @@ def write_certificates() -> None:
                 f"- Upper bound: `{certificate['upper_bound']:.6f}`",
                 f"- Lower bound: `{certificate['lower_bound']:.6f}`",
                 f"- Reported entropy-bound gap: `{certificate['reported_bound_gap']:.6f}`",
-                f"- Exact gap: `{certificate['exact_gap']:.6f}`",
+                f"- Reported exact diagnostic gap: `{certificate['diagnostics']['reported_exact_gap']:.6f}`",
                 f"- Bound source: `{certificate['bound_source']}`",
                 f"- Splits: `{certificate['splits']}`",
                 "",

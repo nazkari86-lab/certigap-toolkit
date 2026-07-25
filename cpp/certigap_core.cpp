@@ -202,6 +202,8 @@ static std::vector<int> pruned_thresholds(const std::vector<double>& pref, const
 
 extern "C" void* certigap_pruned_beam_json(const double* weights, int n, int budget, double eta, int beam_width, int candidate_limit) {
     if (weights == nullptr || n <= 0 || budget < 0 || beam_width <= 0 || candidate_limit < 4 || !std::isfinite(eta) || eta < 0.0 || eta > 1.0) return nullptr;
+    int requested_budget = budget;
+    budget = std::min(budget, n - 1);
     std::vector<double> pref(n + 1, 0.0);
     for (int i = 1; i <= n; ++i) { if (!std::isfinite(weights[i - 1]) || weights[i - 1] < 0.0) return nullptr; pref[i] = pref[i - 1] + weights[i - 1]; }
     if (pref[n] <= 0.0) return nullptr;
@@ -230,7 +232,7 @@ extern "C" void* certigap_pruned_beam_json(const double* weights, int n, int bud
     }
     std::vector<int> per_key(n + 1, 0); for (const auto& leaf : best.leaves) for (int i = leaf.l; i <= leaf.r; ++i) per_key[i] = cost(leaf);
     std::ostringstream out; out.setf(std::ios::fixed); out.precision(6);
-    out << "{\"n\":" << n << ",\"budget\":" << budget << ",\"eta\":" << eta << ",\"average_cost\":" << best.average << ",\"max_cost\":" << best.maximum << ",\"objective\":" << objective(best) << ",\"beam_width\":" << beam_width << ",\"candidate_limit\":" << candidate_limit << ",\"per_key_costs\":[";
+    out << "{\"n\":" << n << ",\"budget\":" << budget << ",\"requested_budget\":" << requested_budget << ",\"eta\":" << eta << ",\"average_cost\":" << best.average << ",\"max_cost\":" << best.maximum << ",\"objective\":" << objective(best) << ",\"beam_width\":" << beam_width << ",\"candidate_limit\":" << candidate_limit << ",\"per_key_costs\":[";
     for (int i = 1; i <= n; ++i) { if (i > 1) out << ","; out << per_key[i]; } out << "]}";
     std::string payload = out.str(); char* raw = static_cast<char*>(std::malloc(payload.size() + 1)); if (!raw) return nullptr; std::memcpy(raw, payload.c_str(), payload.size() + 1); return raw;
 }
@@ -255,6 +257,8 @@ extern "C" void certigap_free_string(void* ptr) {
 
 extern "C" void* certigap_fit_json(const double* weights, int n, int budget, double eta) {
     if (weights == nullptr || n <= 0 || budget < 0 || !std::isfinite(eta) || eta < 0.0 || eta > 1.0) return nullptr;
+    int requested_budget = budget;
+    budget = std::min(budget, n - 1);
     std::vector<double> p(n + 1, 0.0);
     double total = 0.0;
     for (int i = 0; i < n; ++i) {
@@ -274,6 +278,7 @@ extern "C" void* certigap_fit_json(const double* weights, int n, int budget, dou
     out << "{";
     out << "\"n\":" << n << ",";
     out << "\"budget\":" << budget << ",";
+    out << "\"requested_budget\":" << requested_budget << ",";
     out << "\"eta\":" << eta << ",";
     out << "\"average_cost\":" << best.avg_cost << ",";
     out << "\"max_cost\":" << best.max_cost << ",";

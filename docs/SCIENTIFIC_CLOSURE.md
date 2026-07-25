@@ -11,6 +11,7 @@
 ## Honest Boundaries
 
 - The C++ pruned beam is empirical: it has no approximation theorem and no proof certificate.
+- The exact DP recurrence is mathematically exact, while the current implementation uses floating-point dominance with `EPS`; rational verification is future work.
 - Movie identifier order is not semantic locality; the temporal result is one public dataset, not a production deployment claim.
 - Runtime measurements are machine-specific.
 
