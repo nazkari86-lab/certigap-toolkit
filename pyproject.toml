@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "certigap-toolkit"
-version = "0.9.0"
-description = "Budgeted robust prefix search with executable interval fallbacks"
+version = "1.0.0"
+description = "AutoDRO selection for budgeted robust prefix search"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"

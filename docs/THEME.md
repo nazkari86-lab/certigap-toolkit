@@ -2,11 +2,11 @@
 
 ## Final Topic
 
-**CertiGap: budgeted robust partial search trees with executable interval fallbacks**
+**CertiGap-AutoDRO: automatic portfolio selection for budgeted robust partial search**
 
 ## One-Sentence Contribution
 
-We optimize **how much order to materialize** under a strict split budget and **unreliable query predictions**, with exact optimality for the dynamic program and independently verifiable objective bounds for every exported solution.
+We automatically select **how much order to materialize**, which solver and fallback to use, and how to trade latency against memory under statistically uncertain query predictions, with exact fixed-candidate TV-DRO evaluation and independently verifiable portfolio arithmetic.
 
 ## Central Research Question
 

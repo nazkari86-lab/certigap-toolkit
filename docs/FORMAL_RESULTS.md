@@ -232,3 +232,24 @@ frontier DP is exact for every fixed fallback profile.
 
 The full statement, relation to height-limited alphabetic trees, implementation,
 and scope are given in `GENERALIZED_FALLBACK.md`.
+
+## Theorem F: Exact Worst-Case Expectation in a Finite TV Ball
+
+Let `p` be a nominal distribution, `c_i` finite per-key execution costs, and
+`rho` a total-variation radius. The sorted mass-transfer algorithm implemented
+by `worst_case_tv_expectation` returns
+
+`max_q sum_i q_i c_i`
+
+over all distributions satisfying `TV(q,p) <= rho`.
+
+Every feasible probability change decomposes into equal donor-to-receiver mass
+transfers. If a solution removes mass from a more expensive donor while a
+cheaper donor still has removable mass, exchanging the donors cannot decrease
+the objective. The symmetric exchange applies to receivers. Thus an optimum
+exists that transfers mass in ascending donor-cost and descending receiver-cost
+order. The algorithm performs exactly these transfers until the TV budget or
+all profitable capacity is exhausted. `QED`
+
+This theorem certifies the robust score of a fixed candidate. AutoDRO selection
+is globally exact only over the submitted candidate portfolio.

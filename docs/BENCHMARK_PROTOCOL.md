@@ -82,3 +82,20 @@ limits; it is not a hardware-routing or external-library claim.
 ```bash
 PYTHONPATH=. python3 generate_lookup_benchmark.py
 ```
+
+## AutoDRO Distribution Shift
+
+`generate_autodro_benchmark.py` uses four predefined train/test scenarios at
+`n=32` and `n=64`. AutoDRO receives only integer training counts and a fixed TV
+radius of `0.2`; the test distribution is used only after selection. Fixed beam
+and fixed balanced structures use `B=4` and `eta=0.15`.
+
+The 24 published rows report test-distribution mean comparison cost, maximum
+cost, split count, and analytical bytes. AutoDRO wins against fixed beam in
+`5/8` cases and fixed balanced in `4/8`. In hot-reversal cases the selected TV
+radius is too small and balanced search remains better. These are deterministic
+comparison-cost results, not hardware latency.
+
+```bash
+PYTHONPATH=. python3 generate_autodro_benchmark.py
+```

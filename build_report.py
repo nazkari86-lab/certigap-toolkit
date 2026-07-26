@@ -37,7 +37,8 @@ def build_abstract(summary_text: str) -> str:
             "1. an exact generalized frontier dynamic program for deterministic executable fallbacks;",
             "2. a scalable candidate-pruned C++ heuristic and an unbounded-gap result for one-step greedy;",
             "3. structural, entropy-bound, proof-trace, and rational-arithmetic verification layers;",
-            "4. reproducible synthetic, public-workload, temporal, and matched-budget C++ benchmarks.",
+            "4. exact finite-support TV-DRO candidate evaluation and auditable automatic portfolio selection;",
+            "5. reproducible synthetic, public-workload, temporal, shift, and matched-budget C++ benchmarks.",
             "",
             "Current prototype evidence:",
             "",
@@ -56,6 +57,7 @@ def build_report(
     summary_text: str,
     generalized_text: str = "",
     lookup_text: str = "",
+    autodro_text: str = "",
 ) -> str:
     return "\n".join(
         [
@@ -96,6 +98,10 @@ def build_report(
             "## Matched-Budget Lookup Evidence",
             "",
             lookup_text,
+            "",
+            "## AutoDRO Under Distribution Shift",
+            "",
+            autodro_text,
             "",
             "## Competition Positioning",
             "",
@@ -170,6 +176,7 @@ def main() -> None:
     speed_quality_text = read_text(RESULTS_DIR / "speed_quality_summary.md") if (RESULTS_DIR / "speed_quality_summary.md").exists() else ""
     generalized_text = read_text(DOCS_DIR / "GENERALIZED_FALLBACK.md")
     lookup_text = read_text(RESULTS_DIR / "cpp_lookup_latency.md")
+    autodro_text = read_text(RESULTS_DIR / "autodro_shift.md")
 
     (REPORT_DIR / "ABSTRACT.md").write_text(build_abstract(summary_text), encoding="utf-8")
     (REPORT_DIR / "REPORT.md").write_text(
@@ -183,6 +190,7 @@ def main() -> None:
             + ("\n\n## Counterexamples\n\n" + counterexample_text if counterexample_text else ""),
             generalized_text,
             lookup_text,
+            autodro_text,
         ),
         encoding="utf-8",
     )

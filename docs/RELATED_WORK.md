@@ -6,6 +6,7 @@
 |---|---:|---|---:|---:|
 | Hu--Tucker optimal alphabetic trees | yes | expected weighted path length | no | no |
 | Height-limited alphabetic trees | yes | expected cost under a maximum-depth constraint | no | no |
+| Finite-support TV-DRO | not search-specific | worst-case expectation in a distribution ball | no | yes |
 | Scenario-based robust BSTs (AAAI-25) | yes | scenario regret / competitive ratio | no | no |
 | Dinitz et al. distributional predictions | yes | entropy plus earth-mover prediction error | no | different uncertainty model |
 | PGM-index | ordered predecessor queries | space-time learned-index tradeoff | different model | no |
@@ -40,6 +41,14 @@ fallback, and a contamination-robust objective.
    The SOSD methodology motivates matched memory, last-mile search, and
    hardware-counter experiments; internal proxy baselines are not substitutes
    for those external implementations.
+7. T. Weissman, E. Ordentlich, G. Seroussi, S. Verdu, and M. J. Weinberger,
+   *Inequalities for the L1 Deviation of the Empirical Distribution*, 2003.
+   AutoDRO uses its finite-alphabet concentration form to derive a conservative
+   TV radius and adds the exact smoothing distance by triangle inequality.
+
+AutoDRO does not claim a new generic ambiguity set. Its narrower contribution
+is integrating exact finite-support TV evaluation with budgeted partial-search
+portfolio selection, memory constraints, and executable interval fallbacks.
 
 The project currently provides internal baseline implementations only.
 Reproducing external robust-BST and learned-index code under matched memory,

@@ -32,7 +32,7 @@ def build_abstract_ru(summary_text: str) -> str:
     metric_lines = "\n".join(f"- {line}" for line in metrics)
     return f"""# Аннотация
 
-**Тема:** CertiGap — робастный префиксный поиск с ограниченным бюджетом и исполняемыми fallback-алгоритмами.
+**Тема:** CertiGap-AutoDRO — автоматический выбор робастной частичной поисковой структуры по статистике запросов.
 
 В работе исследуется статическая задача поиска в отсортированном наборе ключей при двух ограничениях: число заранее материализованных пороговых сравнений ограничено бюджетом, а прогноз распределения запросов может быть неверным. В отличие от полностью упорядоченных поисковых структур, CertiGap оптимизирует не форму полного дерева, а то, **какую часть порядка вообще стоит материализовать заранее**, а какую оставить в виде неразрешённых интервалов с резервным поиском.
 
@@ -42,6 +42,7 @@ def build_abstract_ru(summary_text: str) -> str:
 2. масштабируемую C++ эвристику и доказанное семейство неограниченной ошибки one-step greedy;
 3. независимые floating-point, proof-trace и rational-arithmetic проверки;
 4. синтетические, публичные, temporal и matched-budget C++ эксперименты.
+5. AutoDRO-выбор бюджета, solver и fallback в статистической TV-окрестности.
 
 Текущее состояние прототипа подтверждается следующими результатами:
 
@@ -58,7 +59,7 @@ def build_report_ru(summary_text: str, cert_text: str, proof_text: str) -> str:
 
 ## 1. Тема проекта
 
-**CertiGap: робастный префиксный поиск с ограниченным бюджетом и исполняемыми fallback-алгоритмами**
+**CertiGap-AutoDRO: автоматический выбор робастной частичной поисковой структуры**
 
 ## 2. Актуальность
 
@@ -90,6 +91,7 @@ CertiGap не строит полное поисковое дерево на в�
 - используется робастная contamination-модель для учёта недоверия к прогнозу;
 - вместе со структурой возвращаются проверяемая стоимость, entropy-нижняя граница и, на малых задачах, exhaustive proof trace;
 - exact DP обобщён на реальные per-key стоимости midpoint binary search и пользовательские fallback-профили;
+- AutoDRO автоматически выбирает структуру по query counts, memory limit и измеряемой cost model;
 - проект сочетает точный алгоритм, эвристику и независимую проверку результата.
 
 ## 6. Методы
@@ -193,6 +195,8 @@ def main() -> None:
     proof_text = read(DOCS_DIR / "FORMAL_RESULTS.md")
     generalized_text = read(DOCS_DIR / "GENERALIZED_FALLBACK.md")
     lookup_text = read(RESULTS_DIR / "cpp_lookup_latency.md")
+    autodro_text = read(RESULTS_DIR / "autodro_shift.md")
+    autodro_theory_text = read(DOCS_DIR / "AUTODRO.md")
     counterexample_text = read(RESULTS_DIR / "counterexamples.md") if (RESULTS_DIR / "counterexamples.md").exists() else ""
     family_text = read(DOCS_DIR / "GREEDY_COUNTEREXAMPLE_FAMILY.md") if (DOCS_DIR / "GREEDY_COUNTEREXAMPLE_FAMILY.md").exists() else ""
     speed_quality_text = read(RESULTS_DIR / "speed_quality_summary.md") if (RESULTS_DIR / "speed_quality_summary.md").exists() else ""
@@ -205,7 +209,15 @@ def main() -> None:
             + ("\n\n## Скорость и качество\n\n" + speed_quality_text if speed_quality_text else "")
             + ("\n\n## Контрпримеры greedy\n\n" + counterexample_text if counterexample_text else ""),
             cert_text + ("\n\n" + speed_quality_text if speed_quality_text else "") + ("\n\n" + family_text if family_text else ""),
-            proof_text + "\n\n" + generalized_text + "\n\n" + lookup_text,
+            proof_text
+            + "\n\n"
+            + generalized_text
+            + "\n\n"
+            + autodro_theory_text
+            + "\n\n"
+            + autodro_text
+            + "\n\n"
+            + lookup_text,
         ),
         encoding="utf-8",
     )

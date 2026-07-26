@@ -2,7 +2,7 @@
 
 ## 1. Тема проекта
 
-**CertiGap: робастный префиксный поиск с ограниченным бюджетом и исполняемыми fallback-алгоритмами**
+**CertiGap-AutoDRO: автоматический выбор робастной частичной поисковой структуры**
 
 ## 2. Актуальность
 
@@ -34,6 +34,7 @@ CertiGap не строит полное поисковое дерево на в�
 - используется робастная contamination-модель для учёта недоверия к прогнозу;
 - вместе со структурой возвращаются проверяемая стоимость, entropy-нижняя граница и, на малых задачах, exhaustive proof trace;
 - exact DP обобщён на реальные per-key стоимости midpoint binary search и пользовательские fallback-профили;
+- AutoDRO автоматически выбирает структуру по query counts, memory limit и измеряемой cost model;
 - проект сочетает точный алгоритм, эвристику и независимую проверку результата.
 
 ## 6. Методы
@@ -432,6 +433,27 @@ frontier DP is exact for every fixed fallback profile.
 The full statement, relation to height-limited alphabetic trees, implementation,
 and scope are given in `GENERALIZED_FALLBACK.md`.
 
+## Theorem F: Exact Worst-Case Expectation in a Finite TV Ball
+
+Let `p` be a nominal distribution, `c_i` finite per-key execution costs, and
+`rho` a total-variation radius. The sorted mass-transfer algorithm implemented
+by `worst_case_tv_expectation` returns
+
+`max_q sum_i q_i c_i`
+
+over all distributions satisfying `TV(q,p) <= rho`.
+
+Every feasible probability change decomposes into equal donor-to-receiver mass
+transfers. If a solution removes mass from a more expensive donor while a
+cheaper donor still has removable mass, exchanging the donors cannot decrease
+the objective. The symmetric exchange applies to receivers. Thus an optimum
+exists that transfers mass in ascending donor-cost and descending receiver-cost
+order. The algorithm performs exactly these transfers until the TV budget or
+all profitable capacity is exhausted. `QED`
+
+This theorem certifies the robust score of a fixed candidate. AutoDRO selection
+is globally exact only over the submitted candidate portfolio.
+
 # Generalized Executable Fallback Model
 
 ## Motivation
@@ -509,6 +531,121 @@ freely materialized prefix nodes.
 The rational verifier proves submitted-tree arithmetic, not global optimality.
 Global exactness is established by the DP proof and small-instance independent
 cross-validation.
+
+# CertiGap-AutoDRO
+
+## Purpose
+
+AutoDRO chooses a concrete search structure instead of requiring a user to
+manually select `B`, solver, robustness parameter, and interval fallback.
+Selection is constrained by an optional memory limit and evaluated with an
+explicit execution-cost model.
+
+## Statistical Uncertainty
+
+For integer query counts with total sample size `N`, AutoDRO constructs an
+empirical distribution and applies additive pseudocount smoothing. The sampling
+radius uses the finite-alphabet multinomial inequality
+
+`P(||p_hat - p||_1 >= epsilon) <= 2^n exp(-N epsilon^2 / 2)`.
+
+This is the conservative finite-alphabet form of the L1 deviation bound from
+Weissman et al., *Inequalities for the L1 Deviation of the Empirical
+Distribution* (2003).
+
+The reported total-variation radius is half the resulting L1 radius plus the
+exact TV distance introduced by smoothing. The sum follows from the triangle
+inequality and is capped at one. A user may instead supply a radius directly;
+this is required for fractional frequency weights that are not observation
+counts.
+
+## Exact Fixed-Candidate DRO Evaluation
+
+For a candidate with per-key execution costs `c_i`, AutoDRO computes
+
+`max_q sum_i q_i c_i`
+
+subject to `TV(q, p_nominal) <= rho`.
+
+The evaluator transfers probability mass from the currently cheapest keys to
+the currently most expensive keys until the TV budget or profitable transfer
+capacity is exhausted.
+
+**Theorem F.** The transfer algorithm returns the exact worst-case expectation
+for a finite total-variation ball.
+
+**Proof.** A feasible change can be decomposed into transfers of equal mass from
+donor coordinates to receiver coordinates. An exchange that removes mass from
+a donor with larger cost while a cheaper donor has removable mass cannot be
+optimal. Likewise, adding mass to a cheaper receiver while a more expensive
+receiver has capacity cannot be optimal. Repeatedly exchanging such pairs gives
+the sorted transfer rule without decreasing the objective. The algorithm stops
+only when the TV budget is exhausted or no positive-cost transfer remains.
+Therefore no feasible transfer can further increase the expectation. `QED`
+
+## Portfolio Selection
+
+For every requested budget and training robustness value, AutoDRO constructs
+trees with the configured solver portfolio and evaluates both fixed-round and
+midpoint-binary executable fallbacks. Duplicate tree/fallback pairs are removed.
+Candidates that exceed the memory limit are rejected.
+
+The selected score is
+
+`DROMean + tail_weight * MaxCost + memory_weight * Bytes + build_weight * Splits`.
+
+Exact DP candidates are included by default only when `n <= exact_limit`.
+
+## Guarantee Boundary
+
+- Worst-case expectation is exact for each generated candidate.
+- Selection is exact over the enumerated, deduplicated portfolio.
+- The result is not claimed globally optimal over every possible tree unless
+  the portfolio itself exhausts the feasible tree family.
+- Default costs are comparison-equivalent units, not nanoseconds.
+- Nanosecond claims require calibration samples from the deployment target.
+- Re-fitting after additional integer counts is supported through
+  `update_counts`; low-latency in-place tree mutation is not yet implemented.
+
+# CertiGap-AutoDRO Distribution-Shift Benchmark
+
+Selection uses only the training counts and a fixed TV radius of `0.2`. The test distribution is used only after selection.
+
+| Scenario | n | Method | Selected solver | Fallback | Splits | Bytes | Test mean | Test max |
+|---|---:|---|---|---|---:|---:|---:|---:|
+| hot_reversal | 32 | autodro | beam | midpoint_binary | 2 | 368 | 6.63636 | 7.00000 |
+| hot_reversal | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 6.82955 | 7.00000 |
+| hot_reversal | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 5.00000 | 5.00000 |
+| hot_reversal | 64 | autodro | beam | midpoint_binary | 2 | 496 | 7.67614 | 8.00000 |
+| hot_reversal | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 7.82955 | 8.00000 |
+| hot_reversal | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 6.00000 | 6.00000 |
+| partial_hot_drift | 32 | autodro | beam | midpoint_binary | 2 | 368 | 4.39836 | 7.00000 |
+| partial_hot_drift | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 4.48236 | 7.00000 |
+| partial_hot_drift | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 5.00000 | 5.00000 |
+| partial_hot_drift | 64 | autodro | beam | midpoint_binary | 2 | 496 | 5.41228 | 8.00000 |
+| partial_hot_drift | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 5.48236 | 8.00000 |
+| partial_hot_drift | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 6.00000 | 6.00000 |
+| stationary_zipf | 32 | autodro | beam | fixed_rounds | 3 | 464 | 4.30368 | 6.00000 |
+| stationary_zipf | 32 | fixed_beam | beam | fixed_rounds | 4 | 560 | 4.24755 | 6.00000 |
+| stationary_zipf | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 5.00000 | 5.00000 |
+| stationary_zipf | 64 | autodro | beam | midpoint_binary | 4 | 688 | 4.99841 | 7.00000 |
+| stationary_zipf | 64 | fixed_beam | beam | fixed_rounds | 4 | 688 | 5.01343 | 7.00000 |
+| stationary_zipf | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 6.00000 | 6.00000 |
+| uniform_to_zipf | 32 | autodro | beam | fixed_rounds | 0 | 176 | 5.00000 | 5.00000 |
+| uniform_to_zipf | 32 | fixed_beam | beam | fixed_rounds | 0 | 176 | 5.00000 | 5.00000 |
+| uniform_to_zipf | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 5.00000 | 5.00000 |
+| uniform_to_zipf | 64 | autodro | beam | fixed_rounds | 0 | 304 | 6.00000 | 6.00000 |
+| uniform_to_zipf | 64 | fixed_beam | beam | fixed_rounds | 0 | 304 | 6.00000 | 6.00000 |
+| uniform_to_zipf | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 6.00000 | 6.00000 |
+
+## Aggregate
+
+- AutoDRO beats fixed beam on shifted/stationary test mean in `5/8` cases.
+- AutoDRO beats fixed balanced on shifted/stationary test mean in `4/8` cases.
+
+## Scope
+
+This is a deterministic comparison-cost experiment, not a hardware-latency claim. It tests selection under distribution shift; an external trace replay remains required.
 
 # C++ Post-Build Lookup Microbenchmark
 

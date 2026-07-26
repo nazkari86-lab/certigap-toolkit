@@ -60,6 +60,17 @@ The leaf base case may use a full per-key cost profile rather than a uniform
 proof remain exact. This closes the mathematical/runtime gap and makes the
 fixed-round formulation a special case.
 
+## Fixed-Candidate DRO Result
+
+**Theorem F: exact worst-case expectation in a finite total-variation ball**
+
+Sorted probability-mass transfer computes the exact maximum expected
+per-key execution cost over the TV ambiguity set. The implementation is
+cross-checked against exhaustive probability grids.
+
+This certifies each generated candidate's robust score. It does not prove that
+a heuristic portfolio contains the globally optimal tree.
+
 ## Highest-Value Open Theorem
 
 Prove an additive approximation guarantee for mass-quantile candidate pruning

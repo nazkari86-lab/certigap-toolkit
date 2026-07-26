@@ -1,4 +1,4 @@
-.PHONY: test verify lookup reproduce paper
+.PHONY: test verify lookup autodro reproduce paper
 
 test:
 	PYTHONPATH=. python3 -m unittest discover -s tests -v
@@ -8,6 +8,9 @@ verify:
 
 lookup:
 	PYTHONPATH=. python3 generate_lookup_benchmark.py
+
+autodro:
+	PYTHONPATH=. python3 generate_autodro_benchmark.py
 
 reproduce:
 	PYTHONPATH=. python3 build_all.py --benchmark-mode max

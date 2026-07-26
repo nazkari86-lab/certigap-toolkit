@@ -19,8 +19,9 @@ It ships with:
 - greedy and simple baseline solvers;
 - lower bounds and certificate export;
 - benchmark, counterexample, and report-generation pipelines;
-- a C++ core plus Python bindings.
+- a C++ core plus Python bindings;
 - a candidate-pruned C++ beam heuristic for large ordered workloads.
+- AutoDRO selection across budgets, solvers, and executable fallbacks.
 
 License:
 
@@ -73,6 +74,38 @@ Available solver modes:
 - `binary_search`
 - `learned_segment`
 
+## AutoDRO API
+
+Use query counts rather than manually choosing one structure:
+
+```python
+from certigap import CertiGapAutoDRO, ExecutionCostModel
+
+cost_model = ExecutionCostModel.from_samples(
+    routing_samples=[2.8, 2.9, 3.0],
+    fallback_samples=[4.1, 4.0, 4.2],
+    cost_unit="ns",
+)
+
+model = CertiGapAutoDRO().fit(
+    counts=[1200, 430, 90, 20, 4],
+    max_budget=4,
+    confidence=0.95,
+    memory_limit_bytes=4096,
+    cost_model=cost_model,
+)
+
+print(model.summary())
+print(model.estimated_query_cost(1))
+artifact = model.export_selection_artifact()
+```
+
+AutoDRO enumerates the configured portfolio, rejects candidates above the
+memory limit, evaluates each candidate exactly over a total-variation ambiguity
+ball, and returns the minimum verified portfolio score. It does not claim
+global optimality outside that portfolio. See
+[`docs/AUTODRO.md`](docs/AUTODRO.md).
+
 ## Quick Start
 
 Run the full project build:
@@ -114,6 +147,12 @@ Run the post-build C++ lookup-latency microbenchmark:
 
 ```bash
 PYTHONPATH=. python3 generate_lookup_benchmark.py
+```
+
+Run the distribution-shift selection benchmark:
+
+```bash
+PYTHONPATH=. python3 generate_autodro_benchmark.py
 ```
 
 Run the exact generalized model with executable midpoint-binary fallback:

@@ -43,6 +43,7 @@ jobs:
           python generate_speed_quality.py --mode fast
           python generate_counterexamples.py --mode fast
           python generate_proof_artifacts.py
+          python generate_autodro_benchmark.py
           python generate_figures.py
 
       - name: Verify committed scientific artifacts
@@ -57,6 +58,7 @@ jobs:
           python examples/skewed_kv_lookup.py
           python examples/static_hot_cold_catalog.py
           python examples/read_heavy_embedded_index.py
+          python examples/autodro_catalog.py
 
       - name: Build installable wheel
         run: python -m pip wheel . --no-deps --wheel-dir /tmp/certigap-wheel

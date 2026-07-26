@@ -2,7 +2,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb,booktabs,hyperref}
 
-\title{CertiGap: Budgeted Robust Prefix Search\\with Executable Interval Fallbacks}
+\title{CertiGap-AutoDRO: Automatic Portfolio Selection for\\Budgeted Robust Prefix Search}
 \author{Dulat Nurlanuly}
 \date{}
 
@@ -24,7 +24,10 @@ brute force, and proof-carrying branch-and-bound on small instances. A
 candidate-pruned C++ implementation and matched-budget microbenchmark evaluate
 the quality, construction cost, lookup cost, and auxiliary memory of scalable
 solutions. We report both wins and losses and distinguish mathematical,
-empirical, and external-validation claims.
+empirical, and external-validation claims. AutoDRO additionally derives a
+finite-sample total-variation radius from integer query counts, evaluates the
+worst-case expectation of every generated candidate exactly, and automatically
+selects budget, solver, and executable fallback under a memory constraint.
 \end{abstract}
 
 \section{Problem}
@@ -65,6 +68,22 @@ then
 \]
 Hence the objective is the exact robust risk for this contamination set.
 
+\section{Automatic TV-DRO Selection}
+Given integer query counts, AutoDRO constructs a smoothed nominal distribution.
+It derives a conservative finite-alphabet total-variation radius from the
+$L_1$ concentration inequality of Weissman et al.\ \cite{weissman2003} and
+adds the exact TV distance introduced by smoothing. For fixed per-key execution
+costs $c_i$, it evaluates
+\[
+\max_{q:\operatorname{TV}(q,\hat p)\leq\rho}\sum_i q_i c_i
+\]
+by transferring mass from the cheapest donor coordinates to the most
+expensive receiver coordinates. An exchange argument proves this evaluation
+exact. AutoDRO enumerates configured budgets, training robustness values,
+solvers, and fallbacks, filters candidates by memory, and returns the minimum
+verified portfolio score. This is an exact selection guarantee over the
+generated portfolio, not over trees omitted by a heuristic portfolio.
+
 \section{Relation To Prior Work}
 Classical alphabetic and height-limited trees optimize a full tree
 \cite{hutucker1971,larmore1994}. CertiGap instead limits the freely
@@ -79,6 +98,8 @@ The repository contains exact cross-validation, a standalone certificate
 checker, synthetic and public-frequency workloads, temporal holdout, pruning
 ablation, and C++ lookup measurements. Floating-point DP is not itself a
 machine proof; the rational evaluator verifies submitted fixed-round trees.
+The AutoDRO shift benchmark uses the test distribution only after selection
+and reports when fixed balanced search remains preferable.
 External implementations, independent hardware reproduction, and a
 domain-owner pilot remain external validation requirements.
 

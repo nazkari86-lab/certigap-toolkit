@@ -11,11 +11,18 @@
   midpoint binary search, plus an integer-count/rational-eta evaluator.
 - Matched-budget C++ lookup comparisons that separate auxiliary and total bytes
   and label batch-level timing quantiles correctly.
+- Exact finite-support TV worst-case evaluation for every AutoDRO candidate.
+- Automatic portfolio selection over budgets, solvers, and fallbacks with
+  explicit memory and execution-cost accounting.
+- Independently recomputable AutoDRO selection artifacts and a 24-row
+  train/test distribution-shift benchmark.
 
 ## Honest Boundaries
 
 - The C++ pruned beam is empirical: it has no approximation theorem and no proof certificate.
-- The exact DP recurrence is mathematically exact, while the current implementation uses floating-point dominance with `EPS`; rational verification is future work.
+- The exact DP recurrence is mathematically exact, while the current
+  implementation uses floating-point dominance with `EPS`. Rational arithmetic
+  verifies submitted-tree costs but does not machine-prove DP enumeration.
 - Movie identifier order is not semantic locality; the temporal result is one public dataset, not a production deployment claim.
 - Runtime measurements are machine-specific.
 - The rational evaluator verifies submitted-tree arithmetic; it is not a
@@ -30,3 +37,5 @@ These cannot be completed truthfully by local code generation:
 3. A domain-owner pilot with a naturally ordered production lookup catalog and a preregistered latency/memory protocol.
 4. Literature-reviewed comparison against external robust BST and learned-index implementations under matched resource budgets.
 5. A non-trivial approximation theorem for the candidate-pruned scalable path.
+6. Prospective validation of the inferred TV radius under non-stationary real
+   query streams.

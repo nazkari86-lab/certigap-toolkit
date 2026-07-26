@@ -6,6 +6,8 @@ import json
 import re
 from pathlib import Path
 
+from certigap import verify_autodro_selection_artifact
+
 
 ROOT = Path(__file__).resolve().parent
 RESULTS = ROOT / "results"
@@ -30,6 +32,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "speed_quality.csv": 1_152,
         "temporal_holdout.csv": 9,
         "cpp_lookup_latency.csv": 24,
+        "autodro_shift.csv": 24,
     }
     observed: dict[str, int] = {}
     for name, minimum in minimum_rows.items():
@@ -65,6 +68,10 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
     lookup_metadata = json.loads((RESULTS / "cpp_lookup_metadata.json").read_text(encoding="utf-8"))
     if lookup_metadata.get("measurement_scope") != "post-build lookup; p95 across batch means":
         raise ValueError("lookup benchmark metadata is missing or ambiguous")
+    autodro_artifact = json.loads(
+        (RESULTS / "autodro_selection_example.json").read_text(encoding="utf-8")
+    )
+    verify_autodro_selection_artifact(autodro_artifact)
     return observed
 
 

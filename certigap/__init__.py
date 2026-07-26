@@ -1,4 +1,15 @@
 from .api import CertiGapToolkit, FitResult, baseline_learned_segment
+from .autodro import (
+    AutoDROFitResult,
+    AutoDROVerificationError,
+    CertiGapAutoDRO,
+    ExecutionCostModel,
+    UncertaintyModel,
+    fit_autodro,
+    multinomial_uncertainty,
+    verify_autodro_selection_artifact,
+    worst_case_tv_expectation,
+)
 from .branch_and_bound import branch_and_bound_exact
 from .cpp_bindings import CppCertiGap
 from .exact_verifier import verify_serialized_tree_exact
@@ -46,6 +57,8 @@ __all__ = [
     "IntervalLeaf",
     "SplitNode",
     "all_budget_optima",
+    "AutoDROFitResult",
+    "AutoDROVerificationError",
     "baseline_learned_segment",
     "baseline_balanced",
     "baseline_weighted_median",
@@ -54,6 +67,7 @@ __all__ = [
     "benchmark_case",
     "brute_force_best",
     "CertiGapToolkit",
+    "CertiGapAutoDRO",
     "combined_lower_bound",
     "cost_cap_dp_best",
     "counterexample_search",
@@ -63,9 +77,11 @@ __all__ = [
     "effective_budget",
     "evaluate_tree",
     "evaluate_tree_with_fallback",
+    "ExecutionCostModel",
     "FitResult",
     "frontier_dp_best",
     "fixed_rounds_profile",
+    "fit_autodro",
     "generalized_frontier_dp_best",
     "greedy_best",
     "heuristic_best",
@@ -75,12 +91,16 @@ __all__ = [
     "make_distribution",
     "max_cost_lower_bound",
     "midpoint_binary_profile",
+    "multinomial_uncertainty",
     "normalize_weights",
     "power_of_two_greedy_family",
     "split_count",
     "validate_problem",
+    "UncertaintyModel",
     "verify_certificate_artifact",
     "verify_branch_and_bound_certificate",
+    "verify_autodro_selection_artifact",
     "verify_tree",
     "verify_serialized_tree_exact",
+    "worst_case_tv_expectation",
 ]
