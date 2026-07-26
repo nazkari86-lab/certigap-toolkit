@@ -26,3 +26,9 @@ These are worst-case bounds for numerically validated floating-point reference
 implementations; the recurrence is mathematically exact, but finite `EPS`
 dominance comparisons are not rational-arithmetic proofs. The candidate-pruned
 C++ path is a separate heuristic and has no exactness guarantee.
+
+The generalized executable-fallback DP has the same asymptotic recurrence after
+fallback profiles have been precomputed. A direct midpoint-profile
+precomputation takes `O(n^3)` time over all intervals and keys in the reference
+implementation; fixed-round profiles are constant-time per interval. This
+precomputation does not increase the displayed frontier-DP worst-case bound.

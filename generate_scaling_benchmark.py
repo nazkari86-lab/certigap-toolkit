@@ -17,6 +17,7 @@ from certigap.benchmark_datasets import MANIFEST_PATH, SOURCES, load_real_worklo
 ROOT = Path(__file__).resolve().parent
 RESULTS_DIR = ROOT / "results"
 CSV_PATH = RESULTS_DIR / "scaling_benchmark.csv"
+TEMP_CSV_PATH = RESULTS_DIR / "scaling_benchmark.csv.tmp"
 SUMMARY_PATH = RESULTS_DIR / "scaling_benchmark.md"
 PROVENANCE_PATH = RESULTS_DIR / "benchmark_provenance.json"
 
@@ -116,7 +117,7 @@ def main() -> None:
     workloads, provenance = workload_rows(args, preset)
     fieldnames = ["workload_type", "workload", "n", "budget", "eta", "solver", "beam_width", "repeats", "median_ms", "p95_ms", "peak_memory_mb", "objective"]
     rows: list[dict] = []
-    with CSV_PATH.open("w", encoding="utf-8", newline="") as handle:
+    with TEMP_CSV_PATH.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         for workload_type, workload, source_weights in workloads:
@@ -143,6 +144,7 @@ def main() -> None:
                     }
                     rows.append(row)
                     writer.writerow(row)
+    TEMP_CSV_PATH.replace(CSV_PATH)
     provenance["run"] = {"mode": args.mode, "dataset_selection": args.datasets, "sizes": preset["sizes"], "base_repeats": preset["repeats"], "measurement_plan": {str(n): {"beams": measurement_plan(args.mode, preset, n)[0], "repeats": measurement_plan(args.mode, preset, n)[1]} for n in preset["sizes"]}, "eta": 0.15, "budget": "min(6, n-1)", "raw_cache_manifest": str(MANIFEST_PATH.relative_to(ROOT))}
     PROVENANCE_PATH.write_text(json.dumps(provenance, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     lines = ["# CertiGap Scaling Benchmark", "", f"Mode: `{args.mode}`; datasets: `{args.datasets}`. This measures heuristic and baseline scaling, not exact-optimality quality.", "", "## Coverage", "", f"- Workloads completed: `{len({(row['workload_type'], row['workload']) for row in rows})}`", f"- Rows: `{len(rows)}`", f"- Sizes: `{', '.join(map(str, preset['sizes']))}`", f"- Solvers: greedy, beam widths up to `{max(preset['beams'])}`, and {', '.join(BASELINES)}", "- `max` is the largest complete range for this threshold-enumerating Python reference implementation. Exploratory runs above `n=512` were deliberately not published because they did not complete within the benchmark budget.", "- Raw-source provenance and SHA-256: [`benchmark_provenance.json`](benchmark_provenance.json)", "", "## Zipf / First Real Workload Snapshot", "", "| Workload | n | Solver | Width | Repeats | Median ms | p95 ms | Peak MB | Objective |", "|---|---:|---|---:|---:|---:|---:|---:|"]

@@ -217,3 +217,18 @@ The leaf case is feasible exactly when `ceil(log2(|I|)) <= h`; every split decre
 Induction on interval length and budget proves the recurrence. Minimizing the resulting candidates over `h` recovers the optimum of `J_eta`, because every tree appears at its own maximum cost cap.
 
 The repository cross-validates this recurrence against both the Pareto-frontier DP and brute force on the generated small-instance suite.
+
+## Theorem E: Exact Optimality With Executable Fallback Profiles
+
+Let `F(l,r,i)` be any deterministic non-negative per-key comparison cost for
+resolving key `i` inside interval `[l,r]`. Replacing the fixed leaf cost with
+
+- `A_F(l,r) = sum_i p_hat_i F(l,r,i)`;
+- `M_F(l,r) = max_i F(l,r,i)`
+
+preserves the split recurrences in Lemmas 2 and 3. The structural induction and
+dominance argument of Theorem A therefore apply unchanged. The generalized
+frontier DP is exact for every fixed fallback profile.
+
+The full statement, relation to height-limited alphabetic trees, implementation,
+and scope are given in `GENERALIZED_FALLBACK.md`.

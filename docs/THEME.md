@@ -2,11 +2,11 @@
 
 ## Final Topic
 
-**CertiGap: budgeted robust partial search trees with certified near-optimality**
+**CertiGap: budgeted robust partial search trees with executable interval fallbacks**
 
 ## One-Sentence Contribution
 
-We optimize **how much order to materialize** under a strict split budget, under **unreliable query predictions**, and return a solution together with a **verifiable certificate of its quality**.
+We optimize **how much order to materialize** under a strict split budget and **unreliable query predictions**, with exact optimality for the dynamic program and independently verifiable objective bounds for every exported solution.
 
 ## Central Research Question
 

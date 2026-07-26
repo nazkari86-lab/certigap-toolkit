@@ -29,7 +29,7 @@ def main() -> None:
     with (RESULTS / "cpp_pruned_scaling.csv").open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader(); writer.writerows(rows)
-    lines = ["# C++ Pruned-Beam Scaling", "", "This measures the candidate-pruned C++ heuristic, not an exact solver. It evaluates at most 32 thresholds per leaf and preserves no certificate/tree export.", "", "| Distribution | n | Median ms | Objective |", "|---|---:|---:|---:|"]
+    lines = ["# C++ Pruned-Beam Scaling", "", "This measures the candidate-pruned C++ heuristic, not an exact solver. It evaluates at most 32 thresholds per leaf and exports its executable tree, but it does not produce an optimality certificate.", "", "| Distribution | n | Median ms | Objective |", "|---|---:|---:|---:|"]
     lines += [f"| {row['distribution']} | {row['n']} | {row['median_ms']:.3f} | {row['objective']:.6f} |" for row in rows]
     (RESULTS / "cpp_pruned_scaling.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("Wrote C++ pruned-beam scaling artifacts")

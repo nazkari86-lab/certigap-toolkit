@@ -50,3 +50,18 @@ Why it matters:
 Identify a clean family, such as single hot interval or symmetric bimodal mass, where a specific constructive policy is provably optimal.
 
 This is strong, but optional. It should not delay Theorems A and B.
+
+## Generalized Positive Result
+
+**Theorem E: exact optimality for any deterministic executable interval fallback**
+
+The leaf base case may use a full per-key cost profile rather than a uniform
+`ceil(log2 |I|)` bound. The materialized split recurrence and Pareto-dominance
+proof remain exact. This closes the mathematical/runtime gap and makes the
+fixed-round formulation a special case.
+
+## Highest-Value Open Theorem
+
+Prove an additive approximation guarantee for mass-quantile candidate pruning
+with mandatory size-boundary thresholds. This is intentionally still marked
+open; empirical 0.04% mean relative gap is not a theorem.

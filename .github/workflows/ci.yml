@@ -45,6 +45,11 @@ jobs:
           python generate_proof_artifacts.py
           python generate_figures.py
 
+      - name: Verify committed scientific artifacts
+        env:
+          PYTHONPATH: .
+        run: python verify_artifacts.py
+
       - name: Verify public examples
         env:
           PYTHONPATH: .
@@ -52,3 +57,6 @@ jobs:
           python examples/skewed_kv_lookup.py
           python examples/static_hot_cold_catalog.py
           python examples/read_heavy_embedded_index.py
+
+      - name: Build installable wheel
+        run: python -m pip wheel . --no-deps --wheel-dir /tmp/certigap-wheel

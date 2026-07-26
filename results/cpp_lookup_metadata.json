@@ -1,0 +1,15 @@
+{
+  "command": {
+    "batch_repeats": 31,
+    "queries_per_batch": 200000,
+    "sizes": [
+      1000,
+      10000
+    ]
+  },
+  "compiler": "Apple clang version 17.0.0 (clang-1700.6.3.2)",
+  "machine": "arm64",
+  "measurement_scope": "post-build lookup; p95 across batch means",
+  "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+  "python": "3.14.5"
+}

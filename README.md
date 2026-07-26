@@ -116,6 +116,22 @@ Run the post-build C++ lookup-latency microbenchmark:
 PYTHONPATH=. python3 generate_lookup_benchmark.py
 ```
 
+Run the exact generalized model with executable midpoint-binary fallback:
+
+```python
+from certigap import generalized_frontier_dp_best
+
+result = generalized_frontier_dp_best(
+    weights=[5, 2, 20, 3, 1],
+    budget=2,
+    eta=0.15,
+    fallback="midpoint_binary",
+)
+```
+
+See [`GENERALIZED_FALLBACK.md`](docs/GENERALIZED_FALLBACK.md) for Theorem E
+and the exact relationship to classical alphabetic trees.
+
 ## C++ Core And Bindings
 
 The C++ shared library is built from:

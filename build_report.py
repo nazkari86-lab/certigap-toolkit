@@ -34,10 +34,10 @@ def build_abstract(summary_text: str) -> str:
             "",
             "The project contributes:",
             "",
-            "1. an exact frontier dynamic program for the budgeted robust partial-search model;",
-            "2. a stronger beam-search heuristic for larger instances;",
-            "3. a structural checker that recomputes the objective and an entropy lower bound;",
-            "4. a reproducible synthetic benchmark suite.",
+            "1. an exact generalized frontier dynamic program for deterministic executable fallbacks;",
+            "2. a scalable candidate-pruned C++ heuristic and an unbounded-gap result for one-step greedy;",
+            "3. structural, entropy-bound, proof-trace, and rational-arithmetic verification layers;",
+            "4. reproducible synthetic, public-workload, temporal, and matched-budget C++ benchmarks.",
             "",
             "Current prototype evidence:",
             "",
@@ -48,7 +48,15 @@ def build_abstract(summary_text: str) -> str:
     ) + "\n"
 
 
-def build_report(theme_text: str, theorem_text: str, experiment_text: str, positioning_text: str, summary_text: str) -> str:
+def build_report(
+    theme_text: str,
+    theorem_text: str,
+    experiment_text: str,
+    positioning_text: str,
+    summary_text: str,
+    generalized_text: str = "",
+    lookup_text: str = "",
+) -> str:
     return "\n".join(
         [
             "# CertiGap Report",
@@ -73,6 +81,10 @@ def build_report(theme_text: str, theorem_text: str, experiment_text: str, posit
             "",
             theorem_text,
             "",
+            "## Executable Fallback Generalization",
+            "",
+            generalized_text,
+            "",
             "## Experimental Design",
             "",
             experiment_text,
@@ -80,6 +92,10 @@ def build_report(theme_text: str, theorem_text: str, experiment_text: str, posit
             "## Current Results",
             "",
             summary_text,
+            "",
+            "## Matched-Budget Lookup Evidence",
+            "",
+            lookup_text,
             "",
             "## Competition Positioning",
             "",
@@ -152,6 +168,8 @@ def main() -> None:
     counterexample_text = read_text(RESULTS_DIR / "counterexamples.md") if (RESULTS_DIR / "counterexamples.md").exists() else ""
     technical_note_text = read_text(DOCS_DIR / "TECHNICAL_NOTE.md") if (DOCS_DIR / "TECHNICAL_NOTE.md").exists() else ""
     speed_quality_text = read_text(RESULTS_DIR / "speed_quality_summary.md") if (RESULTS_DIR / "speed_quality_summary.md").exists() else ""
+    generalized_text = read_text(DOCS_DIR / "GENERALIZED_FALLBACK.md")
+    lookup_text = read_text(RESULTS_DIR / "cpp_lookup_latency.md")
 
     (REPORT_DIR / "ABSTRACT.md").write_text(build_abstract(summary_text), encoding="utf-8")
     (REPORT_DIR / "REPORT.md").write_text(
@@ -163,6 +181,8 @@ def main() -> None:
             summary_text
             + ("\n\n## Speed And Quality\n\n" + speed_quality_text if speed_quality_text else "")
             + ("\n\n## Counterexamples\n\n" + counterexample_text if counterexample_text else ""),
+            generalized_text,
+            lookup_text,
         ),
         encoding="utf-8",
     )

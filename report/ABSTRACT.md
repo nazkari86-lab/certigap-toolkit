@@ -5,10 +5,10 @@ Instead of forcing a fully resolved search structure, CertiGap allows unresolved
 
 The project contributes:
 
-1. an exact frontier dynamic program for the budgeted robust partial-search model;
-2. a stronger beam-search heuristic for larger instances;
-3. a structural checker that recomputes the objective and an entropy lower bound;
-4. a reproducible synthetic benchmark suite.
+1. an exact generalized frontier dynamic program for deterministic executable fallbacks;
+2. a scalable candidate-pruned C++ heuristic and an unbounded-gap result for one-step greedy;
+3. structural, entropy-bound, proof-trace, and rational-arithmetic verification layers;
+4. reproducible synthetic, public-workload, temporal, and matched-budget C++ benchmarks.
 
 Current prototype evidence:
 

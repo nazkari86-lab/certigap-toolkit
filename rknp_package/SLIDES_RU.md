@@ -2,7 +2,7 @@
 
 ## Слайд 1. Название
 
-CertiGap: робастные частичные поисковые деревья с ограниченным бюджетом разделений и сертифицируемой близостью к оптимуму
+CertiGap: робастный префиксный поиск с исполняемыми interval fallback
 
 ## Слайд 2. Проблема
 
@@ -38,7 +38,8 @@ CertiGap: робастные частичные поисковые деревь�
 - upper bound;
 - lower bound;
 - independently recomputed entropy bound;
-- exact gap на малых случаях.
+- rational arithmetic для integer counts;
+- exhaustive proof trace на малых случаях.
 
 ## Слайд 7. Вывод
 

@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use CertiGap, cite this software and the accompanying technical report."
+title: "CertiGap: Budgeted Robust Prefix Search With Executable Fallbacks"
+type: software
+authors:
+  - family-names: "Nurlanuly"
+    given-names: "Dulat"
+repository-code: "https://github.com/nazkari86-lab/certigap-toolkit"
+url: "https://github.com/nazkari86-lab/certigap-toolkit"
+license: MIT
+version: 0.9.0
+date-released: 2026-07-26

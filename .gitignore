@@ -3,3 +3,7 @@ __pycache__/
 build/
 data/external/*
 !data/external/manifest.json
+.DS_Store
+dist/
+*.egg-info/
+*.tmp

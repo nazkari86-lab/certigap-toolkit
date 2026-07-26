@@ -1,0 +1,87 @@
+\documentclass[10pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,booktabs,hyperref}
+
+\title{CertiGap: Budgeted Robust Prefix Search\\with Executable Interval Fallbacks}
+\author{Dulat Nurlanuly}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We study static search over ordered keys when only a limited number of
+threshold comparisons may be materialized and the observed query distribution
+may be contaminated. A CertiGap tree freely chooses at most $B$ prefix
+comparisons and delegates every unresolved contiguous interval to a fixed
+executable fallback. We give an exact Pareto-frontier dynamic program for any
+deterministic per-key fallback profile, prove that a Huber-contamination model
+reduces exactly to a convex combination of nominal average and worst-case
+cost, and provide an independently checkable rational evaluator. We also give
+an infinite family on which one-step greedy has unbounded additive error.
+The implementation is cross-validated against a second exact recurrence,
+brute force, and proof-carrying branch-and-bound on small instances. A
+candidate-pruned C++ implementation and matched-budget microbenchmark evaluate
+the quality, construction cost, lookup cost, and auxiliary memory of scalable
+solutions. We report both wins and losses and distinguish mathematical,
+empirical, and external-validation claims.
+\end{abstract}
+
+\section{Problem}
+Let $a_1<\cdots<a_n$ be ordered keys with nominal access distribution
+$\hat p$. A partial tree contains at most $B$ materialized threshold nodes.
+If key $i$ reaches unresolved interval $[l,r]$ at depth $d$, a deterministic
+fallback $F$ incurs $F(l,r,i)$ additional comparisons. Thus
+\[
+C_T^F(i)=d+F(l,r,i).
+\]
+For contamination level $\eta\in[0,1]$, we minimize
+\[
+J_\eta^F(T)=(1-\eta)\sum_i\hat p_iC_T^F(i)
+             +\eta\max_i C_T^F(i).
+\]
+
+\section{Exact Dynamic Programming}
+For every interval and remaining budget, the algorithm retains nondominated
+pairs $(A,M)$ of nominal average and maximum cost. A fallback leaf contributes
+\[
+A_F(l,r)=\sum_{i=l}^r\hat p_iF(l,r,i),\qquad
+M_F(l,r)=\max_{i=l}^r F(l,r,i).
+\]
+A split at $k$ contributes
+\[
+A=P(l,r)+A_L+A_R,\qquad M=1+\max(M_L,M_R).
+\]
+Structural induction shows that every feasible partial tree is enumerated.
+Removing a state dominated in both coordinates is safe for every $\eta$.
+Therefore minimizing $(1-\eta)A+\eta M$ over the root frontier is exact.
+
+\section{Robustness}
+If the true distribution is $p=(1-\eta)\hat p+\eta q$ for arbitrary $q$,
+then
+\[
+\max_q\mathbb E_p[C_T^F]
+=(1-\eta)\mathbb E_{\hat p}[C_T^F]+\eta\max_i C_T^F(i).
+\]
+Hence the objective is the exact robust risk for this contamination set.
+
+\section{Relation To Prior Work}
+Classical alphabetic and height-limited trees optimize a full tree
+\cite{hutucker1971,larmore1994}. CertiGap instead limits the freely
+materialized prefix and fixes all completion subtrees. Robust BSTs under
+scenario and earth-mover uncertainty use different uncertainty sets and
+solution classes \cite{angelopoulos2025,dinitz2024}. Learned indexes optimize
+model-size and last-mile-search tradeoffs but generally do not provide this
+split-budget exact program \cite{pgm2020,sosd2020}.
+
+\section{Evidence And Limits}
+The repository contains exact cross-validation, a standalone certificate
+checker, synthetic and public-frequency workloads, temporal holdout, pruning
+ablation, and C++ lookup measurements. Floating-point DP is not itself a
+machine proof; the rational evaluator verifies submitted fixed-round trees.
+External implementations, independent hardware reproduction, and a
+domain-owner pilot remain external validation requirements.
+
+\bibliographystyle{plain}
+\bibliography{references}
+\end{document}

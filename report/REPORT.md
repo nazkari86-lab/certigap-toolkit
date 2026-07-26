@@ -2,11 +2,11 @@
 
 ## Topic
 
-**CertiGap: budgeted robust partial search trees with certified near-optimality**
+**CertiGap: budgeted robust partial search trees with executable interval fallbacks**
 
 ## One-Sentence Contribution
 
-We optimize **how much order to materialize** under a strict split budget, under **unreliable query predictions**, and return a solution together with a **verifiable certificate of its quality**.
+We optimize **how much order to materialize** under a strict split budget and **unreliable query predictions**, with exact optimality for the dynamic program and independently verifiable objective bounds for every exported solution.
 
 ## Research Question
 
@@ -74,6 +74,101 @@ Why it matters:
 Identify a clean family, such as single hot interval or symmetric bimodal mass, where a specific constructive policy is provably optimal.
 
 This is strong, but optional. It should not delay Theorems A and B.
+
+## Generalized Positive Result
+
+**Theorem E: exact optimality for any deterministic executable interval fallback**
+
+The leaf base case may use a full per-key cost profile rather than a uniform
+`ceil(log2 |I|)` bound. The materialized split recurrence and Pareto-dominance
+proof remain exact. This closes the mathematical/runtime gap and makes the
+fixed-round formulation a special case.
+
+## Highest-Value Open Theorem
+
+Prove an additive approximation guarantee for mass-quantile candidate pruning
+with mandatory size-boundary thresholds. This is intentionally still marked
+open; empirical 0.04% mean relative gap is not a theorem.
+
+## Executable Fallback Generalization
+
+# Generalized Executable Fallback Model
+
+## Motivation
+
+The original CertiGap model assigns every key in an unresolved interval
+`[l,r]` the conservative fixed-round cost `ceil(log2(r-l+1))`. Real fallback
+implementations may have different per-key costs. For example, midpoint
+lower-bound search on three keys has costs `(2,2,1)`.
+
+The generalized model closes that model/runtime gap without changing the
+materialized-prefix interpretation.
+
+## Definition
+
+Let `F(l,r,i)` be the non-negative integer comparison cost of a deterministic
+fallback policy for key `i` in interval `[l,r]`. If key `i` reaches that leaf
+at materialized depth `d`, define
+
+`C_T^F(i) = d + F(l,r,i)`.
+
+The robust objective remains
+
+`J_eta^F(T) = (1-eta) sum_i p_hat_i C_T^F(i) + eta max_i C_T^F(i)`.
+
+`fixed_rounds` and the exact comparison profile of executable midpoint binary
+search are included. A user may also supply a deterministic custom profile.
+
+## Theorem E: Exactness For Any Fixed Fallback
+
+For every deterministic fallback profile `F`, the generalized frontier dynamic
+program returns a tree with at most `B` materialized splits minimizing
+`J_eta^F`.
+
+### Proof
+
+For a leaf `[l,r]`, its achievable state is exactly
+
+- `A_F(l,r) = sum_{i=l}^r p_hat_i F(l,r,i)`;
+- `M_F(l,r) = max_{i=l}^r F(l,r,i)`.
+
+For a materialized split at `k`, every key pays one new comparison. Therefore
+the recurrence remains
+
+- `A = P(l,r) + A_left + A_right`;
+- `M = 1 + max(M_left,M_right)`.
+
+The structural decomposition of every valid partial tree is unchanged. By
+induction on interval length and budget, the recurrence enumerates every
+achievable `(A,M)` pair. Pareto dominance is safe because both coefficients in
+`(1-eta)A + eta M` are non-negative. Selecting the minimum retained state is
+therefore globally optimal. `QED`
+
+## Relation To Classical Alphabetic Trees
+
+Expanding every unresolved interval leaf with its deterministic fallback tree
+maps a CertiGap solution to a full alphabetic decision tree. CertiGap optimizes
+over the restricted class in which:
+
+1. at most `B` prefix comparisons are freely materialized;
+2. every remaining subtree must equal the selected fallback completion.
+
+This differs from a height-limited alphabetic tree, where all internal nodes
+are optimized and the constraint is maximum depth rather than the number of
+freely materialized prefix nodes.
+
+## Implementation And Verification
+
+- `generalized_frontier_dp_best` implements Theorem E.
+- `midpoint_binary_profile` reproduces per-key comparison counts of midpoint
+  lower-bound search.
+- `verify_serialized_tree_exact` independently recomputes fixed-round tree
+  objectives from integer counts and rational `eta`, without floating-point
+  dominance or `EPS`.
+
+The rational verifier proves submitted-tree arithmetic, not global optimality.
+Global exactness is established by the DP proof and small-instance independent
+cross-validation.
 
 ## Experimental Design
 
@@ -190,11 +285,11 @@ See `counterexamples.md` for automatically discovered hot-block families where o
 
 ## Small Cases With Exact Reference
 
-- Exact mean time: `3.028 ms`
-- Beam mean time: `5.181 ms`
-- Greedy mean time: `0.242 ms`
-- Balanced mean time: `0.014 ms`
-- Weighted mean time: `0.019 ms`
+- Exact mean time: `2.537 ms`
+- Beam mean time: `4.670 ms`
+- Greedy mean time: `0.224 ms`
+- Balanced mean time: `0.013 ms`
+- Weighted mean time: `0.017 ms`
 - Beam mean absolute objective gap vs exact: `0.000979`
 - Greedy mean absolute objective gap vs exact: `0.114157`
 - Balanced mean absolute objective gap vs exact: `0.447373`
@@ -204,10 +299,10 @@ See `counterexamples.md` for automatically discovered hot-block families where o
 
 ## Large Cases Without Exact Reference
 
-- Beam mean time: `53.550 ms`
-- Greedy mean time: `1.452 ms`
+- Beam mean time: `53.103 ms`
+- Greedy mean time: `1.448 ms`
 - Balanced mean time: `0.024 ms`
-- Weighted mean time: `0.040 ms`
+- Weighted mean time: `0.039 ms`
 
 ## Solver Tradeoff
 
@@ -256,6 +351,61 @@ Top automatically discovered hot-block instances where one-step greedy is much w
 - exact tree: `{'type': 'split', 'interval': [1, 10], 'threshold': 5, 'left': {'type': 'split', 'interval': [1, 5], 'threshold': 4, 'left': {'type': 'leaf', 'interval': [1, 4]}, 'right': {'type': 'leaf', 'interval': [5, 5]}}, 'right': {'type': 'split', 'interval': [6, 10], 'threshold': 6, 'left': {'type': 'leaf', 'interval': [6, 6]}, 'right': {'type': 'leaf', 'interval': [7, 10]}}}`
 - greedy tree: `{'type': 'split', 'interval': [1, 10], 'threshold': 2, 'left': {'type': 'leaf', 'interval': [1, 2]}, 'right': {'type': 'leaf', 'interval': [3, 10]}}`
 - beam tree: `{'type': 'split', 'interval': [1, 10], 'threshold': 5, 'left': {'type': 'split', 'interval': [1, 5], 'threshold': 4, 'left': {'type': 'leaf', 'interval': [1, 4]}, 'right': {'type': 'leaf', 'interval': [5, 5]}}, 'right': {'type': 'split', 'interval': [6, 10], 'threshold': 6, 'left': {'type': 'leaf', 'interval': [6, 6]}, 'right': {'type': 'leaf', 'interval': [7, 10]}}}`
+
+## Matched-Budget Lookup Evidence
+
+# C++ Post-Build Lookup Microbenchmark
+
+This measures only rank lookup after each structure is built. Times are local-machine measurements, not cross-machine or production claims.
+
+- Queries are sampled from each workload distribution with a deterministic PRNG.
+- CertiGap uses the candidate-pruned C++ beam (`B=min(6,n-1)`, `eta=0.15`, width 32, candidate limit 16).
+- CertiGap and budgeted trees use at most `B=min(6,n-1)` materialized splits and fixed-round interval fallback.
+- `balanced_full_reference` and `std_lower_bound` are explicitly unconstrained references, not equal-budget competitors.
+- Reported p95 is across repeated batch means; it is not single-query tail latency.
+- Total index bytes include the shared integer key array; auxiliary bytes exclude allocator overhead.
+
+| Workload | Solver | n | B | Median batch ns/query | p95 batch ns/query | Nodes | Auxiliary bytes | Total bytes |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| uniform | certigap_pruned | 1000 | 6 | 16.574 | 16.909 | 1 | 48 | 4048 |
+| uniform | balanced_budgeted | 1000 | 6 | 18.637 | 19.711 | 13 | 624 | 4624 |
+| uniform | weighted_budgeted | 1000 | 6 | 18.592 | 19.480 | 13 | 624 | 4624 |
+| uniform | balanced_full_reference | 1000 | 999 | 16.546 | 18.773 | 1999 | 95952 | 99952 |
+| uniform | std_lower_bound | 1000 | 0 | 15.670 | 15.947 | 0 | 0 | 4000 |
+| zipf | certigap_pruned | 1000 | 6 | 26.138 | 27.782 | 11 | 528 | 4528 |
+| zipf | balanced_budgeted | 1000 | 6 | 15.908 | 16.136 | 13 | 624 | 4624 |
+| zipf | weighted_budgeted | 1000 | 6 | 25.656 | 27.144 | 13 | 624 | 4624 |
+| zipf | balanced_full_reference | 1000 | 999 | 15.514 | 15.666 | 1999 | 95952 | 99952 |
+| zipf | std_lower_bound | 1000 | 0 | 15.312 | 17.053 | 0 | 0 | 4000 |
+| hot_tail | certigap_pruned | 1000 | 6 | 22.645 | 31.178 | 13 | 624 | 4624 |
+| hot_tail | balanced_budgeted | 1000 | 6 | 15.471 | 15.593 | 13 | 624 | 4624 |
+| hot_tail | weighted_budgeted | 1000 | 6 | 24.494 | 24.996 | 13 | 624 | 4624 |
+| hot_tail | balanced_full_reference | 1000 | 999 | 16.198 | 16.809 | 1999 | 95952 | 99952 |
+| hot_tail | std_lower_bound | 1000 | 0 | 15.600 | 16.460 | 0 | 0 | 4000 |
+| uniform | certigap_pruned | 10000 | 6 | 28.711 | 41.829 | 5 | 240 | 40240 |
+| uniform | balanced_budgeted | 10000 | 6 | 27.275 | 29.340 | 13 | 624 | 40624 |
+| uniform | weighted_budgeted | 10000 | 6 | 27.286 | 31.902 | 13 | 624 | 40624 |
+| uniform | balanced_full_reference | 10000 | 9999 | 55.459 | 58.687 | 19999 | 959952 | 999952 |
+| uniform | std_lower_bound | 10000 | 0 | 38.827 | 40.326 | 0 | 0 | 40000 |
+| zipf | certigap_pruned | 10000 | 6 | 27.978 | 28.682 | 13 | 624 | 40624 |
+| zipf | balanced_budgeted | 10000 | 6 | 23.843 | 24.185 | 13 | 624 | 40624 |
+| zipf | weighted_budgeted | 10000 | 6 | 28.185 | 29.325 | 13 | 624 | 40624 |
+| zipf | balanced_full_reference | 10000 | 9999 | 51.785 | 52.753 | 19999 | 959952 | 999952 |
+| zipf | std_lower_bound | 10000 | 0 | 44.082 | 46.504 | 0 | 0 | 40000 |
+| hot_tail | certigap_pruned | 10000 | 6 | 23.108 | 24.370 | 13 | 624 | 40624 |
+| hot_tail | balanced_budgeted | 10000 | 6 | 25.067 | 27.748 | 13 | 624 | 40624 |
+| hot_tail | weighted_budgeted | 10000 | 6 | 26.932 | 27.520 | 13 | 624 | 40624 |
+| hot_tail | balanced_full_reference | 10000 | 9999 | 49.320 | 51.558 | 19999 | 959952 | 999952 |
+| hot_tail | std_lower_bound | 10000 | 0 | 38.837 | 47.130 | 0 | 0 | 40000 |
+
+## Matched-Budget Interpretation
+
+- CertiGap has lower median batch lookup time than `balanced_budgeted` in `2/6` measured workload-size cases.
+- CertiGap has lower median batch lookup time than `weighted_budgeted` in `4/6` measured workload-size cases.
+
+## Limits
+
+This is not a hardware-routing, cache-miss, or external-library benchmark. It is reproducible CPU-level evidence that the exported CertiGap decision tree executes real lookups with an explicit storage footprint. Production claims require a target key encoding, allocator, CPU, and independent external baselines.
 
 ## Competition Positioning
 

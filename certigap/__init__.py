@@ -1,6 +1,13 @@
 from .api import CertiGapToolkit, FitResult, baseline_learned_segment
 from .branch_and_bound import branch_and_bound_exact
 from .cpp_bindings import CppCertiGap
+from .exact_verifier import verify_serialized_tree_exact
+from .generalized import (
+    evaluate_tree_with_fallback,
+    fixed_rounds_profile,
+    generalized_frontier_dp_best,
+    midpoint_binary_profile,
+)
 from .core import (
     CertificateError,
     IntervalLeaf,
@@ -55,8 +62,11 @@ __all__ = [
     "entropy_lower_bound",
     "effective_budget",
     "evaluate_tree",
+    "evaluate_tree_with_fallback",
     "FitResult",
     "frontier_dp_best",
+    "fixed_rounds_profile",
+    "generalized_frontier_dp_best",
     "greedy_best",
     "heuristic_best",
     "hot_block_distribution",
@@ -64,6 +74,7 @@ __all__ = [
     "lagrangian_lower_bound",
     "make_distribution",
     "max_cost_lower_bound",
+    "midpoint_binary_profile",
     "normalize_weights",
     "power_of_two_greedy_family",
     "split_count",
@@ -71,4 +82,5 @@ __all__ = [
     "verify_certificate_artifact",
     "verify_branch_and_bound_certificate",
     "verify_tree",
+    "verify_serialized_tree_exact",
 ]

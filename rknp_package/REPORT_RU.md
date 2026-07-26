@@ -2,7 +2,7 @@
 
 ## 1. Тема проекта
 
-**CertiGap: робастные частичные поисковые деревья с ограниченным бюджетом разделений и сертифицируемой близостью к оптимуму**
+**CertiGap: робастный префиксный поиск с ограниченным бюджетом и исполняемыми fallback-алгоритмами**
 
 ## 2. Актуальность
 
@@ -16,7 +16,7 @@
 
 ## 3. Цель работы
 
-Разработать и исследовать алгоритм построения частичного поискового дерева, который при ограниченном числе разделений минимизирует робастную стоимость поиска и возвращает проверяемый сертификат близости к оптимуму.
+Разработать и исследовать алгоритм построения частичного поискового дерева, который при ограниченном числе разделений минимизирует робастную стоимость реального fallback-поиска и возвращает независимо проверяемые структуру, стоимость и границы.
 
 ## 4. Основная идея
 
@@ -32,7 +32,8 @@ CertiGap не строит полное поисковое дерево на в�
 
 - рассматривается не полное упорядочивание, а **частичная материализация порядка** при явном бюджете разделений;
 - используется робастная contamination-модель для учёта недоверия к прогнозу;
-- вместе со структурой возвращается **сертификат качества**: верхняя оценка, нижняя оценка и разрыв между ними;
+- вместе со структурой возвращаются проверяемая стоимость, entropy-нижняя граница и, на малых задачах, exhaustive proof trace;
+- exact DP обобщён на реальные per-key стоимости midpoint binary search и пользовательские fallback-профили;
 - проект сочетает точный алгоритм, эвристику и независимую проверку результата.
 
 ## 6. Методы
@@ -95,11 +96,11 @@ CertiGap не строит полное поисковое дерево на в�
 
 ## Small Cases With Exact Reference
 
-- Exact mean time: `3.028 ms`
-- Beam mean time: `5.181 ms`
-- Greedy mean time: `0.242 ms`
-- Balanced mean time: `0.014 ms`
-- Weighted mean time: `0.019 ms`
+- Exact mean time: `2.537 ms`
+- Beam mean time: `4.670 ms`
+- Greedy mean time: `0.224 ms`
+- Balanced mean time: `0.013 ms`
+- Weighted mean time: `0.017 ms`
 - Beam mean absolute objective gap vs exact: `0.000979`
 - Greedy mean absolute objective gap vs exact: `0.114157`
 - Balanced mean absolute objective gap vs exact: `0.447373`
@@ -109,10 +110,10 @@ CertiGap не строит полное поисковое дерево на в�
 
 ## Large Cases Without Exact Reference
 
-- Beam mean time: `53.550 ms`
-- Greedy mean time: `1.452 ms`
+- Beam mean time: `53.103 ms`
+- Greedy mean time: `1.448 ms`
 - Balanced mean time: `0.024 ms`
-- Weighted mean time: `0.040 ms`
+- Weighted mean time: `0.039 ms`
 
 ## Solver Tradeoff
 
@@ -196,75 +197,372 @@ This family is the cleanest route to a real negative result in the project:
 
 ## 9. Доказательная часть
 
-# Proof Sketches
+# Formal Results
+
+## Definitions
+
+Let `T` be a valid CertiGap tree on ranks `1..n`.
+
+- Every internal node is a threshold comparison `x <= x_k?`.
+- Every leaf is a contiguous unresolved interval `[l, r]`.
+- The depth of the root is `0`.
+- If key `i` reaches interval leaf `I = [l, r]` at depth `d`, then
+  `C_T(i) = d + ceil(log2(|I|))`.
+
+For a probability vector `p = (p_1, ..., p_n)`:
+
+- `Avg_p(T) = sum_i p_i C_T(i)`
+- `Max(T) = max_i C_T(i)`
+
+For distrust parameter `eta in [0,1]`:
+
+- `J_eta(T) = (1 - eta) Avg_p_hat(T) + eta Max(T)`
+
+The split budget of `T` is the number of internal nodes and must satisfy `|T| <= B`.
+
+## Lemma 1: Structural Decomposition
+
+Every valid CertiGap tree on interval `[l, r]` with budget `b` is exactly one of:
+
+1. a single interval leaf `[l, r]`, or
+2. a root split at some `k` with `l <= k < r`, whose left subtree is valid on `[l, k]`,
+   whose right subtree is valid on `[k+1, r]`, and whose subtree budgets sum to `b - 1`.
+
+### Proof
+
+If the root is a leaf, we are in case 1.
+Otherwise the root is a threshold comparison and so must split the contiguous interval `[l, r]`
+into two contiguous subintervals `[l, k]` and `[k+1, r]` for some `k`.
+Because CertiGap trees preserve contiguity, the left and right subtrees are valid subtrees on those intervals.
+The root itself consumes one split, so the remaining budgets must sum to `b - 1`.
+No other form is possible. `QED`
+
+## Lemma 2: Additive Average-Cost Recurrence
+
+Suppose tree `T` on `[l, r]` has root split at `k`, left subtree `T_L`, right subtree `T_R`, and let
+
+- `P(l, r) = sum_{i=l}^r p_hat_i`.
+
+Then
+
+`Avg_p_hat(T) = P(l, r) + Avg_p_hat(T_L) + Avg_p_hat(T_R)`.
+
+### Proof
+
+Every key in `[l, r]` pays one comparison at the root, contributing total mass `P(l, r)`.
+After the root, keys routed left incur exactly the cost of `T_L`, and keys routed right incur exactly the cost of `T_R`.
+Therefore the expectation decomposes additively. `QED`
+
+## Lemma 3: Worst-Case Recurrence
+
+Under the same assumptions,
+
+`Max(T) = 1 + max(Max(T_L), Max(T_R))`.
+
+### Proof
+
+Every root-to-leaf path in `T` contains the root comparison plus a path entirely inside either `T_L` or `T_R`.
+So the largest key cost is exactly one plus the larger subtree maximum. `QED`
+
+## Lemma 4: Dominance Elimination Is Safe
+
+Let states `S1 = (A1, M1)` and `S2 = (A2, M2)` satisfy
+
+- `A1 <= A2`
+- `M1 <= M2`
+- and at least one inequality is strict.
+
+Then for every `eta in [0,1]`,
+
+`(1 - eta) A1 + eta M1 <= (1 - eta) A2 + eta M2`,
+
+with strict inequality whenever `eta` gives positive weight to a strict component.
+
+### Proof
+
+Both coefficients `(1 - eta)` and `eta` are nonnegative on `[0,1]`.
+Multiplying coordinatewise inequalities by nonnegative coefficients and summing preserves the inequality. `QED`
 
 ## Theorem A: Exact Optimality of the Frontier Dynamic Program
 
-### Statement
+For every interval `[l, r]`, budget `b`, and distrust parameter `eta in [0,1]`,
+the frontier DP returns a tree minimizing
 
-For the static budgeted partial-search model, the frontier DP returns a tree minimizing
+`(1 - eta) Avg_p_hat(T) + eta Max(T)`
 
-`(1 - eta) * average_cost + eta * max_cost`
+among all valid trees on `[l, r]` with at most `b` splits.
 
-among all valid trees with at most `B` splits.
+### Proof
 
-### Proof Sketch
+We proceed by induction on the pair `(r - l, b)` ordered lexicographically.
 
-1. Define the subproblem on an interval `[l, r]` with split budget `b`.
-2. Any valid tree on `[l, r]` is either:
-   - a single interval leaf, or
-   - a root split at some threshold `k`, followed by valid left and right subtrees whose budgets sum to `b - 1`.
-3. The average-cost contribution of a root split decomposes additively:
-   - every key in `[l, r]` pays one extra comparison;
-   - the remaining cost is exactly the cost of the left and right subtrees.
-4. The worst-case cost also decomposes structurally:
-   - after one root split, the resulting worst-case cost is `1 + max(left_max, right_max)`.
-5. Therefore each feasible tree induces a pair
-   - `(average_cost, max_cost)`
-   obtainable from smaller subproblems.
-6. The DP enumerates all such decompositions and compresses only dominated states:
-   - if state `A` has no larger max-cost and strictly smaller average-cost than state `B`,
-     then `B` can never be optimal for any `eta in [0,1]`.
-7. Since compression removes only dominated states, the Pareto frontier is preserved exactly.
-8. Minimizing `(1 - eta) * average_cost + eta * max_cost` over the preserved frontier yields the true optimum.
+### Base Cases
 
-### Formal Status
+If `l = r`, there is only one key. The only valid tree is the leaf `[l, l]`, so the DP is exact.
 
-The complete induction, dominance lemma, tie handling, and singleton boundary cases are written in `FORMAL_RESULTS.md`.
+If `b = 0`, no split is allowed. The only valid tree is the leaf `[l, r]`, so the DP is exact.
 
-## Theorem B: Contamination Robustness
+### Inductive Step
 
-### Statement
+Assume the theorem holds for all smaller subproblems.
+Consider a target subproblem `[l, r]` with budget `b`.
 
-If the true query distribution is
+By Lemma 1, every valid tree is either:
 
-`p = (1 - eta) * p_hat + eta * q`,
+1. the stop state `[l, r]`, or
+2. a root split at some `k` with a budget partition `b_L + b_R = b - 1`.
 
-where `q` is arbitrary, then the worst-case expected cost of tree `T` under this model equals
+For case 1, the DP explicitly includes the corresponding leaf state.
 
-`(1 - eta) * sum_i p_hat_i * C_T(i) + eta * max_i C_T(i)`.
+For case 2, by the induction hypothesis the left and right frontiers produced by the DP contain exactly the nondominated achievable states for `[l, k]` and `[k+1, r]`.
+Combining any such pair with root split `k` yields a valid achievable state on `[l, r]`.
+By Lemma 2 and Lemma 3, its average and maximum components are exactly those used by the recurrence implemented in the DP.
 
-### Proof Sketch
+Therefore before compression, the DP enumerates every achievable state of every valid tree on `[l, r]`.
 
-1. Expand expectation linearly:
-   - `E_p[C_T] = (1 - eta) E_p_hat[C_T] + eta E_q[C_T]`.
-2. Since `q` is arbitrary over the discrete key set, the adversary can place all mass on the key with largest cost.
-3. Therefore
-   - `max_q E_q[C_T] = max_i C_T(i)`.
-4. Substitute this into the objective to obtain the CertiGap robust objective exactly.
+The compression step removes only dominated states.
+By Lemma 4, a dominated state can never beat its dominator for any `eta in [0,1]`.
+Hence compression preserves the entire set of potentially optimal states.
 
-### Why This Matters
+Finally, the DP selects the state minimizing
 
-- it turns `eta` into a mathematically meaningful distrust parameter;
-- it justifies the objective without informal “trade-off” language.
+`(1 - eta) A + eta M`
 
-## Theorem C: A Greedy Baseline Can Be Arbitrarily Suboptimal
+over the preserved frontier.
+Since every valid tree corresponds to some enumerated state and no potentially optimal state was removed,
+the selected tree is globally optimal. `QED`
 
-The proved family uses `n=2^m`, `B=3`, `eta=0`, and two central hot keys of weight `W=n*m`.
-Every first split is either neutral or strictly worse, so one-step greedy stops. A fixed three-split witness isolates the two hot keys at depth two and yields an absolute gap lower bound asymptotic to `m-2`.
+## Theorem B: Contamination Robustness Identity
 
-The full derivation and code generator are in `FORMAL_RESULTS.md` and `power_of_two_greedy_family`.
+Let the true query distribution be
+
+`p = (1 - eta) p_hat + eta q`,
+
+where `q` is any probability distribution over the keys.
+Then for every tree `T`,
+
+`max_q Avg_p(T) = (1 - eta) Avg_p_hat(T) + eta Max(T)`.
+
+### Proof
+
+By linearity of expectation,
+
+`Avg_p(T) = (1 - eta) Avg_p_hat(T) + eta Avg_q(T)`.
+
+The first term is independent of `q`.
+So maximizing over `q` reduces to maximizing `Avg_q(T)`.
+
+Because `q` ranges over all probability distributions on a finite set, its expectation of `C_T(i)` is maximized by placing all mass on a maximizer of `C_T(i)`.
+Hence
+
+`max_q Avg_q(T) = max_i C_T(i) = Max(T)`.
+
+Substituting yields
+
+`max_q Avg_p(T) = (1 - eta) Avg_p_hat(T) + eta Max(T)`.
+
+This is exactly the CertiGap robust objective. `QED`
+
+## Current Formal Status
+
+Theorems A and B are proof-complete at the mathematical level used by the prototype.
+Theorem C below gives a concrete asymptotic negative result for the implemented one-step greedy rule.
+The remaining open work is stronger approximation/structural results and external or machine-assisted formal review.
+
+## Theorem C: An Infinite Family Where One-Step Greedy Is Arbitrarily Suboptimal
+
+For every integer `m >= 3`, let `n = 2^m`, let `B = 3`, let `eta = 0`, and assign weight
+`W = n*m` to keys `n/2` and `n/2 + 1` and weight `1` to every other key.
+Then the implemented one-step greedy algorithm makes no split, while a valid three-split tree has objective at least
+
+`[2W(m - 2) - (n - 2)] / [2W + n - 2]`
+
+smaller than greedy. Consequently the greedy absolute objective gap grows without bound as `m` grows.
+
+### Proof
+
+The unsplit leaf has cost `m` for every key because `n = 2^m`.
+Consider any first split at threshold `k`.
+
+If `k = n/2`, both children have size `n/2`, so every key still has cost `1 + log2(n/2) = m`; this split has zero gain.
+
+If `k < n/2`, both hot keys lie in the larger right child and their cost rises to `m + 1`.
+Let `c = 1 + ceil(log2(k))` be the left-child cost. The unnormalized change in average cost is
+
+`k(c - m) + (n - k - 2) + 2W`.
+
+Since `c >= 1` and `k <= n/2 - 1`, this is at least
+
+`2W - (n/2 - 1)(m - 2) > 0`
+
+for `W = n*m`. The case `k > n/2` is symmetric. Thus no first split strictly improves the objective, and the greedy rule stops at the unsplit leaf.
+
+Now use the explicit tree with root split at `n/2`, a left split at `n/2 - 1`, and a right split at `n/2 + 1`.
+Both hot keys have cost `2`; each cold key has cost `m + 1`.
+Its objective is therefore
+
+`[4W + (n - 2)(m + 1)] / [2W + n - 2]`.
+
+Subtracting this from greedy's cost `m` gives exactly
+
+`[2W(m - 2) - (n - 2)] / [2W + n - 2]`.
+
+This is positive for every `m >= 3` and is asymptotic to `m - 2`, so the gap is unbounded. Since the optimum is no worse than this explicit tree, the same expression is a valid lower bound on greedy's gap to optimum. `QED`
+
+## Proposition D: Cost-Cap DP Exactness
+
+For a fixed cap `h`, the cost-cap recurrence stores the minimum average cost over all valid trees whose relative maximum cost is at most `h`.
+The leaf case is feasible exactly when `ceil(log2(|I|)) <= h`; every split decreases the remaining cap by one for both children.
+Induction on interval length and budget proves the recurrence. Minimizing the resulting candidates over `h` recovers the optimum of `J_eta`, because every tree appears at its own maximum cost cap.
+
+The repository cross-validates this recurrence against both the Pareto-frontier DP and brute force on the generated small-instance suite.
+
+## Theorem E: Exact Optimality With Executable Fallback Profiles
+
+Let `F(l,r,i)` be any deterministic non-negative per-key comparison cost for
+resolving key `i` inside interval `[l,r]`. Replacing the fixed leaf cost with
+
+- `A_F(l,r) = sum_i p_hat_i F(l,r,i)`;
+- `M_F(l,r) = max_i F(l,r,i)`
+
+preserves the split recurrences in Lemmas 2 and 3. The structural induction and
+dominance argument of Theorem A therefore apply unchanged. The generalized
+frontier DP is exact for every fixed fallback profile.
+
+The full statement, relation to height-limited alphabetic trees, implementation,
+and scope are given in `GENERALIZED_FALLBACK.md`.
+
+# Generalized Executable Fallback Model
+
+## Motivation
+
+The original CertiGap model assigns every key in an unresolved interval
+`[l,r]` the conservative fixed-round cost `ceil(log2(r-l+1))`. Real fallback
+implementations may have different per-key costs. For example, midpoint
+lower-bound search on three keys has costs `(2,2,1)`.
+
+The generalized model closes that model/runtime gap without changing the
+materialized-prefix interpretation.
+
+## Definition
+
+Let `F(l,r,i)` be the non-negative integer comparison cost of a deterministic
+fallback policy for key `i` in interval `[l,r]`. If key `i` reaches that leaf
+at materialized depth `d`, define
+
+`C_T^F(i) = d + F(l,r,i)`.
+
+The robust objective remains
+
+`J_eta^F(T) = (1-eta) sum_i p_hat_i C_T^F(i) + eta max_i C_T^F(i)`.
+
+`fixed_rounds` and the exact comparison profile of executable midpoint binary
+search are included. A user may also supply a deterministic custom profile.
+
+## Theorem E: Exactness For Any Fixed Fallback
+
+For every deterministic fallback profile `F`, the generalized frontier dynamic
+program returns a tree with at most `B` materialized splits minimizing
+`J_eta^F`.
+
+### Proof
+
+For a leaf `[l,r]`, its achievable state is exactly
+
+- `A_F(l,r) = sum_{i=l}^r p_hat_i F(l,r,i)`;
+- `M_F(l,r) = max_{i=l}^r F(l,r,i)`.
+
+For a materialized split at `k`, every key pays one new comparison. Therefore
+the recurrence remains
+
+- `A = P(l,r) + A_left + A_right`;
+- `M = 1 + max(M_left,M_right)`.
+
+The structural decomposition of every valid partial tree is unchanged. By
+induction on interval length and budget, the recurrence enumerates every
+achievable `(A,M)` pair. Pareto dominance is safe because both coefficients in
+`(1-eta)A + eta M` are non-negative. Selecting the minimum retained state is
+therefore globally optimal. `QED`
+
+## Relation To Classical Alphabetic Trees
+
+Expanding every unresolved interval leaf with its deterministic fallback tree
+maps a CertiGap solution to a full alphabetic decision tree. CertiGap optimizes
+over the restricted class in which:
+
+1. at most `B` prefix comparisons are freely materialized;
+2. every remaining subtree must equal the selected fallback completion.
+
+This differs from a height-limited alphabetic tree, where all internal nodes
+are optimized and the constraint is maximum depth rather than the number of
+freely materialized prefix nodes.
+
+## Implementation And Verification
+
+- `generalized_frontier_dp_best` implements Theorem E.
+- `midpoint_binary_profile` reproduces per-key comparison counts of midpoint
+  lower-bound search.
+- `verify_serialized_tree_exact` independently recomputes fixed-round tree
+  objectives from integer counts and rational `eta`, without floating-point
+  dominance or `EPS`.
+
+The rational verifier proves submitted-tree arithmetic, not global optimality.
+Global exactness is established by the DP proof and small-instance independent
+cross-validation.
+
+# C++ Post-Build Lookup Microbenchmark
+
+This measures only rank lookup after each structure is built. Times are local-machine measurements, not cross-machine or production claims.
+
+- Queries are sampled from each workload distribution with a deterministic PRNG.
+- CertiGap uses the candidate-pruned C++ beam (`B=min(6,n-1)`, `eta=0.15`, width 32, candidate limit 16).
+- CertiGap and budgeted trees use at most `B=min(6,n-1)` materialized splits and fixed-round interval fallback.
+- `balanced_full_reference` and `std_lower_bound` are explicitly unconstrained references, not equal-budget competitors.
+- Reported p95 is across repeated batch means; it is not single-query tail latency.
+- Total index bytes include the shared integer key array; auxiliary bytes exclude allocator overhead.
+
+| Workload | Solver | n | B | Median batch ns/query | p95 batch ns/query | Nodes | Auxiliary bytes | Total bytes |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| uniform | certigap_pruned | 1000 | 6 | 16.574 | 16.909 | 1 | 48 | 4048 |
+| uniform | balanced_budgeted | 1000 | 6 | 18.637 | 19.711 | 13 | 624 | 4624 |
+| uniform | weighted_budgeted | 1000 | 6 | 18.592 | 19.480 | 13 | 624 | 4624 |
+| uniform | balanced_full_reference | 1000 | 999 | 16.546 | 18.773 | 1999 | 95952 | 99952 |
+| uniform | std_lower_bound | 1000 | 0 | 15.670 | 15.947 | 0 | 0 | 4000 |
+| zipf | certigap_pruned | 1000 | 6 | 26.138 | 27.782 | 11 | 528 | 4528 |
+| zipf | balanced_budgeted | 1000 | 6 | 15.908 | 16.136 | 13 | 624 | 4624 |
+| zipf | weighted_budgeted | 1000 | 6 | 25.656 | 27.144 | 13 | 624 | 4624 |
+| zipf | balanced_full_reference | 1000 | 999 | 15.514 | 15.666 | 1999 | 95952 | 99952 |
+| zipf | std_lower_bound | 1000 | 0 | 15.312 | 17.053 | 0 | 0 | 4000 |
+| hot_tail | certigap_pruned | 1000 | 6 | 22.645 | 31.178 | 13 | 624 | 4624 |
+| hot_tail | balanced_budgeted | 1000 | 6 | 15.471 | 15.593 | 13 | 624 | 4624 |
+| hot_tail | weighted_budgeted | 1000 | 6 | 24.494 | 24.996 | 13 | 624 | 4624 |
+| hot_tail | balanced_full_reference | 1000 | 999 | 16.198 | 16.809 | 1999 | 95952 | 99952 |
+| hot_tail | std_lower_bound | 1000 | 0 | 15.600 | 16.460 | 0 | 0 | 4000 |
+| uniform | certigap_pruned | 10000 | 6 | 28.711 | 41.829 | 5 | 240 | 40240 |
+| uniform | balanced_budgeted | 10000 | 6 | 27.275 | 29.340 | 13 | 624 | 40624 |
+| uniform | weighted_budgeted | 10000 | 6 | 27.286 | 31.902 | 13 | 624 | 40624 |
+| uniform | balanced_full_reference | 10000 | 9999 | 55.459 | 58.687 | 19999 | 959952 | 999952 |
+| uniform | std_lower_bound | 10000 | 0 | 38.827 | 40.326 | 0 | 0 | 40000 |
+| zipf | certigap_pruned | 10000 | 6 | 27.978 | 28.682 | 13 | 624 | 40624 |
+| zipf | balanced_budgeted | 10000 | 6 | 23.843 | 24.185 | 13 | 624 | 40624 |
+| zipf | weighted_budgeted | 10000 | 6 | 28.185 | 29.325 | 13 | 624 | 40624 |
+| zipf | balanced_full_reference | 10000 | 9999 | 51.785 | 52.753 | 19999 | 959952 | 999952 |
+| zipf | std_lower_bound | 10000 | 0 | 44.082 | 46.504 | 0 | 0 | 40000 |
+| hot_tail | certigap_pruned | 10000 | 6 | 23.108 | 24.370 | 13 | 624 | 40624 |
+| hot_tail | balanced_budgeted | 10000 | 6 | 25.067 | 27.748 | 13 | 624 | 40624 |
+| hot_tail | weighted_budgeted | 10000 | 6 | 26.932 | 27.520 | 13 | 624 | 40624 |
+| hot_tail | balanced_full_reference | 10000 | 9999 | 49.320 | 51.558 | 19999 | 959952 | 999952 |
+| hot_tail | std_lower_bound | 10000 | 0 | 38.837 | 47.130 | 0 | 0 | 40000 |
+
+## Matched-Budget Interpretation
+
+- CertiGap has lower median batch lookup time than `balanced_budgeted` in `2/6` measured workload-size cases.
+- CertiGap has lower median batch lookup time than `weighted_budgeted` in `4/6` measured workload-size cases.
+
+## Limits
+
+This is not a hardware-routing, cache-miss, or external-library benchmark. It is reproducible CPU-level evidence that the exported CertiGap decision tree executes real lookups with an explicit storage footprint. Production claims require a target key encoding, allocator, CPU, and independent external baselines.
 
 ## 10. Вывод
 
-На текущем этапе CertiGap оформлен как воспроизводимый research-прототип: есть точный solver, усиленная эвристика, benchmark, checker, lower bounds и автоматическая генерация отчётных артефактов. Доказательства Theorem A и Theorem B представлены как proof drafts; они ещё не проходили внешнюю или машинную формальную проверку. Следующий главный научный шаг — завершить строгую бесконечную отрицательную конструкцию для greedy baseline и расширить масштаб экспериментов.
+На текущем этапе CertiGap оформлен как воспроизводимый research-прототип: есть generalized exact solver, две независимые exact-рекуррентности, rational checker, proof trace, C++ heuristic и matched-budget benchmark. Теоремы ещё не проходили внешнюю или машинную формальную проверку. Главный оставшийся теоретический шаг — получить нетривиальную approximation guarantee для candidate-pruned solver; главный внешний шаг — независимое воспроизведение и production pilot.

@@ -2,13 +2,16 @@
 
 ## Working Title
 
-CertiGap: Budgeted Robust Partial Search Trees With Certified Near-Optimality
+CertiGap: Budgeted Robust Prefix Search With Executable Interval Fallbacks
 
 ## Abstract Skeleton
 
 We study a static search problem where only a limited number of threshold comparisons may be materialized in advance and the predicted query distribution may be unreliable.
-We introduce CertiGap, a budgeted partial-search model with interval leaves, a robust contamination objective, and a certificate interface that attaches upper and lower bounds to candidate solutions.
-For this model we provide an exact frontier dynamic program, stronger heuristic baselines, empirical counterexamples against one-step greedy construction, and a reproducible benchmark suite.
+We introduce CertiGap, a budgeted partial-search model with executable interval
+fallbacks, a robust contamination objective, and independently checkable
+arithmetic for submitted trees. For this model we provide an exact generalized
+frontier dynamic program, a second exact recurrence, an unbounded-gap family
+against one-step greedy construction, and a reproducible benchmark suite.
 
 ## Sections
 
@@ -16,7 +19,7 @@ For this model we provide an exact frontier dynamic program, stronger heuristic 
 2. Model
 3. Exact Dynamic Programming
 4. Robustness Identity
-5. Lower Bounds and Certificates
+5. Exact Rational Verification
 6. Heuristics and Counterexamples
-7. Experiments
+7. Matched-Resource Experiments
 8. Limitations and Open Questions

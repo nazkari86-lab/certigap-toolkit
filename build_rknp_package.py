@@ -32,16 +32,16 @@ def build_abstract_ru(summary_text: str) -> str:
     metric_lines = "\n".join(f"- {line}" for line in metrics)
     return f"""# Аннотация
 
-**Тема:** CertiGap — робастные частичные поисковые деревья с ограниченным бюджетом разделений и сертифицируемой близостью к оптимуму.
+**Тема:** CertiGap — робастный префиксный поиск с ограниченным бюджетом и исполняемыми fallback-алгоритмами.
 
 В работе исследуется статическая задача поиска в отсортированном наборе ключей при двух ограничениях: число заранее материализованных пороговых сравнений ограничено бюджетом, а прогноз распределения запросов может быть неверным. В отличие от полностью упорядоченных поисковых структур, CertiGap оптимизирует не форму полного дерева, а то, **какую часть порядка вообще стоит материализовать заранее**, а какую оставить в виде неразрешённых интервалов с резервным поиском.
 
 Предлагаемый проект включает:
 
-1. точный frontier dynamic programming алгоритм для малых и средних экземпляров;
-2. более сильную beam-search эвристику для более крупных экземпляров;
-3. независимый checker, пересчитывающий целевую функцию и entropy-нижнюю оценку;
-4. воспроизводимый синтетический benchmark.
+1. точный generalized frontier DP для произвольного детерминированного interval fallback;
+2. масштабируемую C++ эвристику и доказанное семейство неограниченной ошибки one-step greedy;
+3. независимые floating-point, proof-trace и rational-arithmetic проверки;
+4. синтетические, публичные, temporal и matched-budget C++ эксперименты.
 
 Текущее состояние прототипа подтверждается следующими результатами:
 
@@ -58,7 +58,7 @@ def build_report_ru(summary_text: str, cert_text: str, proof_text: str) -> str:
 
 ## 1. Тема проекта
 
-**CertiGap: робастные частичные поисковые деревья с ограниченным бюджетом разделений и сертифицируемой близостью к оптимуму**
+**CertiGap: робастный префиксный поиск с ограниченным бюджетом и исполняемыми fallback-алгоритмами**
 
 ## 2. Актуальность
 
@@ -72,7 +72,7 @@ def build_report_ru(summary_text: str, cert_text: str, proof_text: str) -> str:
 
 ## 3. Цель работы
 
-Разработать и исследовать алгоритм построения частичного поискового дерева, который при ограниченном числе разделений минимизирует робастную стоимость поиска и возвращает проверяемый сертификат близости к оптимуму.
+Разработать и исследовать алгоритм построения частичного поискового дерева, который при ограниченном числе разделений минимизирует робастную стоимость реального fallback-поиска и возвращает независимо проверяемые структуру, стоимость и границы.
 
 ## 4. Основная идея
 
@@ -88,7 +88,8 @@ CertiGap не строит полное поисковое дерево на в�
 
 - рассматривается не полное упорядочивание, а **частичная материализация порядка** при явном бюджете разделений;
 - используется робастная contamination-модель для учёта недоверия к прогнозу;
-- вместе со структурой возвращается **сертификат качества**: верхняя оценка, нижняя оценка и разрыв между ними;
+- вместе со структурой возвращаются проверяемая стоимость, entropy-нижняя граница и, на малых задачах, exhaustive proof trace;
+- exact DP обобщён на реальные per-key стоимости midpoint binary search и пользовательские fallback-профили;
 - проект сочетает точный алгоритм, эвристику и независимую проверку результата.
 
 ## 6. Методы
@@ -120,7 +121,7 @@ CertiGap не строит полное поисковое дерево на в�
 
 ## 10. Вывод
 
-На текущем этапе CertiGap оформлен как воспроизводимый research-прототип: есть точный solver, усиленная эвристика, benchmark, checker, lower bounds и автоматическая генерация отчётных артефактов. Доказательства Theorem A и Theorem B представлены как proof drafts; они ещё не проходили внешнюю или машинную формальную проверку. Следующий главный научный шаг — завершить строгую бесконечную отрицательную конструкцию для greedy baseline и расширить масштаб экспериментов.
+На текущем этапе CertiGap оформлен как воспроизводимый research-прототип: есть generalized exact solver, две независимые exact-рекуррентности, rational checker, proof trace, C++ heuristic и matched-budget benchmark. Теоремы ещё не проходили внешнюю или машинную формальную проверку. Главный оставшийся теоретический шаг — получить нетривиальную approximation guarantee для candidate-pruned solver; главный внешний шаг — независимое воспроизведение и production pilot.
 """
 
 
@@ -131,7 +132,7 @@ def build_theses_ru() -> str:
 2. В модели явно учитывается недоверие к прогнозу запросов через параметр `eta`.
 3. Для малых и средних случаев построен точный алгоритм frontier DP.
 4. Для более крупных случаев реализована beam-search эвристика, существенно лучше greedy baseline.
-5. Вместе с решением возвращается проверяемый сертификат качества.
+5. Стоимость решения независимо проверяется, а exact proof trace доступен на малых экземплярах.
 6. Эксперименты показывают, что на скошенных распределениях beam почти всегда совпадает с exact optimum, а greedy заметно хуже.
 7. Проект хорошо подходит для РКНП как теоретико-алгоритмическая работа с воспроизводимым результатом.
 """
@@ -144,7 +145,7 @@ def build_slides_ru(summary_text: str) -> str:
 
 ## Слайд 1. Название
 
-CertiGap: робастные частичные поисковые деревья с ограниченным бюджетом разделений и сертифицируемой близостью к оптимуму
+CertiGap: робастный префиксный поиск с исполняемыми interval fallback
 
 ## Слайд 2. Проблема
 
@@ -174,7 +175,8 @@ CertiGap: робастные частичные поисковые деревь�
 - upper bound;
 - lower bound;
 - independently recomputed entropy bound;
-- exact gap на малых случаях.
+- rational arithmetic для integer counts;
+- exhaustive proof trace на малых случаях.
 
 ## Слайд 7. Вывод
 
@@ -188,7 +190,9 @@ def main() -> None:
     RKNP_DIR.mkdir(exist_ok=True)
     summary_text = read(RESULTS_DIR / "summary.md")
     cert_text = read(RESULTS_DIR / "certificate_examples.md")
-    proof_text = read(DOCS_DIR / "PROOF_SKETCHES.md")
+    proof_text = read(DOCS_DIR / "FORMAL_RESULTS.md")
+    generalized_text = read(DOCS_DIR / "GENERALIZED_FALLBACK.md")
+    lookup_text = read(RESULTS_DIR / "cpp_lookup_latency.md")
     counterexample_text = read(RESULTS_DIR / "counterexamples.md") if (RESULTS_DIR / "counterexamples.md").exists() else ""
     family_text = read(DOCS_DIR / "GREEDY_COUNTEREXAMPLE_FAMILY.md") if (DOCS_DIR / "GREEDY_COUNTEREXAMPLE_FAMILY.md").exists() else ""
     speed_quality_text = read(RESULTS_DIR / "speed_quality_summary.md") if (RESULTS_DIR / "speed_quality_summary.md").exists() else ""
@@ -201,7 +205,7 @@ def main() -> None:
             + ("\n\n## Скорость и качество\n\n" + speed_quality_text if speed_quality_text else "")
             + ("\n\n## Контрпримеры greedy\n\n" + counterexample_text if counterexample_text else ""),
             cert_text + ("\n\n" + speed_quality_text if speed_quality_text else "") + ("\n\n" + family_text if family_text else ""),
-            proof_text,
+            proof_text + "\n\n" + generalized_text + "\n\n" + lookup_text,
         ),
         encoding="utf-8",
     )
