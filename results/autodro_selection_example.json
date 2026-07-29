@@ -4189,7 +4189,7 @@
       "midpoint_binary"
     ],
     "generator": "certigap-autodro-deterministic-v2",
-    "leaderboard_sha256": "f4a1751057bc51c9cec0172e87cb8ee1470ad3ac97c425fd68d0859708b4d27d",
+    "portfolio_sha256": "c45e6e50f104b3b21fd00ef9c497ce1a14a67a2336269781519b431a556f9d61",
     "selection_scope": "best candidate in the regenerated deterministic portfolio",
     "solvers": [
       "beam",

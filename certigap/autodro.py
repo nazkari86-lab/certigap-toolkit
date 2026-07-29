@@ -371,6 +371,30 @@ def _canonical_sha256(value: object) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _portfolio_identities(leaderboard: Sequence[dict]) -> list[dict]:
+    identities = []
+    for candidate in leaderboard:
+        sources = sorted(
+            candidate["sources"],
+            key=lambda source: json.dumps(source, sort_keys=True, separators=(",", ":")),
+        )
+        identities.append(
+            {
+                "serialized_tree": candidate["serialized_tree"],
+                "fallback": candidate["fallback"],
+                "sources": sources,
+            }
+        )
+    return sorted(
+        identities,
+        key=lambda identity: json.dumps(identity, sort_keys=True, separators=(",", ":")),
+    )
+
+
+def _portfolio_sha256(leaderboard: Sequence[dict]) -> str:
+    return _canonical_sha256(_portfolio_identities(leaderboard))
+
+
 def verify_autodro_selection_artifact(
     artifact: dict,
     *,
@@ -495,8 +519,8 @@ def verify_autodro_selection_artifact(
             if not isinstance(manifest, dict):
                 raise AutoDROVerificationError("v2 artifact requires a portfolio manifest")
             _validate_manifest_limits(manifest, max_budget, len(counts))
-            if manifest.get("leaderboard_sha256") != _canonical_sha256(leaderboard):
-                raise AutoDROVerificationError("leaderboard digest does not match manifest")
+            if manifest.get("portfolio_sha256") != _portfolio_sha256(leaderboard):
+                raise AutoDROVerificationError("portfolio digest does not match manifest")
             if int(manifest.get("candidate_count", -1)) != len(leaderboard):
                 raise AutoDROVerificationError("candidate count does not match manifest")
             if verify_completeness:
@@ -769,7 +793,7 @@ def fit_autodro(
         "exact_limit": exact_limit,
         "direct_tv_limit": direct_tv_limit,
         "candidate_count": len(leaderboard),
-        "leaderboard_sha256": _canonical_sha256(public_leaderboard),
+        "portfolio_sha256": _portfolio_sha256(public_leaderboard),
         "direct_tree_space": direct_space,
         "selection_scope": (
             "globally optimal over every partial tree and configured fallback"
@@ -814,7 +838,9 @@ def _verify_portfolio_completeness(
         direct_tv_limit=int(manifest["direct_tv_limit"]),
     )
     regenerated_leaderboard = [_public_candidate(row) for row in regenerated.leaderboard]
-    if _canonical_sha256(regenerated_leaderboard) != _canonical_sha256(artifact["leaderboard"]):
+    if _portfolio_identities(regenerated_leaderboard) != _portfolio_identities(
+        artifact["leaderboard"]
+    ):
         raise AutoDROVerificationError("submitted portfolio is incomplete or was not regenerated")
     if regenerated.portfolio_manifest != manifest:
         raise AutoDROVerificationError("portfolio manifest does not recompute")

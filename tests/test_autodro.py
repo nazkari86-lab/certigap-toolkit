@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import copy
-import hashlib
-import json
 import unittest
 
 from certigap import (
@@ -15,7 +13,11 @@ from certigap import (
     verify_autodro_selection_artifact,
     worst_case_tv_expectation,
 )
-from certigap.autodro import AutoDROVerificationError, _deserialize_tree
+from certigap.autodro import (
+    AutoDROVerificationError,
+    _deserialize_tree,
+    _portfolio_sha256,
+)
 
 
 class AutoDROTests(unittest.TestCase):
@@ -219,10 +221,9 @@ class AutoDROTests(unittest.TestCase):
         tampered["leaderboard"] = tampered["leaderboard"][first_worse:]
         tampered["selected"] = tampered["leaderboard"][0]
         tampered["portfolio_manifest"]["candidate_count"] = len(tampered["leaderboard"])
-        encoded = json.dumps(
-            tampered["leaderboard"], sort_keys=True, separators=(",", ":")
-        ).encode("utf-8")
-        tampered["portfolio_manifest"]["leaderboard_sha256"] = hashlib.sha256(encoded).hexdigest()
+        tampered["portfolio_manifest"]["portfolio_sha256"] = _portfolio_sha256(
+            tampered["leaderboard"]
+        )
         with self.assertRaisesRegex(ValueError, "incomplete"):
             verify_autodro_selection_artifact(tampered)
 

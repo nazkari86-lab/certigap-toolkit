@@ -94,7 +94,7 @@ policies, not low-latency in-place mutation.
 ## Verifiable Portfolio Manifest
 
 Version 2 artifacts bind the deterministic generator configuration, candidate
-count, leaderboard digest, and direct-tree-space digest. The verifier rebuilds
+count, structural portfolio digest, and direct-tree-space digest. The verifier rebuilds
 the portfolio and rejects omitted candidates even if the selected row and
 digest are rewritten. Key count, candidate count, tree depth, and node count
 are bounded before expensive verification.
