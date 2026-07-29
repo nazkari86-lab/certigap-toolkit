@@ -67,3 +67,18 @@ size. A generated CertiRange header contains its complete `2n-1` topology and
 therefore has `O(n)` source size. Runtime bounds match the selected backend.
 The generated C++ snapshot operation copies runtime vectors and takes `O(n)`
 time and space; it is semantic snapshot isolation, not path-copy persistence.
+
+## Adaptive Single-Header Runtime
+
+Let `q` be the number of distinct observed ranges. Point and update profiling
+take `O(1)`; exact range-record profiling takes `O(log q)`. Range-aware
+coverage weights are computed with a difference array in `O(n+q)`, without
+expanding every range. Prefix construction is `O(n)`, and depth-safe weighted
+topology construction is `O(n log n)` because each of `O(n)` nodes performs a
+prefix lower bound.
+
+Scoring array, Fenwick, and segment tree takes `O(n+q)`. Each CertiRange score
+also replays exact range visits and costs `O(n+qh)`, where `h` is bounded by
+the configured maximum depth. Adaptive snapshots copy canonical values,
+runtime state, point/update profiles, and the range map in `O(n+q)` logical
+space and time.

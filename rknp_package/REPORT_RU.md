@@ -611,6 +611,26 @@ Thus generated C++ execution preserves the selected configuration and
 point/range/update semantics. This is source-level fidelity, not equivalence
 of machine code across C++ compilers. `QED`
 
+## Proposition N: Adaptive Runtime Portfolio Minimum
+
+Given a nonempty accumulated runtime profile and valid options, the
+single-header selector constructs exactly five ordered candidate reports:
+array, Fenwick, segment tree, point-weighted CertiRange, and
+range-coverage-weighted CertiRange. It computes every report with the same
+declared mean/tail/resource objective, filters infeasible candidates, and scans
+the complete list with deterministic score, memory, and order tie-breaking.
+The returned backend is therefore the minimum reported feasible candidate.
+
+Both adaptive CertiRange candidates are completed into singleton leaves under
+the declared depth cap. The aggregate, query, and update correctness argument
+from Theorem J applies to these completed topologies. `snapshot()` copies all
+value, runtime, and profile state, so later mutation cannot change the copy.
+
+This is an in-process portfolio statement. Unlike Theorems L and M, it has no
+independent artifact regeneration and makes no global claim over omitted data
+structures. The two adaptive routing builders are deterministic weighted
+heuristics, not globally optimal topology solvers.
+
 # Generalized Executable Fallback Model
 
 ## Motivation
@@ -1518,13 +1538,16 @@ five portfolio candidates, and emits a normal C++17 configuration header.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install certigap_toolkit-1.5.0-py3-none-any.whl
+pip install certigap_toolkit-1.6.0-py3-none-any.whl
 
 certigap-compile include-dir
 ```
 
 The last command prints the directory containing
 `certigap_autoindex.hpp`.
+
+For a simpler no-Python runtime mode, the same directory also contains the
+standalone [`certigap.hpp`](ADAPTIVE_CPP.md).
 
 ## Input
 
@@ -1662,6 +1685,175 @@ costs should be calibrated on the target system when latency matters.
 - The CMake example compiles a generated CertiRange topology and checks snapshot isolation.
 
 Header hashes cover exact generated C++ source. They certify deterministic code generation from a verified artifact, not compiler binary equivalence across toolchains.
+
+# Adaptive Single-Header C++
+
+`certigap.hpp` is the lowest-friction CertiGap interface. It requires only a
+C++17 compiler: no Python, generated file, JSON, or custom compiler.
+
+## Online Compiler
+
+Download
+[`cpp/certigap.hpp`](../cpp/certigap.hpp), add it beside the program, and use:
+
+```cpp
+#include <iostream>
+#include <vector>
+#include "certigap.hpp"
+
+int main() {
+    std::vector<double> values{1, 2, 3, 4, 5};
+    certigap::Index index(values);
+
+    for (int repetition = 0; repetition < 100; ++repetition) {
+        index.observe_range(1, 4);
+    }
+    index.optimize();
+
+    std::cout << index.selected_name() << '\n';
+    std::cout << index.range_query(1, 4) << '\n';
+}
+```
+
+Compile as C++17:
+
+```bash
+g++ -std=c++17 -O2 main.cpp -o app
+./app
+```
+
+## Automatic Profiling
+
+Normal operations record themselves:
+
+```cpp
+index.get(key);
+index.range_query(left, right);
+index.point_update(key, value);
+```
+
+Use `peek` and `peek_range` for const, untracked inspection:
+
+```cpp
+double value = index.peek(key);
+double total = index.peek_range(left, right);
+```
+
+Explicit observations warm the profile without executing an operation:
+
+```cpp
+index.observe_get(key, count);
+index.observe_range(left, right, count);
+index.observe_update(key, count);
+```
+
+Do not record an operation explicitly and then execute its tracked form unless
+double weight is intended.
+
+## Selection
+
+```cpp
+certigap::OptimizeOptions options;
+options.aggregate = certigap::Aggregate::Sum;
+options.memory_limit_slots = 4096;
+options.tail_weight = 0.10;
+
+auto backend = index.optimize(options);
+std::cout << certigap::backend_name(backend) << '\n';
+
+for (const auto& row : index.leaderboard()) {
+    std::cout << certigap::backend_name(row.backend)
+              << " score=" << row.score
+              << " feasible=" << row.feasible << '\n';
+}
+```
+
+The deterministic runtime portfolio contains a contiguous array, Fenwick
+tree, iterative segment tree, point-weighted CertiRange, and
+range-coverage-weighted CertiRange.
+
+The range topology uses a difference-array coverage profile, prefix sums, and
+depth-safe weighted splits. Profiling does not expand every range over every
+covered key. Backend unit costs, memory/build penalties, maximum depth, and a
+mandatory CertiRange constraint are configurable. Fenwick is automatically
+infeasible for minimum and maximum aggregates.
+
+## Drift Reoptimization
+
+```cpp
+certigap::RebuildPolicy policy;
+policy.minimum_new_operations = 10'000;
+policy.minimum_tv_drift = 0.10;
+
+if (index.maybe_reoptimize(policy)) {
+    std::cout << "new backend=" << index.selected_name() << '\n';
+}
+```
+
+Reoptimization is explicit rather than silently occurring inside a query.
+This avoids unpredictable latency spikes. TV drift is measured over the
+current range-coverage routing distribution relative to the profile at the
+previous optimization.
+
+## Snapshots
+
+```cpp
+auto snapshot = index.snapshot();
+index.point_update(2, 100);
+
+assert(snapshot.peek(2) != index.peek(2));
+```
+
+Adaptive snapshots are independent value-copies. They copy the active runtime,
+canonical values, point/update counts, and `q` distinct range records, taking
+`O(n+q)` logical space. This is semantic isolation, not the Python CertiRange
+path-copy implementation.
+
+## CMake FetchContent
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(
+    certigap
+    GIT_REPOSITORY https://github.com/nazkari86-lab/certigap-toolkit.git
+    GIT_TAG v1.6.0
+)
+FetchContent_MakeAvailable(certigap)
+
+add_executable(app main.cpp)
+target_link_libraries(app PRIVATE CertiGap::certigap)
+```
+
+Installed packages support:
+
+```cmake
+find_package(CertiGap 1.6 REQUIRED)
+target_link_libraries(app PRIVATE CertiGap::certigap)
+```
+
+## Which Mode To Use
+
+- Use `certigap.hpp` for learning, online compilers, prototypes, and simple
+  application integration.
+- Use `certigap-compile` when selection must be reproduced, independently
+  verified, embedded into generated C++, and separated from runtime latency.
+- Use the Python research API for exact/anytime algorithms, certificates, and
+  benchmark reproduction.
+
+The adaptive runtime returns all five candidate reports and a deterministic
+minimum under its declared model, but it does not export the independently
+replayed omission-resistant certificate of `certigap-compile`.
+
+# Adaptive single-header C++ validation
+
+- Native C++ rows: `24`.
+- Correct point/range/update/snapshot cases: `24/24`.
+- Complete candidate reports per case: `5/5`.
+- Selected backend distribution: `{'certirange_point': 4, 'fenwick': 4, 'segment_tree': 12, 'sorted_array': 4}`.
+- Sizes: `16, 32, 64, 128`.
+- Modes: point-hot, range-hot, calibrated segment tree, required CertiRange, minimum, and maximum.
+
+This validates deterministic reference behavior and selection contracts. It is not a production latency benchmark.
 
 ## 10. Вывод
 

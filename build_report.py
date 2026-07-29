@@ -214,6 +214,8 @@ def main() -> None:
             RESULTS_DIR / "autoindex_validation.md",
             DOCS_DIR / "COMPILER_INTEGRATION.md",
             RESULTS_DIR / "compiler_integration_validation.md",
+            DOCS_DIR / "ADAPTIVE_CPP.md",
+            RESULTS_DIR / "adaptive_header_validation.md",
         )
     )
 
@@ -250,7 +252,9 @@ def main() -> None:
             + "\n\n"
             + read_text(DOCS_DIR / "AUTOINDEX.md")
             + "\n\n"
-            + read_text(DOCS_DIR / "COMPILER_INTEGRATION.md"),
+            + read_text(DOCS_DIR / "COMPILER_INTEGRATION.md")
+            + "\n\n"
+            + read_text(DOCS_DIR / "ADAPTIVE_CPP.md"),
             roadmap_text,
         ),
         encoding="utf-8",

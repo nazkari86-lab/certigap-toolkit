@@ -79,6 +79,19 @@ C++ component. The generated C++ snapshot is deliberately documented as an
 `O(n)` value-copy. Native path-copy persistence, insert/delete, concurrency,
 disk pages, and direct storage-engine integration remain external work.
 
+## Adaptive Single-Header Boundary
+
+The standalone C++17 mode removes Python and generated-file requirements. Its
+24-case native matrix verifies complete five-candidate reporting,
+point/range/update behavior, all aggregates, calibrated and constrained
+selection, and snapshot isolation. Root CMake install and downstream
+`find_package` are executable tests.
+
+Unlike `certigap-compile`, runtime selection has no independent artifact
+replay. Range profiles retain one record per distinct interval, snapshots cost
+`O(n+q)`, and reoptimization is explicit to avoid hidden latency. These are
+intentional usability tradeoffs, not certified build-time claims.
+
 ## Honest Boundaries
 
 - The C++ pruned beam is empirical: it has no approximation theorem and no proof certificate.

@@ -83,6 +83,18 @@
 - cross-language sum/min/max/update/snapshot tests
 - 24-row deterministic code-generation validation
 
+## Phase 10: Single-Header Adaptive C++
+
+- one standalone `certigap.hpp`
+- no Python or generated-file requirement
+- tracked operations and explicit profile warmup
+- array, Fenwick, segment-tree, and two CertiRange runtime candidates
+- sum, minimum, maximum, updates, ranges, and isolated snapshots
+- deterministic five-row leaderboard
+- opt-in TV-drift reoptimization without hidden query latency
+- root CMake target, install export, `find_package`, and FetchContent
+- native 24-row validation plus online-compiler example
+
 ## External Closure
 
 - independent proof review or machine-assisted formalization

@@ -18,7 +18,9 @@ def main() -> None:
     parser.add_argument("--benchmark-mode", choices=("quick", "full", "max"), default="max")
     args = parser.parse_args()
     python = sys.executable
+    run([python, "generate_single_header.py"])
     run([python, "build_cpp_core.py"])
+    run([python, "generate_adaptive_validation.py"])
     run([python, "generate_cpp_scaling.py"])
     run([python, "generate_lookup_benchmark.py"])
     run([python, "generate_cpp_dynamic_range.py"])

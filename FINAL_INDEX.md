@@ -15,6 +15,8 @@
 - [Independent AutoIndex verifier](certigap/autoindex_verifier.py)
 - [JSON/C++ compiler](certigap/compiler.py)
 - [Reusable C++ AutoIndex runtime](cpp/certigap_autoindex.hpp)
+- [Adaptive C++ runtime](cpp/certigap_adaptive.hpp)
+- [Standalone single header](cpp/certigap.hpp)
 - [__init__.py](certigap/__init__.py)
 
 ## Generators
@@ -39,6 +41,7 @@
 - [generate_range_optimizer_validation.py](generate_range_optimizer_validation.py)
 - [generate_autoindex_validation.py](generate_autoindex_validation.py)
 - [generate_compiler_integration_validation.py](generate_compiler_integration_validation.py)
+- [generate_adaptive_validation.py](generate_adaptive_validation.py)
 - [verify_artifacts.py](verify_artifacts.py)
 - [generate_pruning_validation.py](generate_pruning_validation.py)
 - [generate_temporal_holdout.py](generate_temporal_holdout.py)
@@ -47,6 +50,7 @@
 - [AutoDRO catalog example](examples/autodro_catalog.py)
 - [Certified AutoIndex example](examples/certified_autoindex.py)
 - [Generated CMake example](examples/cmake_autoindex)
+- [Online single-file example](examples/online_single_file.cpp)
 
 ## Main Results
 
@@ -77,11 +81,13 @@
 - [AutoIndex validation](results/autoindex_validation.md)
 - [Verified AutoIndex selection example](results/autoindex_selection_example.json)
 - [Compiler integration validation](results/compiler_integration_validation.md)
+- [Adaptive header validation](results/adaptive_header_validation.md)
 - [AutoDRO theorem and API](docs/AUTODRO.md)
 - [Anytime theorem and certificate contract](docs/ANYTIME_TV.md)
 - [Dynamic CertiRange theorem and API](docs/DYNAMIC_RANGE.md)
 - [Certified AutoIndex theorem and API](docs/AUTOINDEX.md)
 - [Compiler and CMake integration](docs/COMPILER_INTEGRATION.md)
+- [Adaptive single-header C++](docs/ADAPTIVE_CPP.md)
 - [Generalized executable fallback theorem](docs/GENERALIZED_FALLBACK.md)
 - [LaTeX paper](paper/main.tex)
 - [pruning_validation.md](results/pruning_validation.md)

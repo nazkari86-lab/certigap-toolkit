@@ -401,3 +401,23 @@ the stronger Python path-copy complexity is not claimed for generated C++.
 Thus generated C++ execution preserves the selected configuration and
 point/range/update semantics. This is source-level fidelity, not equivalence
 of machine code across C++ compilers. `QED`
+
+## Proposition N: Adaptive Runtime Portfolio Minimum
+
+Given a nonempty accumulated runtime profile and valid options, the
+single-header selector constructs exactly five ordered candidate reports:
+array, Fenwick, segment tree, point-weighted CertiRange, and
+range-coverage-weighted CertiRange. It computes every report with the same
+declared mean/tail/resource objective, filters infeasible candidates, and scans
+the complete list with deterministic score, memory, and order tie-breaking.
+The returned backend is therefore the minimum reported feasible candidate.
+
+Both adaptive CertiRange candidates are completed into singleton leaves under
+the declared depth cap. The aggregate, query, and update correctness argument
+from Theorem J applies to these completed topologies. `snapshot()` copies all
+value, runtime, and profile state, so later mutation cannot change the copy.
+
+This is an in-process portfolio statement. Unlike Theorems L and M, it has no
+independent artifact regeneration and makes no global claim over omitted data
+structures. The two adaptive routing builders are deterministic weighted
+heuristics, not globally optimal topology solvers.

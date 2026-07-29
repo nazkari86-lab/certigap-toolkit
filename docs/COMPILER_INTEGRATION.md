@@ -9,13 +9,16 @@ five portfolio candidates, and emits a normal C++17 configuration header.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install certigap_toolkit-1.5.0-py3-none-any.whl
+pip install certigap_toolkit-1.6.0-py3-none-any.whl
 
 certigap-compile include-dir
 ```
 
 The last command prints the directory containing
 `certigap_autoindex.hpp`.
+
+For a simpler no-Python runtime mode, the same directory also contains the
+standalone [`certigap.hpp`](ADAPTIVE_CPP.md).
 
 ## Input
 

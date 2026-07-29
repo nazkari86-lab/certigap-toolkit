@@ -49,6 +49,7 @@ jobs:
           python generate_online_adaptation.py
           python generate_autoindex_validation.py
           python generate_compiler_integration_validation.py
+          python generate_adaptive_validation.py
           python generate_figures.py
 
       - name: Verify committed scientific artifacts
@@ -76,3 +77,10 @@ jobs:
           cmake -S examples/cmake_autoindex -B /tmp/certigap-cmake
           cmake --build /tmp/certigap-cmake --parallel 2
           /tmp/certigap-cmake/certigap_autoindex_example
+
+      - name: Build standalone header target
+        run: |
+          cmake -S . -B /tmp/certigap-header -DCERTIGAP_BUILD_EXAMPLES=ON
+          cmake --build /tmp/certigap-header --parallel 2
+          /tmp/certigap-header/certigap_online_example
+          cmake --install /tmp/certigap-header --prefix /tmp/certigap-install

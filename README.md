@@ -5,6 +5,20 @@
 
 CertiGap is a toolkit for **budgeted robust partial search trees**.
 
+The easiest C++ mode is one header:
+
+```cpp
+#include "certigap.hpp"
+
+certigap::Index index(values);
+index.observe_range(1, 10, 100);
+index.optimize();
+auto answer = index.range_query(1, 10);
+```
+
+It runs in any C++17 environment without Python. See
+[`docs/ADAPTIVE_CPP.md`](docs/ADAPTIVE_CPP.md).
+
 Instead of fully refining the whole key space, CertiGap decides **how much order is worth materializing at all** when:
 
 - the split budget is tight;
@@ -238,6 +252,11 @@ The generated `Index` exposes `get`, `range_query`, `point_update`, and
 CMake project is available in
 [`examples/cmake_autoindex`](examples/cmake_autoindex); see
 [`docs/COMPILER_INTEGRATION.md`](docs/COMPILER_INTEGRATION.md).
+
+For simpler runtime selection without generated files, use the standalone
+[`cpp/certigap.hpp`](cpp/certigap.hpp). It profiles normal operations,
+supports explicit warmup observations, returns all five candidate reports,
+and performs opt-in TV-drift reoptimization.
 
 ## Quick Start
 

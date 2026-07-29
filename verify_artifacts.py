@@ -55,6 +55,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "range_optimizer_validation.csv": 114,
         "autoindex_validation.csv": 120,
         "compiler_integration_validation.csv": 24,
+        "adaptive_header_validation.csv": 24,
     }
     observed: dict[str, int] = {}
     for name, minimum in minimum_rows.items():
@@ -298,6 +299,34 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         )
     ):
         raise ValueError("compiler integration validation is incomplete")
+
+    adaptive_rows = csv_records("adaptive_header_validation.csv")
+    if (
+        len(adaptive_rows) != 24
+        or any(
+            row["correct"] != "true"
+            or row["candidate_count"] != "5"
+            or not math.isfinite(float(row["score"]))
+            or int(row["memory_slots"]) <= 0
+            for row in adaptive_rows
+        )
+        or any(
+            row["selected"] != "sorted_array"
+            for row in adaptive_rows
+            if row["scenario"] == "point_hot"
+        )
+        or any(
+            row["selected"] != "segment_tree"
+            for row in adaptive_rows
+            if row["scenario"] in {"segment_calibrated", "minimum", "maximum"}
+        )
+        or any(
+            not row["selected"].startswith("certirange")
+            for row in adaptive_rows
+            if row["scenario"] == "certirange_required"
+        )
+    ):
+        raise ValueError("adaptive single-header validation is incomplete")
 
     optimizer_rows = csv_records("range_optimizer_validation.csv")
     exact_optimizer_rows = [

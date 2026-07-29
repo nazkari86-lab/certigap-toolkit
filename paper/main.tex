@@ -195,6 +195,14 @@ range, and update operations for sum, minimum, and maximum. Its snapshot is a
 semantically isolated value-copy and therefore costs $O(n)$, unlike the
 path-copy Python implementation.
 
+For low-friction use, a separate single-header C++17 mode records normal
+operations in-process and deterministically compares the same five backend
+families. Range coverage is accumulated with a difference array, adaptive
+topologies use depth-safe weighted splits, and reoptimization is an explicit
+TV-drift-triggered call rather than hidden query work. This mode exposes the
+complete leaderboard but deliberately omits the independent artifact replay
+of the build-time compiler.
+
 \section{Evidence And Limits}
 The repository contains exact cross-validation, a standalone certificate
 checker, synthetic and public-frequency workloads, temporal holdout, pruning
@@ -233,6 +241,10 @@ byte-identical headers and every source artifact independently verifies.
 Cross-language executable tests cover all backend families, all three
 aggregates, updates, and snapshot isolation; a separate CMake target compiles
 and runs a generated CertiRange configuration.
+The adaptive single-header matrix adds 24 native C++ cases over four sizes and
+six workload/constraint modes; all return complete five-row leaderboards and
+pass point/range/update/snapshot oracles. CMake installation and a downstream
+`find_package` consumer are executable tests.
 External implementations, independent hardware reproduction, and a
 domain-owner pilot remain external validation requirements.
 
