@@ -82,3 +82,13 @@ also replays exact range visits and costs `O(n+qh)`, where `h` is bounded by
 the configured maximum depth. Adaptive snapshots copy canonical values,
 runtime state, point/update profiles, and the range map in `O(n+q)` logical
 space and time.
+
+## Variable-Block Synthesis
+
+Let `w` be `max_block_width`, `b` be `max_blocks`, and `m` be the trace
+length. Computing every legal interval score takes `O(nwm)` time and `O(nw)`
+stored scores. Exact partition dynamic programming takes `O(bnw)` time and
+`O(bn)` state. Runtime construction is `O(n)`, point access is `O(1)`, and
+updates are `O(1)` for sum or `O(w)` for minimum/maximum. A range query costs
+the number of fully covered blocks plus scanned boundary elements. Runtime
+memory is `2n+2b` declared scalar slots.

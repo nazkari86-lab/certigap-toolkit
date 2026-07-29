@@ -109,6 +109,17 @@
 
 ## Theory Notes
 
+## CertiGap-X Synthesis
+
+- [synthesis.py](certigap/synthesis.py)
+- [synthesis_verifier.py](certigap/synthesis_verifier.py)
+- [certigap_synth.hpp](cpp/certigap_synth.hpp)
+- [hardware_calibration.cpp](cpp/hardware_calibration.cpp)
+- [calibrate_hardware.py](calibrate_hardware.py)
+- [generate_synthesis_validation.py](generate_synthesis_validation.py)
+- [synthesis_validation.csv](results/synthesis_validation.csv)
+- [SYNTHESIS.md](docs/SYNTHESIS.md)
+
 - [FORMAL_RESULTS.md](docs/FORMAL_RESULTS.md)
 - [PROOF_SKETCHES.md](docs/PROOF_SKETCHES.md)
 - [TECHNICAL_NOTE.md](docs/TECHNICAL_NOTE.md)

@@ -1002,7 +1002,7 @@ five portfolio candidates, and emits a normal C++17 configuration header.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install certigap_toolkit-1.6.0-py3-none-any.whl
+pip install certigap_toolkit-1.7.0-py3-none-any.whl
 
 certigap-compile include-dir
 ```
@@ -1280,7 +1280,7 @@ include(FetchContent)
 FetchContent_Declare(
     certigap
     GIT_REPOSITORY https://github.com/nazkari86-lab/certigap-toolkit.git
-    GIT_TAG v1.6.0
+    GIT_TAG v1.7.0
 )
 FetchContent_MakeAvailable(certigap)
 
@@ -1291,7 +1291,7 @@ target_link_libraries(app PRIVATE CertiGap::certigap)
 Installed packages support:
 
 ```cmake
-find_package(CertiGap 1.6 REQUIRED)
+find_package(CertiGap 1.7 REQUIRED)
 target_link_libraries(app PRIVATE CertiGap::certigap)
 ```
 
@@ -1318,6 +1318,94 @@ replayed omission-resistant certificate of `certigap-compile`.
 - Modes: point-hot, range-hot, calibrated segment tree, required CertiRange, minimum, and maximum.
 
 This validates deterministic reference behavior and selection contracts. It is not a production latency benchmark.
+
+# CertiGap-X Certified Structure Synthesis
+
+CertiGap-X extends fixed-portfolio selection with a synthesized
+`VariableBlockIndex`. It partitions ordered keys into unequal contiguous
+blocks. A range query reads one precomputed aggregate for each fully covered
+block and scans only partially covered block fragments.
+
+```python
+from certigap import SynthesisConstraints, WorkloadTrace
+from certigap import compile_synthesized_index, verify_synthesis_certificate
+
+trace = WorkloadTrace(32)
+for _ in range(100):
+    trace.add_range(2, 11)
+
+model = compile_synthesized_index(
+    range(32),
+    trace,
+    constraints=SynthesisConstraints(max_blocks=12, max_block_width=16),
+)
+print(model.selected_boundaries)
+print(verify_synthesis_certificate(model.export_certificate()))
+```
+
+## Exact Grammar
+
+For every block count up to `max_blocks`, the compiler considers every
+contiguous partition whose blocks do not exceed `max_block_width`. Dynamic
+programming returns the exact minimum for each block count. The final winner
+is the feasible minimum across that complete frontier.
+
+For operation `o` and block `B`, let `c(o,B)` be the declared calibrated
+primitive cost contributed by that block. Whole-operation cost is
+`C(o,P)=sum_B c(o,B)`. Therefore:
+
+`mean_o C(o,P) = sum_B mean_o c(o,B)`
+
+and
+
+`max_o C(o,P) <= sum_B max_o c(o,B)`.
+
+The optimized additive objective is consequently a certified upper bound on
+the requested mean/tail objective. It is intentionally conservative: the
+partition minimizing this upper bound need not minimize measured `p99`.
+
+## Hardware Calibration
+
+```bash
+python3 calibrate_hardware.py --output hardware_profile.json
+```
+
+The C++17 calibrator records median primitive costs. A certificate is
+conditional on these supplied measurements. The verifier checks their digest
+and recomputes the complete frontier, but cannot prove that another machine
+has the same latency.
+
+## C++ Export
+
+`model.render_cpp_header("my_index")` emits a deterministic configuration that
+uses `cpp/certigap_synth.hpp`. Python and generated C++ share inclusive
+1-based point/range/update semantics. Memory accounting is `2n+2b` scalar
+slots: values, key-to-block mapping, boundaries, and block aggregates.
+
+## Safe Migration
+
+`migration_decision` permits rebuilding only when projected horizon savings
+strictly exceed rebuild cost plus an explicit confidence margin. This is an
+amortization rule, not a workload forecast or statistical confidence
+estimator.
+
+## Claim Boundary
+
+The current grammar synthesizes in-memory rank-addressed block indexes. It
+does not yet include PGM/ALEX, concurrency, inserts/deletes, disk pages, SIMD
+layouts, or a storage-engine integration. Committed validation uses portable
+unit primitive costs; target-specific nanoseconds must be measured locally.
+
+# CertiGap-X synthesis validation
+
+- Exact independently verified portfolios: `24/24`.
+- Runtime oracle passes: `24/24`.
+- Nonuniform selected designs: `20/24`.
+- Mean certified gain over best uniform blocks: `31.79%`.
+- Maximum certified gain over best uniform blocks: `91.67%`.
+- Minimum certified gain over best uniform blocks: `0.00%`.
+
+The committed matrix uses unit primitive costs for deterministic reproduction. Machine-specific nanosecond profiles are conditional inputs produced by `calibrate_hardware.py`, not portable facts.
 
 ## Competition Positioning
 

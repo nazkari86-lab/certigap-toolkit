@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(CertiGap VERSION 1.6.0 LANGUAGES CXX)
+project(CertiGap VERSION 1.7.0 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
@@ -35,6 +35,7 @@ install(
         cpp/certigap.hpp
         cpp/certigap_adaptive.hpp
         cpp/certigap_autoindex.hpp
+        cpp/certigap_synth.hpp
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/certigap"
 )
 install(

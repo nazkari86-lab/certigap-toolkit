@@ -38,6 +38,7 @@ from .generalized import (
     generalized_frontier_dp_best,
     midpoint_binary_profile,
 )
+from .hardware import calibrate_hardware, calibration_source_path
 from .online import (
     OnlineRegretCertificate,
     expectation_shift_bound,
@@ -49,6 +50,19 @@ from .range_optimizer_verifier import (
     RangeOptimizerVerificationError,
     make_range_optimizer_artifact,
     verify_range_optimizer_artifact,
+)
+from .synthesis import (
+    HardwareProfile,
+    SynthesisConstraints,
+    SynthesizedIndex,
+    VariableBlockIndex,
+    compile_synthesized_index,
+    migration_decision,
+    synthesize_partitions,
+)
+from .synthesis_verifier import (
+    SynthesisVerificationError,
+    verify_synthesis_certificate,
 )
 from .core import (
     CertificateError,
@@ -112,6 +126,8 @@ __all__ = [
     "compile_autoindex",
     "CppCertiGap",
     "certify_tree",
+    "calibrate_hardware",
+    "calibration_source_path",
     "entropy_lower_bound",
     "enumerate_partial_trees",
     "effective_budget",
@@ -129,12 +145,14 @@ __all__ = [
     "greedy_best",
     "heuristic_best",
     "hot_block_distribution",
+    "HardwareProfile",
     "interval_cost",
     "lagrangian_lower_bound",
     "make_distribution",
     "max_cost_lower_bound",
     "midpoint_binary_profile",
     "multinomial_uncertainty",
+    "migration_decision",
     "normalize_weights",
     "OnlineRegretCertificate",
     "online_regret_certificate",
@@ -146,6 +164,10 @@ __all__ = [
     "score_range_workload",
     "make_range_optimizer_artifact",
     "split_count",
+    "SynthesisConstraints",
+    "SynthesizedIndex",
+    "SynthesisVerificationError",
+    "synthesize_partitions",
     "expectation_shift_bound",
     "total_variation_distance",
     "TraceOperation",
@@ -160,7 +182,10 @@ __all__ = [
     "verify_anytime_tv_certificate",
     "verify_autoindex_artifact",
     "verify_tree",
+    "verify_synthesis_certificate",
     "verify_serialized_tree_exact",
     "worst_case_tv_expectation",
     "WorkloadTrace",
+    "VariableBlockIndex",
+    "compile_synthesized_index",
 ]

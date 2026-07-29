@@ -5,6 +5,11 @@
 
 CertiGap is a toolkit for **budgeted robust partial search trees**.
 
+CertiGap-X can synthesize a new variable-block aggregate index instead of
+selecting only a named backend. Its exact dynamic program and independent
+verifier cover every legal partition in the declared grammar; see
+[`docs/SYNTHESIS.md`](docs/SYNTHESIS.md).
+
 The easiest C++ mode is one header:
 
 ```cpp

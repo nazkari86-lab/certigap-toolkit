@@ -95,6 +95,18 @@
 - root CMake target, install export, `find_package`, and FetchContent
 - native 24-row validation plus online-compiler example
 
+## Phase 11: Certified Structure Synthesis
+
+- exact synthesis of unequal contiguous aggregate blocks;
+- target-hardware primitive calibration;
+- independent regeneration of every DP frontier candidate;
+- deterministic C++17 configuration export;
+- amortized migration gate with an explicit confidence margin;
+- exhaustive small-space and best-uniform-block ablations.
+
+Completed in `v1.7.0`. Learned routing, storage-engine integration,
+concurrency, and independently reproduced wall-clock gains remain external.
+
 ## External Closure
 
 - independent proof review or machine-assisted formalization

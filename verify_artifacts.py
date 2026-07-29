@@ -56,6 +56,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "autoindex_validation.csv": 120,
         "compiler_integration_validation.csv": 24,
         "adaptive_header_validation.csv": 24,
+        "synthesis_validation.csv": 24,
     }
     observed: dict[str, int] = {}
     for name, minimum in minimum_rows.items():
@@ -327,6 +328,22 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         )
     ):
         raise ValueError("adaptive single-header validation is incomplete")
+
+    synthesis_rows = csv_records("synthesis_validation.csv")
+    if (
+        len(synthesis_rows) != 24
+        or any(
+            row["certificate_verified"] != "true"
+            or row["runtime_correct"] != "true"
+            or int(row["candidate_count"]) <= 0
+            or int(row["selected_blocks"]) <= 0
+            or not math.isfinite(float(row["selected_certified_score"]))
+            or float(row["relative_gain"]) < -1e-12
+            for row in synthesis_rows
+        )
+        or sum(row["nonuniform"] == "true" for row in synthesis_rows) < 12
+    ):
+        raise ValueError("CertiGap-X synthesis validation is incomplete")
 
     optimizer_rows = csv_records("range_optimizer_validation.csv")
     exact_optimizer_rows = [

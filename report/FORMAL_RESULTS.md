@@ -421,3 +421,29 @@ This is an in-process portfolio statement. Unlike Theorems L and M, it has no
 independent artifact regeneration and makes no global claim over omitted data
 structures. The two adaptive routing builders are deterministic weighted
 heuristics, not globally optimal topology solvers.
+
+## Theorem O: Exact Variable-Block Robust-Upper Synthesis
+
+Fix a trace, hardware profile, aggregate, maximum block count, and maximum
+block width. For operation `o`, legal partition `P`, and block `B` in `P`,
+let the nonnegative declared contribution be `c(o,B)`. Runtime work is
+additive: `C(o,P) = sum_{B in P} c(o,B)`.
+
+Linearity gives
+`mean_o C(o,P) = sum_{B in P} mean_o c(o,B)`, while the maximum of sums is at
+most the sum of maxima:
+`max_o C(o,P) <= sum_{B in P} max_o c(o,B)`.
+
+Thus the sum of per-block `(1-eta) mean + eta max` terms, plus additive
+memory/build penalties, is an upper bound on the whole-partition robust
+objective. The recurrence
+`DP[b,r] = min_l DP[b-1,l-1] + block_score(l,r)` enumerates every legal final
+block `[l,r]`; induction on `b` proves that it returns the minimum certified
+upper score for every exact block count. Taking the feasible minimum over all
+published block counts proves completeness in the declared grammar. The
+independent verifier reconstructs this recurrence and rejects a changed or
+omitted frontier. `QED`
+
+This theorem does not claim that the conservative upper-bound minimizer is the
+minimum measured tail-latency design, nor that supplied hardware measurements
+transfer to another machine.

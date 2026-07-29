@@ -248,6 +248,16 @@ pass point/range/update/snapshot oracles. CMake installation and a downstream
 External implementations, independent hardware reproduction, and a
 domain-owner pilot remain external validation requirements.
 
+CertiGap-X additionally synthesizes unequal contiguous aggregate blocks
+rather than selecting only a named backend. For block contribution
+$c(o,B)$, whole-operation work is additive, so mean work is exactly additive
+and $\max_o\sum_B c(o,B)\leq\sum_B\max_o c(o,B)$. This yields an additive
+robust upper objective whose global minimum over all declared partitions is
+computed by dynamic programming and independently regenerated. A 24-case
+matrix verifies every frontier and runtime oracle; 20 cases select genuinely
+nonuniform designs. Hardware coefficients are conditional measurements, not
+portable latency guarantees.
+
 \bibliographystyle{plain}
 \bibliography{references}
 \end{document}

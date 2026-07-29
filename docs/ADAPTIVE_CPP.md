@@ -128,7 +128,7 @@ include(FetchContent)
 FetchContent_Declare(
     certigap
     GIT_REPOSITORY https://github.com/nazkari86-lab/certigap-toolkit.git
-    GIT_TAG v1.6.0
+    GIT_TAG v1.7.0
 )
 FetchContent_MakeAvailable(certigap)
 
@@ -139,7 +139,7 @@ target_link_libraries(app PRIVATE CertiGap::certigap)
 Installed packages support:
 
 ```cmake
-find_package(CertiGap 1.6 REQUIRED)
+find_package(CertiGap 1.7 REQUIRED)
 target_link_libraries(app PRIVATE CertiGap::certigap)
 ```
 

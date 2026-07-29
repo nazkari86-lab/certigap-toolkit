@@ -242,6 +242,8 @@ def main() -> None:
             RESULTS_DIR / "compiler_integration_validation.md",
             DOCS_DIR / "ADAPTIVE_CPP.md",
             RESULTS_DIR / "adaptive_header_validation.md",
+            DOCS_DIR / "SYNTHESIS.md",
+            RESULTS_DIR / "synthesis_validation.md",
         )
     )
     counterexample_text = read(RESULTS_DIR / "counterexamples.md") if (RESULTS_DIR / "counterexamples.md").exists() else ""
