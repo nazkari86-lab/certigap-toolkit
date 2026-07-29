@@ -7,7 +7,12 @@ import math
 import re
 from pathlib import Path
 
-from certigap import verify_anytime_tv_certificate, verify_autodro_selection_artifact
+from certigap import (
+    verify_anytime_tv_certificate,
+    verify_autodro_selection_artifact,
+    verify_dynamic_range_certificate,
+    verify_range_optimizer_artifact,
+)
 
 
 ROOT = Path(__file__).resolve().parent
@@ -44,6 +49,9 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "uncertainty_validation.csv": 12,
         "online_adaptation.csv": 4,
         "anytime_validation.csv": 48,
+        "dynamic_range_benchmark.csv": 36,
+        "cpp_dynamic_range.csv": 36,
+        "range_optimizer_validation.csv": 114,
     }
     observed: dict[str, int] = {}
     for name, minimum in minimum_rows.items():
@@ -204,6 +212,80 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
     )
     if not verify_anytime_tv_certificate(anytime_artifact)["verified"]:
         raise ValueError("anytime example certificate did not replay")
+
+    dynamic_rows = csv_records("dynamic_range_benchmark.csv")
+    if (
+        {row["method"] for row in dynamic_rows}
+        != {"array", "fenwick", "segment_tree", "certirange"}
+        or any(row["correct"] != "True" for row in dynamic_rows)
+    ):
+        raise ValueError("Python dynamic range benchmark is incomplete")
+    cpp_dynamic_rows = csv_records("cpp_dynamic_range.csv")
+    if (
+        {row["method"] for row in cpp_dynamic_rows}
+        != {"array", "fenwick", "segment_tree", "certirange"}
+        or any(row["correct"] != "true" for row in cpp_dynamic_rows)
+    ):
+        raise ValueError("C++ dynamic range benchmark is incomplete")
+    cpp_dynamic_metadata = json.loads(
+        (RESULTS / "cpp_dynamic_range_metadata.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if (
+        cpp_dynamic_metadata.get("measurement_scope")
+        != "post-build mixed operations; p95 across batch means"
+    ):
+        raise ValueError("C++ dynamic range measurement scope is ambiguous")
+
+    optimizer_rows = csv_records("range_optimizer_validation.csv")
+    exact_optimizer_rows = [
+        row for row in optimizer_rows if row["phase"] == "exact_oracle"
+    ]
+    if len(exact_optimizer_rows) != 6 or any(
+        row["exact"] != "True" or abs(float(row["oracle_gap"])) > 1e-9
+        for row in exact_optimizer_rows
+    ):
+        raise ValueError("range-aware optimizer lost exact-oracle agreement")
+    optimizer_groups: dict[tuple[str, str, str], list[dict[str, str]]] = {}
+    for row in optimizer_rows:
+        if row["phase"] == "scaling":
+            optimizer_groups.setdefault(
+                (row["n"], row["family"], row["budget"]), []
+            ).append(row)
+    if len(optimizer_groups) != 36 or any(
+        {row["method"] for row in group}
+        != {
+            "balanced_completion",
+            "point_endpoint_proxy",
+            "range_aware_beam",
+        }
+        for group in optimizer_groups.values()
+    ):
+        raise ValueError("range-aware scaling matrix is incomplete")
+    for group in optimizer_groups.values():
+        aware = next(
+            float(row["objective"])
+            for row in group
+            if row["method"] == "range_aware_beam"
+        )
+        if aware > min(float(row["objective"]) for row in group) + 1e-9:
+            raise ValueError(
+                "range-aware search lost to an included training candidate"
+            )
+
+    dynamic_artifact = json.loads(
+        (RESULTS / "dynamic_range_certificate_example.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if not verify_dynamic_range_certificate(dynamic_artifact)["verified"]:
+        raise ValueError("dynamic range certificate did not replay")
+    optimizer_artifact = json.loads(
+        (RESULTS / "range_optimizer_example.json").read_text(encoding="utf-8")
+    )
+    if not verify_range_optimizer_artifact(optimizer_artifact)["verified"]:
+        raise ValueError("range optimizer artifact did not replay")
     return observed
 
 

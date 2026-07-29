@@ -520,6 +520,44 @@ This is the bound implemented by `online_regret_certificate`. It applies to
 mean execution cost and does not silently extend to rebuild latency or an
 unmodeled storage-engine objective. `QED`
 
+## Theorem J: Dynamic CertiRange Correctness And Height Bound
+
+Let a valid partial routing tree over `[1,n]` be completed recursively. A
+routing split is retained only when balanced completion of both children fits
+inside the remaining depth. Otherwise the entire current interval is replaced
+by its midpoint completion.
+
+Every retained split partitions its parent into `[l,k]` and `[k+1,r]`;
+midpoint completion has the same property. Structural induction therefore
+shows that the completed leaves are exactly the singleton partition
+`[1,1],...,[n,n]`. Midpoint completion of `s` keys has height
+`ceil(log2(s))`, and the retention check reserves at least that much depth for
+both children. Induction on remaining depth proves completed height at most
+the declared `max_depth`.
+
+Each internal aggregate is the monoid combination of its children. Induction
+on subtree size proves that it equals the aggregate of its full interval.
+Point update replaces exactly the root-to-key path and recomputes those
+aggregates, so the new root is correct while every node reachable from an old
+root is unchanged. Hence pre-update snapshots remain consistent.
+
+A range query stops at disjoint and fully covered nodes. Only nodes on the two
+boundary paths can recurse; at each level there are at most two such nodes and
+their checked siblings. Thus it visits `O(h)` nodes for tree height `h`; the
+implementation exports the conservative bound `4h+1`. `QED`
+
+## Proposition K: Range-Aware Bounded-Search Dominance
+
+The range-aware beam starts with the unsplit routing tree, whose deterministic
+completion is the balanced baseline, and records it as the incumbent. The
+incumbent changes only after exact mixed-trace evaluation reports a strictly
+smaller objective. Therefore the returned candidate is never worse than this
+included balanced completion on the declared training workload.
+
+This proposition is a portfolio-dominance statement, not global optimality.
+Complete small routing spaces are separately enumerated to validate the search
+implementation.
+
 # Generalized Executable Fallback Model
 
 ## Motivation
@@ -1190,6 +1228,155 @@ This measures only rank lookup after each structure is built. Times are local-ma
 ## Limits
 
 This is not an official YCSB, RocksDB, hardware-routing, cache-miss, or external-library benchmark. It is reproducible CPU-level evidence that the exported CertiGap decision tree executes real lookups with an explicit storage footprint. Production claims require a target storage engine, key encoding, allocator, CPU, and independent external baselines.
+
+# Dynamic CertiRange
+
+Dynamic CertiRange extends the static budgeted lookup model into a complete
+ordered range index.
+
+It supports:
+
+- point lookup;
+- point update;
+- inclusive range `sum`, `min`, and `max`;
+- immutable snapshots through persistent path copying;
+- workload-shaped routing;
+- drift-triggered rebuilding;
+- deterministic depth caps;
+- independently replayed structural and optimizer artifacts.
+
+## Python API
+
+```python
+from certigap import CertiRangeWorkload
+
+workload = CertiRangeWorkload(32)
+workload.add_point(1, 1000)
+workload.add_range(1, 10, 500)
+workload.add_update(2, 100)
+
+index = workload.compile(
+    values=list(range(32)),
+    budget=6,
+    eta=0.10,
+    aggregate="sum",
+    max_depth=10,
+    routing="range_aware",
+)
+
+print(index.get(1))
+print(index.range_query(1, 10))
+
+snapshot = index.snapshot()
+index.point_update(2, 1000)
+assert snapshot.get(2) != index.get(2)
+
+certificate = index.export_certificate()
+```
+
+Keys and ranges are one-based and ranges are inclusive.
+
+## Structure
+
+The routing solver emits a partial alphabetic tree. Every unresolved interval
+is deterministically completed by a midpoint tree. If a proposed routing split
+cannot fit inside `max_depth`, that interval is replaced by its balanced
+completion.
+
+The resulting full tree has exactly one leaf per key. Every internal node
+stores the aggregate of its contiguous interval.
+
+## Guarantees
+
+For `n` keys and completed-tree height `h`:
+
+- point lookup takes at most `h` routing steps;
+- persistent point update copies `O(h)` nodes;
+- range aggregate visits `O(h)` boundary nodes;
+- the implementation exports the conservative executable bound `4h + 1`;
+- memory is `O(n)` for the current root plus `O(h)` per retained update;
+- `h <= max_depth`;
+- snapshots acquired before an update remain unchanged.
+
+The structural verifier reconstructs the deterministic completion, checks
+every interval and split, recomputes all per-key depths and aggregates, and
+validates canonical SHA-256 digests.
+
+## Range-Aware Search
+
+The former endpoint proxy converts range boundaries into point frequencies.
+This is cheap but does not optimize actual range traversal.
+
+`range_aware_beam_search` instead evaluates each candidate by replaying the
+declared point, update, and range workload on its completed topology. Its
+objective is
+
+```text
+(1 - eta) * mean_node_visits + eta * (max_point_depth + 1)
+```
+
+The balanced completion is always retained as an incumbent. Therefore the
+returned bounded-search candidate is never worse than that included candidate
+under the exact training-trace evaluator.
+
+This is not a global guarantee for large instances. The repository validates
+the implementation against complete routing-tree enumeration on small cases.
+
+## C++ Core
+
+`cpp/certigap_range.hpp` provides a contiguous-node sum implementation. The
+C++ benchmark compares identical mixed traces against:
+
+- a direct array;
+- Fenwick tree;
+- iterative segment tree;
+- contiguous Dynamic CertiRange.
+
+The current benchmark rejects a blanket speed claim: Fenwick and segment trees
+win raw sum throughput. CertiRange's distinct features are workload-shaped
+point paths, generic Python aggregates, persistent snapshots, drift control,
+and replayable certificates.
+
+## Scope
+
+Dynamic CertiRange is currently an ordered fixed-key-universe index. It does
+not yet support insertion or deletion, lazy range updates, disk pages,
+concurrent writers, or an official storage-engine integration.
+
+# Range-aware optimizer validation
+
+- Rows: `114`
+- Complete small-space oracle matches: `6/6`
+- Scaling groups where range-aware is tied for best or best: `36/36`
+- Strict improvements over point/endpoint proxy: `18/36`
+- Every objective is recomputed by the exact mixed-trace evaluator.
+- Scaling rows are bounded beam results, not global optimality claims.
+
+The complete-tree-space checks validate the search implementation on n=8. The scaling matrix tests whether direct range-cost optimization improves over the former endpoint proxy without hiding cases where it ties or loses.
+
+# C++ Dynamic CertiRange benchmark
+
+- Rows: `36`
+- Same deterministic mixed get/range-sum/update trace for every method.
+- Latency is post-build median and p95 across whole-batch per-operation means.
+- CertiRange uses contiguous nodes and a workload-shaped routing prefix.
+- This local microbenchmark is not independent-hardware evidence.
+
+| n | workload | fastest | CertiRange rank | CertiRange ns/op | fastest ns/op | hot depth vs balanced |
+|---:|---|---|---:|---:|---:|---:|
+| 1024 | clustered_range | fenwick | 4/4 | 80.5 | 13.3 | 12 vs 10 |
+| 1024 | hotspot_point | array | 4/4 | 28.4 | 4.6 | 7 vs 10 |
+| 1024 | uniform_mixed | fenwick | 4/4 | 65.7 | 14.7 | 10 vs 10 |
+| 16384 | clustered_range | fenwick | 3/4 | 145.4 | 15.1 | 16 vs 14 |
+| 16384 | hotspot_point | segment_tree | 3/4 | 53.8 | 8.9 | 11 vs 14 |
+| 16384 | uniform_mixed | fenwick | 3/4 | 147.9 | 17.6 | 14 vs 14 |
+| 100000 | clustered_range | fenwick | 3/4 | 264.5 | 16.9 | 18 vs 17 |
+| 100000 | hotspot_point | segment_tree | 3/4 | 91.2 | 11.7 | 14 vs 17 |
+| 100000 | uniform_mixed | fenwick | 3/4 | 215.2 | 25.1 | 17 vs 17 |
+
+## Honest result
+
+Fenwick or an iterative segment tree wins raw range-sum throughput in this matrix. CertiRange reduces hot-key depth on skewed traces, but irregular routing and recursive range traversal currently outweigh that comparison saving. The result rejects a blanket speed claim and motivates portfolio selection rather than replacing classical structures.
 
 ## 10. Вывод
 

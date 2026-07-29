@@ -15,6 +15,11 @@ from .autodro import (
 from .branch_and_bound import branch_and_bound_exact
 from .cpp_bindings import CppCertiGap
 from .direct_tv import enumerate_partial_trees, exact_tree_space_manifest
+from .dynamic_range import DynamicCertiRange, RangeNode, RangeSnapshot
+from .dynamic_range_verifier import (
+    DynamicRangeVerificationError,
+    verify_dynamic_range_certificate,
+)
 from .exact_verifier import verify_serialized_tree_exact
 from .generalized import (
     evaluate_tree_with_fallback,
@@ -27,6 +32,12 @@ from .online import (
     expectation_shift_bound,
     online_regret_certificate,
     total_variation_distance,
+)
+from .range_optimizer import range_aware_beam_search, score_range_workload
+from .range_optimizer_verifier import (
+    RangeOptimizerVerificationError,
+    make_range_optimizer_artifact,
+    verify_range_optimizer_artifact,
 )
 from .core import (
     CertificateError,
@@ -59,6 +70,7 @@ from .core import (
     validate_problem,
 )
 from .verifier import VerificationError, verify_branch_and_bound_certificate, verify_certificate_artifact, verify_tree
+from .workload import CertiRangeWorkload
 
 __all__ = [
     "CertificateError",
@@ -78,6 +90,7 @@ __all__ = [
     "benchmark_case",
     "brute_force_best",
     "CertiGapToolkit",
+    "CertiRangeWorkload",
     "CertiGapAutoDRO",
     "combined_lower_bound",
     "cost_cap_dp_best",
@@ -91,6 +104,8 @@ __all__ = [
     "evaluate_tree_with_fallback",
     "ExecutionCostModel",
     "exact_tree_space_manifest",
+    "DynamicCertiRange",
+    "DynamicRangeVerificationError",
     "FitResult",
     "frontier_dp_best",
     "fixed_rounds_profile",
@@ -109,6 +124,12 @@ __all__ = [
     "OnlineRegretCertificate",
     "online_regret_certificate",
     "power_of_two_greedy_family",
+    "RangeNode",
+    "RangeSnapshot",
+    "RangeOptimizerVerificationError",
+    "range_aware_beam_search",
+    "score_range_workload",
+    "make_range_optimizer_artifact",
     "split_count",
     "expectation_shift_bound",
     "total_variation_distance",
@@ -116,6 +137,8 @@ __all__ = [
     "validate_problem",
     "UncertaintyModel",
     "verify_certificate_artifact",
+    "verify_dynamic_range_certificate",
+    "verify_range_optimizer_artifact",
     "verify_branch_and_bound_certificate",
     "verify_autodro_selection_artifact",
     "verify_anytime_tv_certificate",

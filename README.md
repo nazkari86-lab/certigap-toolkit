@@ -27,6 +27,9 @@ It ships with:
 - version 2 artifacts with deterministic portfolio regeneration;
 - cumulative, decayed, and sliding-window adaptation policies;
 - distribution-drift regret certificates for rebuild decisions.
+- Dynamic CertiRange point/range/update indexes with persistent snapshots.
+- range-aware workload optimization with independently replayed artifacts.
+- contiguous-node C++ range benchmarks against Fenwick and segment trees.
 
 License:
 
@@ -146,6 +149,41 @@ bounds. A zero gap proves global optimality for the declared objective and
 constraints; a nonzero gap remains an unresolved interval. See
 [`docs/ANYTIME_TV.md`](docs/ANYTIME_TV.md).
 
+## Dynamic CertiRange API
+
+Compile a full range index from point, range, and update workload counts:
+
+```python
+from certigap import CertiRangeWorkload
+
+workload = CertiRangeWorkload(32)
+workload.add_point(1, 1000)
+workload.add_range(1, 10, 500)
+workload.add_update(2, 100)
+
+index = workload.compile(
+    values=list(range(32)),
+    budget=6,
+    eta=0.10,
+    aggregate="sum",       # sum, min, or max
+    max_depth=10,
+    routing="range_aware",
+)
+
+snapshot = index.snapshot()
+index.point_update(2, 1000)
+
+print(index.get(1))
+print(index.range_query(1, 10))
+print(snapshot.get(2))     # immutable pre-update view
+print(index.export_certificate())
+```
+
+The range-aware solver evaluates mixed-trace node visits rather than only an
+endpoint proxy. Its balanced candidate is always retained, but large-instance
+beam results are not claimed globally optimal. See
+[`docs/DYNAMIC_RANGE.md`](docs/DYNAMIC_RANGE.md).
+
 ## Quick Start
 
 Run the full project build:
@@ -238,6 +276,7 @@ print(result["objective"])
 - [`examples/read_heavy_embedded_index.py`](examples/read_heavy_embedded_index.py)
 - [`examples/anytime_certified_search.py`](examples/anytime_certified_search.py)
 - [`examples/online_regret_certificate.py`](examples/online_regret_certificate.py)
+- [`examples/dynamic_certirange.py`](examples/dynamic_certirange.py)
 
 ## Main Results
 
@@ -258,6 +297,9 @@ Generated artifacts live in [`results/`](results):
 - [`direct_tv_validation.md`](results/direct_tv_validation.md): complete-tree-space validation and strict separation witness
 - [`uncertainty_validation.md`](results/uncertainty_validation.md): 3,000 finite-sample i.i.d. coverage trials
 - [`online_adaptation.md`](results/online_adaptation.md): drift-threshold rebuild/regret simulation
+- [`dynamic_range_benchmark.md`](results/dynamic_range_benchmark.md): Python point/range/update baselines
+- [`cpp_dynamic_range.md`](results/cpp_dynamic_range.md): C++ mixed traces against Fenwick and segment tree
+- [`range_optimizer_validation.md`](results/range_optimizer_validation.md): exact-oracle and scaling validation
 - [`anytime_validation.md`](results/anytime_validation.md): exact-oracle and scalable certified-gap trajectories
 
 Figures live in [`figures/`](figures):

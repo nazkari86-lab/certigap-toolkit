@@ -59,6 +59,7 @@ def build_report(
     generalized_text: str = "",
     lookup_text: str = "",
     autodro_text: str = "",
+    dynamic_range_text: str = "",
 ) -> str:
     return "\n".join(
         [
@@ -103,6 +104,10 @@ def build_report(
             "## AutoDRO Under Distribution Shift",
             "",
             autodro_text,
+            "",
+            "## Dynamic CertiRange",
+            "",
+            dynamic_range_text,
             "",
             "## Competition Positioning",
             "",
@@ -188,6 +193,15 @@ def main() -> None:
             RESULTS_DIR / "anytime_validation.md",
         )
     )
+    dynamic_range_text = "\n\n".join(
+        read_text(path)
+        for path in (
+            DOCS_DIR / "DYNAMIC_RANGE.md",
+            RESULTS_DIR / "range_optimizer_validation.md",
+            RESULTS_DIR / "cpp_dynamic_range.md",
+            RESULTS_DIR / "dynamic_range_benchmark.md",
+        )
+    )
 
     (REPORT_DIR / "ABSTRACT.md").write_text(build_abstract(summary_text), encoding="utf-8")
     (REPORT_DIR / "REPORT.md").write_text(
@@ -202,10 +216,12 @@ def main() -> None:
             generalized_text,
             lookup_text,
             autodro_text,
+            dynamic_range_text,
         ),
         encoding="utf-8",
     )
     anytime_theory_text = read_text(DOCS_DIR / "ANYTIME_TV.md")
+    dynamic_range_theory_text = read_text(DOCS_DIR / "DYNAMIC_RANGE.md")
     (REPORT_DIR / "APPENDIX.md").write_text(
         build_appendix(
             certificate_text
@@ -213,7 +229,9 @@ def main() -> None:
             + ("\n\n" + counterexample_text if counterexample_text else "")
             + ("\n\n" + technical_note_text if technical_note_text else "")
             + "\n\n"
-            + anytime_theory_text,
+            + anytime_theory_text
+            + "\n\n"
+            + dynamic_range_theory_text,
             roadmap_text,
         ),
         encoding="utf-8",

@@ -310,3 +310,41 @@ be optimal under `p`. Applying the shift inequality to `T_q` and `T_p` gives
 This is the bound implemented by `online_regret_certificate`. It applies to
 mean execution cost and does not silently extend to rebuild latency or an
 unmodeled storage-engine objective. `QED`
+
+## Theorem J: Dynamic CertiRange Correctness And Height Bound
+
+Let a valid partial routing tree over `[1,n]` be completed recursively. A
+routing split is retained only when balanced completion of both children fits
+inside the remaining depth. Otherwise the entire current interval is replaced
+by its midpoint completion.
+
+Every retained split partitions its parent into `[l,k]` and `[k+1,r]`;
+midpoint completion has the same property. Structural induction therefore
+shows that the completed leaves are exactly the singleton partition
+`[1,1],...,[n,n]`. Midpoint completion of `s` keys has height
+`ceil(log2(s))`, and the retention check reserves at least that much depth for
+both children. Induction on remaining depth proves completed height at most
+the declared `max_depth`.
+
+Each internal aggregate is the monoid combination of its children. Induction
+on subtree size proves that it equals the aggregate of its full interval.
+Point update replaces exactly the root-to-key path and recomputes those
+aggregates, so the new root is correct while every node reachable from an old
+root is unchanged. Hence pre-update snapshots remain consistent.
+
+A range query stops at disjoint and fully covered nodes. Only nodes on the two
+boundary paths can recurse; at each level there are at most two such nodes and
+their checked siblings. Thus it visits `O(h)` nodes for tree height `h`; the
+implementation exports the conservative bound `4h+1`. `QED`
+
+## Proposition K: Range-Aware Bounded-Search Dominance
+
+The range-aware beam starts with the unsplit routing tree, whose deterministic
+completion is the balanced baseline, and records it as the incumbent. The
+incumbent changes only after exact mixed-trace evaluation reports a strictly
+smaller objective. Therefore the returned candidate is never worse than this
+included balanced completion on the declared training workload.
+
+This proposition is a portfolio-dominance statement, not global optimality.
+Complete small routing spaces are separately enumerated to validate the search
+implementation.

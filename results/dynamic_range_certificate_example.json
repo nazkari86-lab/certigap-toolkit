@@ -1,0 +1,386 @@
+{
+  "aggregate": "sum",
+  "complete_topology": {
+    "interval": [
+      1,
+      16
+    ],
+    "left": {
+      "interval": [
+        1,
+        1
+      ],
+      "type": "leaf"
+    },
+    "right": {
+      "interval": [
+        2,
+        16
+      ],
+      "left": {
+        "interval": [
+          2,
+          2
+        ],
+        "type": "leaf"
+      },
+      "right": {
+        "interval": [
+          3,
+          16
+        ],
+        "left": {
+          "interval": [
+            3,
+            8
+          ],
+          "left": {
+            "interval": [
+              3,
+              4
+            ],
+            "left": {
+              "interval": [
+                3,
+                3
+              ],
+              "type": "leaf"
+            },
+            "right": {
+              "interval": [
+                4,
+                4
+              ],
+              "type": "leaf"
+            },
+            "threshold": 3,
+            "type": "split"
+          },
+          "right": {
+            "interval": [
+              5,
+              8
+            ],
+            "left": {
+              "interval": [
+                5,
+                6
+              ],
+              "left": {
+                "interval": [
+                  5,
+                  5
+                ],
+                "type": "leaf"
+              },
+              "right": {
+                "interval": [
+                  6,
+                  6
+                ],
+                "type": "leaf"
+              },
+              "threshold": 5,
+              "type": "split"
+            },
+            "right": {
+              "interval": [
+                7,
+                8
+              ],
+              "left": {
+                "interval": [
+                  7,
+                  7
+                ],
+                "type": "leaf"
+              },
+              "right": {
+                "interval": [
+                  8,
+                  8
+                ],
+                "type": "leaf"
+              },
+              "threshold": 7,
+              "type": "split"
+            },
+            "threshold": 6,
+            "type": "split"
+          },
+          "threshold": 4,
+          "type": "split"
+        },
+        "right": {
+          "interval": [
+            9,
+            16
+          ],
+          "left": {
+            "interval": [
+              9,
+              12
+            ],
+            "left": {
+              "interval": [
+                9,
+                10
+              ],
+              "left": {
+                "interval": [
+                  9,
+                  9
+                ],
+                "type": "leaf"
+              },
+              "right": {
+                "interval": [
+                  10,
+                  10
+                ],
+                "type": "leaf"
+              },
+              "threshold": 9,
+              "type": "split"
+            },
+            "right": {
+              "interval": [
+                11,
+                12
+              ],
+              "left": {
+                "interval": [
+                  11,
+                  11
+                ],
+                "type": "leaf"
+              },
+              "right": {
+                "interval": [
+                  12,
+                  12
+                ],
+                "type": "leaf"
+              },
+              "threshold": 11,
+              "type": "split"
+            },
+            "threshold": 10,
+            "type": "split"
+          },
+          "right": {
+            "interval": [
+              13,
+              16
+            ],
+            "left": {
+              "interval": [
+                13,
+                14
+              ],
+              "left": {
+                "interval": [
+                  13,
+                  13
+                ],
+                "type": "leaf"
+              },
+              "right": {
+                "interval": [
+                  14,
+                  14
+                ],
+                "type": "leaf"
+              },
+              "threshold": 13,
+              "type": "split"
+            },
+            "right": {
+              "interval": [
+                15,
+                16
+              ],
+              "left": {
+                "interval": [
+                  15,
+                  15
+                ],
+                "type": "leaf"
+              },
+              "right": {
+                "interval": [
+                  16,
+                  16
+                ],
+                "type": "leaf"
+              },
+              "threshold": 15,
+              "type": "split"
+            },
+            "threshold": 14,
+            "type": "split"
+          },
+          "threshold": 12,
+          "type": "split"
+        },
+        "threshold": 8,
+        "type": "split"
+      },
+      "threshold": 2,
+      "type": "split"
+    },
+    "threshold": 1,
+    "type": "split"
+  },
+  "digests": {
+    "fit_weights_sha256": "53f8201b00fa5ed0ead7a50f410e0e76330e3c5b1aabe044234cd2320634ed5d",
+    "topology_sha256": "a6344039fe38746dacf17c2662702129adf3a29e30eb3a7a7aef7e1545591772",
+    "values_sha256": "aab1eb17e36e2231dfc9f00b0b101473886c0aaf2d4939a2d68b65f15202a1dc"
+  },
+  "fit_weights": [
+    0.6707317073170732,
+    0.2682926829268293,
+    0.0,
+    0.06097560975609756,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "routing_tree": {
+    "interval": [
+      1,
+      16
+    ],
+    "left": {
+      "interval": [
+        1,
+        1
+      ],
+      "type": "leaf"
+    },
+    "right": {
+      "interval": [
+        2,
+        16
+      ],
+      "left": {
+        "interval": [
+          2,
+          2
+        ],
+        "type": "leaf"
+      },
+      "right": {
+        "interval": [
+          3,
+          16
+        ],
+        "left": {
+          "interval": [
+            3,
+            8
+          ],
+          "left": {
+            "interval": [
+              3,
+              4
+            ],
+            "type": "leaf"
+          },
+          "right": {
+            "interval": [
+              5,
+              8
+            ],
+            "type": "leaf"
+          },
+          "threshold": 4,
+          "type": "split"
+        },
+        "right": {
+          "interval": [
+            9,
+            16
+          ],
+          "type": "leaf"
+        },
+        "threshold": 8,
+        "type": "split"
+      },
+      "threshold": 2,
+      "type": "split"
+    },
+    "threshold": 1,
+    "type": "split"
+  },
+  "schema": "certigap-dynamic-range-v1",
+  "scope": "independently verifies topology completion, depth cap, point values, aggregate state, and structural cost; it does not claim global latency optimality",
+  "settings": {
+    "budget": 5,
+    "drift_threshold": 0.1,
+    "eta": 0.1,
+    "max_depth": 8,
+    "min_rebuild_observations": 32.0,
+    "range_endpoint_weight": 1.0,
+    "requested_budget": 5,
+    "routing_label": "beam",
+    "solver": "beam"
+  },
+  "state": {
+    "data_version": 1,
+    "height": 6,
+    "leaf_count": 16,
+    "node_count": 31,
+    "per_key_depths": [
+      1,
+      2,
+      5,
+      5,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6
+    ],
+    "realized_average_point_depth": 1.5121951219512195,
+    "realized_max_point_depth": 6,
+    "realized_objective": 1.9609756097560977,
+    "rebuild_count": 0,
+    "root_aggregate": 232.0,
+    "structure_version": 0
+  },
+  "values": [
+    1.0,
+    2.0,
+    3.0,
+    100.0,
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    9.0,
+    10.0,
+    11.0,
+    12.0,
+    13.0,
+    14.0,
+    15.0,
+    16.0
+  ]
+}

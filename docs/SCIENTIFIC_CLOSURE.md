@@ -38,6 +38,23 @@
 - Real C++ post-build lookup measurements on two additional YCSB-inspired
   read-only distributions, explicitly separated from official YCSB evidence.
 
+## Dynamic CertiRange Extension
+
+The fixed-key-universe range layer is executable and validated:
+
+- point lookup, point update, and inclusive sum/min/max;
+- persistent immutable snapshots;
+- deterministic maximum-depth completion;
+- exact aggregate and mixed-trace replay verifiers;
+- `6/6` complete small routing-space oracle matches;
+- 36 scaling groups with an included balanced incumbent;
+- Python and contiguous-node C++ comparisons against array, Fenwick, and
+  segment-tree baselines.
+
+The negative performance result is retained: classical Fenwick and iterative
+segment trees remain faster for raw range-sum throughput in the current local
+matrix. Dynamic CertiRange is not presented as their universal replacement.
+
 ## Honest Boundaries
 
 - The C++ pruned beam is empirical: it has no approximation theorem and no proof certificate.

@@ -1,0 +1,176 @@
+{
+  "reported": {
+    "beam_width": 8,
+    "candidate_limit": 12,
+    "evaluated_candidates": 362,
+    "expanded_candidates": 374,
+    "max_point_depth": 7,
+    "mean_node_visits": 4.6,
+    "objective": 4.9399999999999995,
+    "point_contribution": 0.0,
+    "range_contribution": 4.6,
+    "scope": "best candidate found by bounded range-aware beam search; not a global optimum certificate",
+    "used_splits": 4
+  },
+  "routing_tree": {
+    "interval": [
+      1,
+      32
+    ],
+    "left": {
+      "interval": [
+        1,
+        10
+      ],
+      "type": "leaf"
+    },
+    "right": {
+      "interval": [
+        11,
+        32
+      ],
+      "left": {
+        "interval": [
+          11,
+          24
+        ],
+        "left": {
+          "interval": [
+            11,
+            15
+          ],
+          "type": "leaf"
+        },
+        "right": {
+          "interval": [
+            16,
+            24
+          ],
+          "type": "leaf"
+        },
+        "threshold": 15,
+        "type": "split"
+      },
+      "right": {
+        "interval": [
+          25,
+          32
+        ],
+        "left": {
+          "interval": [
+            25,
+            25
+          ],
+          "type": "leaf"
+        },
+        "right": {
+          "interval": [
+            26,
+            32
+          ],
+          "type": "leaf"
+        },
+        "threshold": 25,
+        "type": "split"
+      },
+      "threshold": 24,
+      "type": "split"
+    },
+    "threshold": 10,
+    "type": "split"
+  },
+  "schema": "certigap-range-optimizer-v1",
+  "settings": {
+    "budget": 4,
+    "max_depth": 8,
+    "tail_weight": 0.1
+  },
+  "sha256": "1bdecc5556d172c33b28f38a90dc9a5b4c1b75d75f6ade476568d8ae6c98bf72",
+  "workload": {
+    "point_counts": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "range_counts": [
+      [
+        1,
+        10,
+        600.0
+      ],
+      [
+        16,
+        24,
+        300.0
+      ],
+      [
+        26,
+        32,
+        100.0
+      ]
+    ],
+    "update_counts": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  }
+}

@@ -2,7 +2,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb,booktabs,hyperref}
 
-\title{CertiGap-AutoDRO: Certified Anytime Optimization for\\Budgeted Robust Prefix Search}
+\title{CertiGap: Certified Workload-Adaptive\\Partial and Range Indexes}
 \author{Dulat Nurlanuly}
 \date{}
 
@@ -31,7 +31,10 @@ selects budget, solver, and executable fallback under a memory constraint. On
 proof-sized instances, a direct solver exhaustively enumerates the partial-tree
 space and is globally optimal for the TV objective. For larger spaces, a
 best-first anytime solver returns a feasible upper bound and independently
-replayable lower bound after any declared expansion limit.
+replayable lower bound after any declared expansion limit. We further extend
+the model into Dynamic CertiRange, a complete point/range/update index with
+depth caps, persistent snapshots, range-aware workload search, and replayable
+structural artifacts.
 \end{abstract}
 
 \section{Problem}
@@ -132,6 +135,23 @@ g+2\delta R.
 This result supports a conservative horizon-aware rebuild trigger; it is not a
 claim about unmeasured mutation or storage-engine latency.
 
+\section{Dynamic CertiRange}
+A partial routing tree is completed deterministically by midpoint subtrees.
+A proposed routing split is retained only when both children can still be
+completed inside a declared maximum depth $h$. The completed leaves therefore
+form the singleton partition of the ordered keys and have height at most $h$.
+Internal nodes store a monoid aggregate. Point updates path-copy the
+root-to-key path, preserving old snapshot roots, while an inclusive range query
+recurses only along its two boundary paths and visits $O(h)$ nodes.
+
+For mixed workloads we directly replay point, update, and range records on
+every completed candidate. The bounded range-aware beam retains balanced
+completion as an incumbent, so it cannot return a higher training objective
+than that included candidate. This is portfolio dominance rather than a
+large-instance global optimum guarantee. A standalone artifact checker
+recomputes topology, depth, aggregate state, mixed-trace objective, and
+canonical digests.
+
 \section{Relation To Prior Work}
 Classical alphabetic and height-limited trees optimize a full tree
 \cite{hutucker1971,larmore1994}. CertiGap instead limits the freely
@@ -161,6 +181,12 @@ power-of-two cases close immediately through the entropy bound, while skewed
 cases retain explicitly reported nonzero gaps. The C++ lookup benchmark also
 includes read-only 80/20-hotspot and latest-biased YCSB-inspired
 distributions, but is not presented as an official YCSB or RocksDB result.
+Dynamic CertiRange matches complete routing-space optimization in 6 of 6 small
+range-workload cases. In 36 scaling groups, range-aware search is never worse
+than its included balanced candidate and strictly improves the former
+point/endpoint proxy in 18 groups. Python and contiguous-node C++ mixed
+benchmarks also show that Fenwick or iterative segment trees remain faster for
+raw range sums; no blanket speed superiority is claimed.
 External implementations, independent hardware reproduction, and a
 domain-owner pilot remain external validation requirements.
 

@@ -46,6 +46,19 @@
 - formal online TV-drift regret bound
 - YCSB-inspired post-build C++ lookup workloads
 
+## Phase 7: Dynamic CertiRange
+
+- complete ordered point/range/update API
+- sum, minimum, and maximum monoids
+- persistent immutable snapshots
+- deterministic maximum-depth enforcement
+- drift-triggered structural rebuilding
+- declarative mixed-workload compiler
+- range-aware beam with exact trace evaluator
+- independent structural and optimizer certificates
+- complete small-space oracle validation
+- Python and contiguous-node C++ benchmarks against Fenwick and segment tree
+
 ## External Closure
 
 - independent proof review or machine-assisted formalization
@@ -54,3 +67,4 @@
 - prospective domain-owner trace and production pilot
 - tighter large-instance bounds and approximation ratios
 - official YCSB integration with RocksDB or SQLite
+- insert/delete, lazy range updates, disk pages, and concurrent-writer protocol

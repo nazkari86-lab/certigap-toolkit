@@ -735,6 +735,184 @@ The exact phase compares against independent complete-tree-space enumeration. Th
 
 A zero reported gap is a proof for the configured TV radius, fallback, memory/build/tail cost model, and split budget. A nonzero gap is an honest unresolved interval, not an optimality claim.
 
+## Dynamic CertiRange
+
+# Dynamic CertiRange
+
+Dynamic CertiRange extends the static budgeted lookup model into a complete
+ordered range index.
+
+It supports:
+
+- point lookup;
+- point update;
+- inclusive range `sum`, `min`, and `max`;
+- immutable snapshots through persistent path copying;
+- workload-shaped routing;
+- drift-triggered rebuilding;
+- deterministic depth caps;
+- independently replayed structural and optimizer artifacts.
+
+## Python API
+
+```python
+from certigap import CertiRangeWorkload
+
+workload = CertiRangeWorkload(32)
+workload.add_point(1, 1000)
+workload.add_range(1, 10, 500)
+workload.add_update(2, 100)
+
+index = workload.compile(
+    values=list(range(32)),
+    budget=6,
+    eta=0.10,
+    aggregate="sum",
+    max_depth=10,
+    routing="range_aware",
+)
+
+print(index.get(1))
+print(index.range_query(1, 10))
+
+snapshot = index.snapshot()
+index.point_update(2, 1000)
+assert snapshot.get(2) != index.get(2)
+
+certificate = index.export_certificate()
+```
+
+Keys and ranges are one-based and ranges are inclusive.
+
+## Structure
+
+The routing solver emits a partial alphabetic tree. Every unresolved interval
+is deterministically completed by a midpoint tree. If a proposed routing split
+cannot fit inside `max_depth`, that interval is replaced by its balanced
+completion.
+
+The resulting full tree has exactly one leaf per key. Every internal node
+stores the aggregate of its contiguous interval.
+
+## Guarantees
+
+For `n` keys and completed-tree height `h`:
+
+- point lookup takes at most `h` routing steps;
+- persistent point update copies `O(h)` nodes;
+- range aggregate visits `O(h)` boundary nodes;
+- the implementation exports the conservative executable bound `4h + 1`;
+- memory is `O(n)` for the current root plus `O(h)` per retained update;
+- `h <= max_depth`;
+- snapshots acquired before an update remain unchanged.
+
+The structural verifier reconstructs the deterministic completion, checks
+every interval and split, recomputes all per-key depths and aggregates, and
+validates canonical SHA-256 digests.
+
+## Range-Aware Search
+
+The former endpoint proxy converts range boundaries into point frequencies.
+This is cheap but does not optimize actual range traversal.
+
+`range_aware_beam_search` instead evaluates each candidate by replaying the
+declared point, update, and range workload on its completed topology. Its
+objective is
+
+```text
+(1 - eta) * mean_node_visits + eta * (max_point_depth + 1)
+```
+
+The balanced completion is always retained as an incumbent. Therefore the
+returned bounded-search candidate is never worse than that included candidate
+under the exact training-trace evaluator.
+
+This is not a global guarantee for large instances. The repository validates
+the implementation against complete routing-tree enumeration on small cases.
+
+## C++ Core
+
+`cpp/certigap_range.hpp` provides a contiguous-node sum implementation. The
+C++ benchmark compares identical mixed traces against:
+
+- a direct array;
+- Fenwick tree;
+- iterative segment tree;
+- contiguous Dynamic CertiRange.
+
+The current benchmark rejects a blanket speed claim: Fenwick and segment trees
+win raw sum throughput. CertiRange's distinct features are workload-shaped
+point paths, generic Python aggregates, persistent snapshots, drift control,
+and replayable certificates.
+
+## Scope
+
+Dynamic CertiRange is currently an ordered fixed-key-universe index. It does
+not yet support insertion or deletion, lazy range updates, disk pages,
+concurrent writers, or an official storage-engine integration.
+
+# Range-aware optimizer validation
+
+- Rows: `114`
+- Complete small-space oracle matches: `6/6`
+- Scaling groups where range-aware is tied for best or best: `36/36`
+- Strict improvements over point/endpoint proxy: `18/36`
+- Every objective is recomputed by the exact mixed-trace evaluator.
+- Scaling rows are bounded beam results, not global optimality claims.
+
+The complete-tree-space checks validate the search implementation on n=8. The scaling matrix tests whether direct range-cost optimization improves over the former endpoint proxy without hiding cases where it ties or loses.
+
+# C++ Dynamic CertiRange benchmark
+
+- Rows: `36`
+- Same deterministic mixed get/range-sum/update trace for every method.
+- Latency is post-build median and p95 across whole-batch per-operation means.
+- CertiRange uses contiguous nodes and a workload-shaped routing prefix.
+- This local microbenchmark is not independent-hardware evidence.
+
+| n | workload | fastest | CertiRange rank | CertiRange ns/op | fastest ns/op | hot depth vs balanced |
+|---:|---|---|---:|---:|---:|---:|
+| 1024 | clustered_range | fenwick | 4/4 | 80.5 | 13.3 | 12 vs 10 |
+| 1024 | hotspot_point | array | 4/4 | 28.4 | 4.6 | 7 vs 10 |
+| 1024 | uniform_mixed | fenwick | 4/4 | 65.7 | 14.7 | 10 vs 10 |
+| 16384 | clustered_range | fenwick | 3/4 | 145.4 | 15.1 | 16 vs 14 |
+| 16384 | hotspot_point | segment_tree | 3/4 | 53.8 | 8.9 | 11 vs 14 |
+| 16384 | uniform_mixed | fenwick | 3/4 | 147.9 | 17.6 | 14 vs 14 |
+| 100000 | clustered_range | fenwick | 3/4 | 264.5 | 16.9 | 18 vs 17 |
+| 100000 | hotspot_point | segment_tree | 3/4 | 91.2 | 11.7 | 14 vs 17 |
+| 100000 | uniform_mixed | fenwick | 3/4 | 215.2 | 25.1 | 17 vs 17 |
+
+## Honest result
+
+Fenwick or an iterative segment tree wins raw range-sum throughput in this matrix. CertiRange reduces hot-key depth on skewed traces, but irregular routing and recursive range traversal currently outweigh that comparison saving. The result rejects a blanket speed claim and motivates portfolio selection rather than replacing classical structures.
+
+# Dynamic CertiRange mixed-workload benchmark
+
+- Rows: `36`
+- Operations: point get, range sum, and point update on identical deterministic traces.
+- Latency: median and p95 across whole-batch per-operation means; Python microbenchmark, not production C++ latency.
+- Build time: one untimed-for-operations construction; values are reset outside every measured repeat.
+- Memory: `estimated_numeric_slots` is an analytical storage proxy, not measured RSS.
+- Range endpoint frequencies are a routing heuristic and do not imply globally optimal range-query shape.
+
+| n | workload | fastest method | CertiRange rank | CertiRange ns/op | fastest ns/op |
+|---:|---|---|---:|---:|---:|
+| 128 | clustered_range | array | 4/4 | 1568.5 | 140.3 |
+| 128 | hotspot_point | array | 4/4 | 928.6 | 67.4 |
+| 128 | uniform_mixed | array | 4/4 | 1581.8 | 110.5 |
+| 512 | clustered_range | array | 4/4 | 2069.7 | 252.3 |
+| 512 | hotspot_point | array | 4/4 | 1179.2 | 75.9 |
+| 512 | uniform_mixed | array | 4/4 | 2174.6 | 161.4 |
+| 2048 | clustered_range | fenwick | 4/4 | 2777.8 | 561.4 |
+| 2048 | hotspot_point | array | 4/4 | 1871.1 | 123.7 |
+| 2048 | uniform_mixed | array | 4/4 | 2628.4 | 335.0 |
+
+## Interpretation
+
+Fenwick and iterative segment trees are expected to win raw Python range-sum throughput. CertiRange's measured claim is different: it combines workload-shaped point paths, generic range aggregates, persistent snapshots, drift-aware rebuilding, and a replayable certificate.
+
+A production speed claim requires the same benchmark in the C++ core on independent hardware.
+
 ## Competition Positioning
 
 # RKNP and ISEF Positioning

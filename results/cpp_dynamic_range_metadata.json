@@ -1,0 +1,25 @@
+{
+  "compiler": "Apple clang version 17.0.0 (clang-1700.6.3.2)",
+  "limitations": [
+    "single local machine",
+    "synthetic deterministic traces",
+    "sum aggregate only",
+    "no concurrent writers"
+  ],
+  "measurement_scope": "post-build mixed operations; p95 across batch means",
+  "methods": [
+    "array",
+    "fenwick",
+    "segment_tree",
+    "certirange"
+  ],
+  "operations_per_case": 200000,
+  "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+  "repeats": 7,
+  "schema": "certigap-cpp-dynamic-range-v1",
+  "workloads": [
+    "uniform_mixed",
+    "hotspot_point",
+    "clustered_range"
+  ]
+}

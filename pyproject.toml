@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "certigap-toolkit"
-version = "1.2.0"
-description = "Certified anytime TV-DRO optimization for budgeted robust prefix search"
+version = "1.3.0"
+description = "Certified workload-adaptive point, range, and robust prefix indexes"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"

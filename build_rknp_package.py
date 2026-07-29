@@ -225,6 +225,14 @@ def main() -> None:
     )
     autodro_theory_text = read(DOCS_DIR / "AUTODRO.md")
     anytime_theory_text = read(DOCS_DIR / "ANYTIME_TV.md")
+    dynamic_range_text = "\n\n".join(
+        read(path)
+        for path in (
+            DOCS_DIR / "DYNAMIC_RANGE.md",
+            RESULTS_DIR / "range_optimizer_validation.md",
+            RESULTS_DIR / "cpp_dynamic_range.md",
+        )
+    )
     counterexample_text = read(RESULTS_DIR / "counterexamples.md") if (RESULTS_DIR / "counterexamples.md").exists() else ""
     family_text = read(DOCS_DIR / "GREEDY_COUNTEREXAMPLE_FAMILY.md") if (DOCS_DIR / "GREEDY_COUNTEREXAMPLE_FAMILY.md").exists() else ""
     speed_quality_text = read(RESULTS_DIR / "speed_quality_summary.md") if (RESULTS_DIR / "speed_quality_summary.md").exists() else ""
@@ -247,7 +255,9 @@ def main() -> None:
             + "\n\n"
             + autodro_text
             + "\n\n"
-            + lookup_text,
+            + lookup_text
+            + "\n\n"
+            + dynamic_range_text,
         ),
         encoding="utf-8",
     )

@@ -32,3 +32,18 @@ fallback profiles have been precomputed. A direct midpoint-profile
 precomputation takes `O(n^3)` time over all intervals and keys in the reference
 implementation; fixed-round profiles are constant-time per interval. This
 precomputation does not increase the displayed frontier-DP worst-case bound.
+
+## Dynamic CertiRange
+
+After deterministic completion, the range tree contains `2n-1` nodes and has
+height `h <= max_depth`. Point lookup takes `O(h)`. Persistent point update
+copies `O(h)` nodes. An inclusive range aggregate visits `O(h)` boundary
+nodes, with executable bound `4h+1`. The current root occupies `O(n)` memory;
+each retained persistent update adds `O(h)` nodes.
+
+For range-aware beam width `W`, split budget `B`, threshold limit `K`, and
+`Q` compressed workload records, the reference implementation evaluates at
+most `O(B W B K)` generated candidates. A direct candidate replay costs
+`O(n + Qh)`, so a conservative bound is
+`O(B^2 W K (n + Qh))`. This is a bounded heuristic, not an exact large-instance
+algorithm.
