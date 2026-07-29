@@ -35,6 +35,8 @@ CertiGap не строит полное поисковое дерево на в�
 - вместе со структурой возвращаются проверяемая стоимость, entropy-нижняя граница и, на малых задачах, exhaustive proof trace;
 - exact DP обобщён на реальные per-key стоимости midpoint binary search и пользовательские fallback-профили;
 - AutoDRO автоматически выбирает структуру по query counts, memory limit и измеряемой cost model;
+- direct TV-DRO solver глобально оптимален на полном малом пространстве деревьев;
+- verifier версии 2 повторно генерирует портфель и обнаруживает удаление кандидатов;
 - проект сочетает точный алгоритм, эвристику и независимую проверку результата.
 
 ## 6. Методы
@@ -451,8 +453,27 @@ exists that transfers mass in ascending donor-cost and descending receiver-cost
 order. The algorithm performs exactly these transfers until the TV budget or
 all profitable capacity is exhausted. `QED`
 
-This theorem certifies the robust score of a fixed candidate. AutoDRO selection
-is globally exact only over the submitted candidate portfolio.
+This theorem certifies the robust score of a fixed candidate.
+
+## Theorem G: Direct TV-DRO Exhaustive Optimality
+
+For a key universe `[1,n]`, split budget `B`, declared memory constraint, and a
+finite configured fallback set, direct-TV search returns a globally
+minimum-score ordered partial tree.
+
+For exact split total zero, the only tree on interval `[l,r]` is its unresolved
+leaf. For `s > 0`, every tree has a unique root threshold `k`, a left subtree
+with `s_L` splits, and a right subtree with `s - 1 - s_L` splits. Conversely,
+combining any recursively enumerated pair under a legal `k` produces a unique
+valid tree. Induction on `s` proves complete, duplicate-free enumeration.
+
+Theorem F gives the exact robust expectation for each enumerated tree and
+fallback. Memory-infeasible trees are removed by the declared constraint.
+Taking the minimum remaining score is therefore globally optimal. `QED`
+
+The guarantee applies when exhaustive direct search is enabled. For larger
+instances, AutoDRO verifies selection over a deterministically regenerated
+heuristic portfolio but does not claim global tree-space optimality.
 
 # Generalized Executable Fallback Model
 
@@ -596,56 +617,298 @@ The selected score is
 
 Exact DP candidates are included by default only when `n <= exact_limit`.
 
+## Direct TV-DRO Exact Search
+
+When `n <= direct_tv_limit` (default `8`), AutoDRO enumerates every ordered
+partial tree with at most the configured split budget, evaluates every
+configured fallback, and minimizes the TV-DRO execution score directly.
+
+**Theorem G.** Direct-TV search is globally optimal over all ordered partial
+trees satisfying the split and memory constraints and over the configured
+fallback set.
+
+**Proof.** For zero splits, the only valid tree is the interval leaf. For
+`s > 0` splits, every valid tree has a unique root threshold, a left subtree
+with `s_L` splits, and a right subtree with `s - 1 - s_L` splits. Conversely,
+every such combination is valid. Induction on `s` proves that the generator
+enumerates every feasible tree exactly once. Theorem F computes the exact TV
+worst-case expectation of each tree. Taking the minimum of the complete finite
+set after applying the declared constraints is globally optimal. `QED`
+
+The manifest records counts by exact split total and a SHA-256 digest of the
+ordered tree space. The fixed witness in `results/direct_tv_validation.csv`
+shows that direct TV optimization can strictly beat the Huber portfolio.
+
+## Streaming Adaptation
+
+`update_window(counts, min_tv_drift=...)` measures empirical TV drift and
+refits only after a declared threshold. `update_counts(..., decay=...)`
+supports forgetting when an explicit TV radius is supplied. These are rebuild
+policies, not low-latency in-place mutation.
+
+## Verifiable Portfolio Manifest
+
+Version 2 artifacts bind the deterministic generator configuration, candidate
+count, leaderboard digest, and direct-tree-space digest. The verifier rebuilds
+the portfolio and rejects omitted candidates even if the selected row and
+digest are rewritten. Key count, candidate count, tree depth, and node count
+are bounded before expensive verification.
+
 ## Guarantee Boundary
 
 - Worst-case expectation is exact for each generated candidate.
-- Selection is exact over the enumerated, deduplicated portfolio.
+- Selection is exact over the regenerated, deduplicated portfolio.
+- For `n <= direct_tv_limit`, selection is globally exact over every feasible
+  partial tree and configured fallback.
 - The result is not claimed globally optimal over every possible tree unless
   the portfolio itself exhausts the feasible tree family.
 - Default costs are comparison-equivalent units, not nanoseconds.
 - Nanosecond claims require calibration samples from the deployment target.
-- Re-fitting after additional integer counts is supported through
-  `update_counts`; low-latency in-place tree mutation is not yet implemented.
+- Cumulative, decayed, and sliding-window rebuild policies are supported;
+  low-latency in-place tree mutation is not yet implemented.
 
-# CertiGap-AutoDRO Distribution-Shift Benchmark
+# CertiGap-AutoDRO Fair Distribution-Shift Benchmark
 
-Selection uses only the training counts and a fixed TV radius of `0.2`. The test distribution is used only after selection.
+`tuned_tv_dro` and `tuned_nominal` search the identical budgets, eta grid, solver set, and fallback set. Their only selection difference is TV radius `0.2` versus `0.0`; this is the primary DRO ablation.
 
-| Scenario | n | Method | Selected solver | Fallback | Splits | Bytes | Test mean | Test max |
-|---|---:|---|---|---|---:|---:|---:|---:|
-| hot_reversal | 32 | autodro | beam | midpoint_binary | 2 | 368 | 6.63636 | 7.00000 |
-| hot_reversal | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 6.82955 | 7.00000 |
-| hot_reversal | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 5.00000 | 5.00000 |
-| hot_reversal | 64 | autodro | beam | midpoint_binary | 2 | 496 | 7.67614 | 8.00000 |
-| hot_reversal | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 7.82955 | 8.00000 |
-| hot_reversal | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 6.00000 | 6.00000 |
-| partial_hot_drift | 32 | autodro | beam | midpoint_binary | 2 | 368 | 4.39836 | 7.00000 |
-| partial_hot_drift | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 4.48236 | 7.00000 |
-| partial_hot_drift | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 5.00000 | 5.00000 |
-| partial_hot_drift | 64 | autodro | beam | midpoint_binary | 2 | 496 | 5.41228 | 8.00000 |
-| partial_hot_drift | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 5.48236 | 8.00000 |
-| partial_hot_drift | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 6.00000 | 6.00000 |
-| stationary_zipf | 32 | autodro | beam | fixed_rounds | 3 | 464 | 4.30368 | 6.00000 |
-| stationary_zipf | 32 | fixed_beam | beam | fixed_rounds | 4 | 560 | 4.24755 | 6.00000 |
-| stationary_zipf | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 5.00000 | 5.00000 |
-| stationary_zipf | 64 | autodro | beam | midpoint_binary | 4 | 688 | 4.99841 | 7.00000 |
-| stationary_zipf | 64 | fixed_beam | beam | fixed_rounds | 4 | 688 | 5.01343 | 7.00000 |
-| stationary_zipf | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 6.00000 | 6.00000 |
-| uniform_to_zipf | 32 | autodro | beam | fixed_rounds | 0 | 176 | 5.00000 | 5.00000 |
-| uniform_to_zipf | 32 | fixed_beam | beam | fixed_rounds | 0 | 176 | 5.00000 | 5.00000 |
-| uniform_to_zipf | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 5.00000 | 5.00000 |
-| uniform_to_zipf | 64 | autodro | beam | fixed_rounds | 0 | 304 | 6.00000 | 6.00000 |
-| uniform_to_zipf | 64 | fixed_beam | beam | fixed_rounds | 0 | 304 | 6.00000 | 6.00000 |
-| uniform_to_zipf | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 6.00000 | 6.00000 |
+| Scenario | n | Method | Solver | Fallback | Splits | Bytes | Candidates | Select s | Test mean | Test max |
+|---|---:|---|---|---|---:|---:|---:|---:|---:|---:|
+| hot_reversal | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1688 | 6.63636 | 7.00000 |
+| hot_reversal | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1658 | 6.63636 | 7.00000 |
+| hot_reversal | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 1 | 0.0000 | 6.82955 | 7.00000 |
+| hot_reversal | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
+| hot_reversal | 32 | fixed_weighted | weighted | fixed_rounds | 3 | 464 | 1 | 0.0000 | 6.82955 | 7.00000 |
+| hot_reversal | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.4527 | 7.67614 | 8.00000 |
+| hot_reversal | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.4502 | 7.67614 | 8.00000 |
+| hot_reversal | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 1 | 0.0000 | 7.82955 | 8.00000 |
+| hot_reversal | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
+| hot_reversal | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 7.82955 | 8.00000 |
+| hot_reversal | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.4247 | 8.71591 | 9.00000 |
+| hot_reversal | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.4333 | 8.71591 | 9.00000 |
+| hot_reversal | 128 | fixed_beam | beam | fixed_rounds | 2 | 752 | 1 | 0.0000 | 8.82955 | 9.00000 |
+| hot_reversal | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
+| hot_reversal | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 8.82955 | 9.00000 |
+| partial_hot_drift_15 | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1617 | 3.70974 | 7.00000 |
+| partial_hot_drift_15 | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1636 | 3.70974 | 7.00000 |
+| partial_hot_drift_15 | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 1 | 0.0000 | 3.76015 | 7.00000 |
+| partial_hot_drift_15 | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
+| partial_hot_drift_15 | 32 | fixed_weighted | weighted | fixed_rounds | 3 | 464 | 1 | 0.0000 | 3.76015 | 7.00000 |
+| partial_hot_drift_15 | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.4508 | 4.71571 | 8.00000 |
+| partial_hot_drift_15 | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.4537 | 4.71571 | 8.00000 |
+| partial_hot_drift_15 | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 1 | 0.0000 | 4.76015 | 8.00000 |
+| partial_hot_drift_15 | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
+| partial_hot_drift_15 | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 4.76015 | 8.00000 |
+| partial_hot_drift_15 | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.4222 | 5.72167 | 9.00000 |
+| partial_hot_drift_15 | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.4285 | 5.72167 | 9.00000 |
+| partial_hot_drift_15 | 128 | fixed_beam | beam | fixed_rounds | 2 | 752 | 1 | 0.0000 | 5.76015 | 9.00000 |
+| partial_hot_drift_15 | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
+| partial_hot_drift_15 | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 5.76015 | 9.00000 |
+| partial_hot_drift_35 | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.2054 | 4.39836 | 7.00000 |
+| partial_hot_drift_35 | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1645 | 4.39836 | 7.00000 |
+| partial_hot_drift_35 | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 1 | 0.0000 | 4.48236 | 7.00000 |
+| partial_hot_drift_35 | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
+| partial_hot_drift_35 | 32 | fixed_weighted | weighted | fixed_rounds | 3 | 464 | 1 | 0.0000 | 4.48236 | 7.00000 |
+| partial_hot_drift_35 | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.4539 | 5.41228 | 8.00000 |
+| partial_hot_drift_35 | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.4524 | 5.41228 | 8.00000 |
+| partial_hot_drift_35 | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 1 | 0.0000 | 5.48236 | 8.00000 |
+| partial_hot_drift_35 | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
+| partial_hot_drift_35 | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 5.48236 | 8.00000 |
+| partial_hot_drift_35 | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.4472 | 6.42620 | 9.00000 |
+| partial_hot_drift_35 | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.4297 | 6.42620 | 9.00000 |
+| partial_hot_drift_35 | 128 | fixed_beam | beam | fixed_rounds | 2 | 752 | 1 | 0.0000 | 6.48236 | 9.00000 |
+| partial_hot_drift_35 | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
+| partial_hot_drift_35 | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 6.48236 | 9.00000 |
+| partial_hot_drift_65 | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1652 | 5.43128 | 7.00000 |
+| partial_hot_drift_65 | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1621 | 5.43128 | 7.00000 |
+| partial_hot_drift_65 | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 1 | 0.0000 | 5.56568 | 7.00000 |
+| partial_hot_drift_65 | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
+| partial_hot_drift_65 | 32 | fixed_weighted | weighted | fixed_rounds | 3 | 464 | 1 | 0.0000 | 5.56568 | 7.00000 |
+| partial_hot_drift_65 | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.4506 | 6.45714 | 8.00000 |
+| partial_hot_drift_65 | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.4507 | 6.45714 | 8.00000 |
+| partial_hot_drift_65 | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 1 | 0.0000 | 6.56568 | 8.00000 |
+| partial_hot_drift_65 | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
+| partial_hot_drift_65 | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.56568 | 8.00000 |
+| partial_hot_drift_65 | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.4318 | 7.48299 | 9.00000 |
+| partial_hot_drift_65 | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.4339 | 7.48299 | 9.00000 |
+| partial_hot_drift_65 | 128 | fixed_beam | beam | fixed_rounds | 2 | 752 | 1 | 0.0000 | 7.56568 | 9.00000 |
+| partial_hot_drift_65 | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
+| partial_hot_drift_65 | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.56568 | 9.00000 |
+| stationary_hot_head | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1653 | 3.19328 | 7.00000 |
+| stationary_hot_head | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1612 | 3.19328 | 7.00000 |
+| stationary_hot_head | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 1 | 0.0000 | 3.21849 | 7.00000 |
+| stationary_hot_head | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
+| stationary_hot_head | 32 | fixed_weighted | weighted | fixed_rounds | 3 | 464 | 1 | 0.0000 | 3.21849 | 7.00000 |
+| stationary_hot_head | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.4533 | 4.19328 | 8.00000 |
+| stationary_hot_head | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.4511 | 4.19328 | 8.00000 |
+| stationary_hot_head | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 1 | 0.0000 | 4.21849 | 8.00000 |
+| stationary_hot_head | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
+| stationary_hot_head | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 4.21849 | 8.00000 |
+| stationary_hot_head | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.4327 | 5.19328 | 9.00000 |
+| stationary_hot_head | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.4213 | 5.19328 | 9.00000 |
+| stationary_hot_head | 128 | fixed_beam | beam | fixed_rounds | 2 | 752 | 1 | 0.0000 | 5.21849 | 9.00000 |
+| stationary_hot_head | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
+| stationary_hot_head | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 5.21849 | 9.00000 |
+| stationary_zipf | 32 | tuned_tv_dro | beam | fixed_rounds | 3 | 464 | 34 | 0.1665 | 4.30368 | 6.00000 |
+| stationary_zipf | 32 | tuned_nominal | beam | midpoint_binary | 4 | 560 | 34 | 0.1637 | 4.20624 | 7.00000 |
+| stationary_zipf | 32 | fixed_beam | beam | fixed_rounds | 4 | 560 | 1 | 0.0000 | 4.24755 | 6.00000 |
+| stationary_zipf | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
+| stationary_zipf | 32 | fixed_weighted | weighted | fixed_rounds | 4 | 560 | 1 | 0.0000 | 4.34144 | 7.00000 |
+| stationary_zipf | 64 | tuned_tv_dro | beam | midpoint_binary | 4 | 688 | 40 | 0.4666 | 4.99841 | 7.00000 |
+| stationary_zipf | 64 | tuned_nominal | beam | midpoint_binary | 4 | 688 | 40 | 0.4597 | 4.94234 | 8.00000 |
+| stationary_zipf | 64 | fixed_beam | beam | fixed_rounds | 4 | 688 | 1 | 0.0000 | 5.01343 | 7.00000 |
+| stationary_zipf | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
+| stationary_zipf | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 5.15870 | 8.00000 |
+| stationary_zipf | 128 | tuned_tv_dro | beam | midpoint_binary | 3 | 848 | 38 | 1.5553 | 5.75959 | 8.00000 |
+| stationary_zipf | 128 | tuned_nominal | beam | midpoint_binary | 4 | 944 | 38 | 1.4497 | 5.65590 | 9.00000 |
+| stationary_zipf | 128 | fixed_beam | beam | fixed_rounds | 3 | 848 | 1 | 0.0000 | 5.79996 | 8.00000 |
+| stationary_zipf | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
+| stationary_zipf | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 5.94223 | 9.00000 |
+| uniform_to_zipf | 32 | tuned_tv_dro | beam | fixed_rounds | 0 | 176 | 16 | 0.1591 | 5.00000 | 5.00000 |
+| uniform_to_zipf | 32 | tuned_nominal | beam | fixed_rounds | 0 | 176 | 16 | 0.1588 | 5.00000 | 5.00000 |
+| uniform_to_zipf | 32 | fixed_beam | beam | fixed_rounds | 0 | 176 | 1 | 0.0000 | 5.00000 | 5.00000 |
+| uniform_to_zipf | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
+| uniform_to_zipf | 32 | fixed_weighted | weighted | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
+| uniform_to_zipf | 64 | tuned_tv_dro | beam | fixed_rounds | 0 | 304 | 18 | 0.4437 | 6.00000 | 6.00000 |
+| uniform_to_zipf | 64 | tuned_nominal | beam | fixed_rounds | 0 | 304 | 18 | 0.4401 | 6.00000 | 6.00000 |
+| uniform_to_zipf | 64 | fixed_beam | beam | fixed_rounds | 0 | 304 | 1 | 0.0000 | 6.00000 | 6.00000 |
+| uniform_to_zipf | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
+| uniform_to_zipf | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
+| uniform_to_zipf | 128 | tuned_tv_dro | beam | fixed_rounds | 0 | 560 | 18 | 1.4089 | 7.00000 | 7.00000 |
+| uniform_to_zipf | 128 | tuned_nominal | beam | fixed_rounds | 0 | 560 | 18 | 1.4338 | 7.00000 | 7.00000 |
+| uniform_to_zipf | 128 | fixed_beam | beam | fixed_rounds | 0 | 560 | 1 | 0.0000 | 7.00000 | 7.00000 |
+| uniform_to_zipf | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
+| uniform_to_zipf | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
+| zipf_to_uniform | 32 | tuned_tv_dro | beam | fixed_rounds | 3 | 464 | 34 | 0.1648 | 5.50000 | 6.00000 |
+| zipf_to_uniform | 32 | tuned_nominal | beam | midpoint_binary | 4 | 560 | 34 | 0.1654 | 5.75000 | 7.00000 |
+| zipf_to_uniform | 32 | fixed_beam | beam | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.50000 | 6.00000 |
+| zipf_to_uniform | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
+| zipf_to_uniform | 32 | fixed_weighted | weighted | fixed_rounds | 4 | 560 | 1 | 0.0000 | 6.03125 | 7.00000 |
+| zipf_to_uniform | 64 | tuned_tv_dro | beam | midpoint_binary | 4 | 688 | 40 | 0.4640 | 6.46875 | 7.00000 |
+| zipf_to_uniform | 64 | tuned_nominal | beam | midpoint_binary | 4 | 688 | 40 | 0.4662 | 6.82812 | 8.00000 |
+| zipf_to_uniform | 64 | fixed_beam | beam | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.50000 | 7.00000 |
+| zipf_to_uniform | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
+| zipf_to_uniform | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 7.20312 | 8.00000 |
+| zipf_to_uniform | 128 | tuned_tv_dro | beam | midpoint_binary | 3 | 848 | 38 | 1.4557 | 7.59375 | 8.00000 |
+| zipf_to_uniform | 128 | tuned_nominal | beam | midpoint_binary | 4 | 944 | 38 | 1.4599 | 7.82812 | 9.00000 |
+| zipf_to_uniform | 128 | fixed_beam | beam | fixed_rounds | 3 | 848 | 1 | 0.0000 | 7.70312 | 8.00000 |
+| zipf_to_uniform | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
+| zipf_to_uniform | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 8.32812 | 9.00000 |
 
-## Aggregate
+## Paired Outcomes
 
-- AutoDRO beats fixed beam on shifted/stationary test mean in `5/8` cases.
-- AutoDRO beats fixed balanced on shifted/stationary test mean in `4/8` cases.
+- tuned TV-DRO vs `tuned_nominal`: `3` wins, `3` losses, `18` ties across `24` pairs.
+- tuned TV-DRO vs `fixed_beam`: `19` wins, `1` losses, `4` ties across `24` pairs.
+- tuned TV-DRO vs `fixed_balanced`: `12` wins, `9` losses, `3` ties across `24` pairs.
+- tuned TV-DRO vs `fixed_weighted`: `21` wins, `0` losses, `3` ties across `24` pairs.
 
 ## Scope
 
-This is a deterministic comparison-cost experiment, not a hardware-latency claim. It tests selection under distribution shift; an external trace replay remains required.
+Expected comparison cost is deterministic for each supplied test distribution, so sampling confidence intervals are not applicable to this table. Construction timings are local-machine measurements. External implementations, real request latency, and prospective traces remain separate experiments.
+
+# Direct TV-DRO Exact-Space Validation
+
+Every row exhaustively enumerates all ordered partial trees up to the split budget and both built-in fallbacks. The heuristic portfolio is a subset, so a negative gap is a test failure.
+
+- Cases: `181`
+- Exact improvements over the heuristic portfolio: `1`
+- Maximum heuristic minus exact robust score: `0.067334968`
+- Largest enumerated tree space: `225`
+- The fixed separation witness is retained as a regression case showing that direct TV optimization can beat every candidate generated from the Huber frontier and heuristic portfolio.
+
+| n | B | rho | Cases | Exact improvements | Mean gap | Max gap |
+|---:|---:|---:|---:|---:|---:|---:|
+| 4 | 1 | 0.05 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 4 | 1 | 0.20 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 4 | 1 | 0.40 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 4 | 2 | 0.05 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 4 | 2 | 0.20 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 4 | 2 | 0.40 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 4 | 3 | 0.05 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 4 | 3 | 0.20 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 4 | 3 | 0.40 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 5 | 1 | 0.05 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 5 | 1 | 0.20 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 5 | 1 | 0.40 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 5 | 2 | 0.05 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 5 | 2 | 0.20 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 5 | 2 | 0.40 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 5 | 3 | 0.05 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 5 | 3 | 0.20 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 5 | 3 | 0.40 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 6 | 1 | 0.05 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 6 | 1 | 0.20 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 6 | 1 | 0.40 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 6 | 2 | 0.05 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 6 | 2 | 0.20 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 6 | 2 | 0.40 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 6 | 3 | 0.05 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 6 | 3 | 0.20 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 6 | 3 | 0.40 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 7 | 1 | 0.05 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 7 | 1 | 0.20 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 7 | 1 | 0.40 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 7 | 2 | 0.05 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 7 | 2 | 0.10 | 1 | 1 | 0.067334968 | 0.067334968 |
+| 7 | 2 | 0.20 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 7 | 2 | 0.40 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 7 | 3 | 0.05 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 7 | 3 | 0.20 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 7 | 3 | 0.40 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 8 | 1 | 0.05 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 8 | 1 | 0.20 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 8 | 1 | 0.40 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 8 | 2 | 0.05 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 8 | 2 | 0.20 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 8 | 2 | 0.40 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 8 | 3 | 0.05 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 8 | 3 | 0.20 | 4 | 0 | 0.000000000 | 0.000000000 |
+| 8 | 3 | 0.40 | 4 | 0 | 0.000000000 | 0.000000000 |
+
+# Temporal Holdout: MovieLens 100K
+
+Identical tuned portfolios are fitted on the earliest 80% of timestamped ratings and evaluated on the final 20%. Only the TV selection radius changes. Movie identifier order is preserved; this is a public temporal shift test, not a production latency study.
+
+| n | Method | rho | Solver | Fallback | Splits | Future average | Future max |
+|---:|---|---:|---|---|---:|---:|---:|
+| 32 | tuned_nominal | 0.00 | beam | fixed_rounds | 6 | 4.474450 | 9 |
+| 32 | tuned_tv_010 | 0.10 | beam | fixed_rounds | 2 | 4.560300 | 6 |
+| 32 | tuned_tv_020 | 0.20 | beam | fixed_rounds | 2 | 4.560300 | 6 |
+| 64 | tuned_nominal | 0.00 | beam | fixed_rounds | 6 | 5.474450 | 10 |
+| 64 | tuned_tv_010 | 0.10 | beam | fixed_rounds | 2 | 5.560300 | 7 |
+| 64 | tuned_tv_020 | 0.20 | beam | fixed_rounds | 2 | 5.560300 | 7 |
+| 128 | tuned_nominal | 0.00 | beam | fixed_rounds | 5 | 6.505450 | 10 |
+| 128 | tuned_tv_010 | 0.10 | beam | fixed_rounds | 2 | 6.560300 | 8 |
+| 128 | tuned_tv_020 | 0.20 | beam | fixed_rounds | 2 | 6.560300 | 8 |
+
+# Finite-Sample TV Radius Validation
+
+Each row uses 250 deterministic i.i.d. multinomial repetitions. Coverage checks whether the known generating distribution lies inside the reported smoothed TV ball. This validates implementation and conservatism under the i.i.d. model only; it is not evidence for dependent production traces.
+
+| Distribution | n | N | Coverage | Mean radius | Mean true TV |
+|---|---:|---:|---:|---:|---:|
+| uniform | 8 | 100 | 1.000 | 0.21073 | 0.10190 |
+| uniform | 8 | 1000 | 1.000 | 0.06548 | 0.03198 |
+| uniform | 8 | 10000 | 0.996 | 0.02067 | 0.01046 |
+| uniform | 32 | 100 | 1.000 | 0.38516 | 0.18976 |
+| uniform | 32 | 1000 | 1.000 | 0.11332 | 0.07017 |
+| uniform | 32 | 10000 | 1.000 | 0.03552 | 0.02233 |
+| zipf | 8 | 100 | 1.000 | 0.21895 | 0.09070 |
+| zipf | 8 | 1000 | 1.000 | 0.06656 | 0.03134 |
+| zipf | 8 | 10000 | 1.000 | 0.02079 | 0.00954 |
+| zipf | 32 | 100 | 1.000 | 0.41790 | 0.17026 |
+| zipf | 32 | 1000 | 1.000 | 0.11890 | 0.05989 |
+| zipf | 32 | 10000 | 1.000 | 0.03615 | 0.01897 |
+
+# Online Rebuild Threshold Simulation
+
+A deterministic 12-window stream moves from a hot head to a hot tail and then to Zipf access. The always-refit tuned portfolio is the per-window oracle. This measures rebuild/regret trade-offs, not in-place mutation.
+
+| TV threshold | Rebuilds | Mean cost | Mean oracle | Mean regret | Max regret |
+|---:|---:|---:|---:|---:|---:|
+| 0.00 | 13 | 4.185059 | 4.185059 | -0.000000 | 0.000000 |
+| 0.03 | 7 | 4.185059 | 4.185059 | -0.000000 | 0.000000 |
+| 0.08 | 7 | 4.185059 | 4.185059 | -0.000000 | 0.000000 |
+| 0.15 | 4 | 4.216119 | 4.185059 | 0.031061 | 0.272727 |
 
 # C++ Post-Build Lookup Microbenchmark
 

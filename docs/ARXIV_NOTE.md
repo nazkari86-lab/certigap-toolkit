@@ -13,7 +13,9 @@ arithmetic for submitted trees. For this model we provide an exact generalized
 frontier dynamic program, a second exact recurrence, an unbounded-gap family
 against one-step greedy construction, exact fixed-candidate TV-DRO evaluation,
 automatic memory-constrained portfolio selection, and a reproducible benchmark
-suite.
+suite. On proof-sized instances we directly optimize the TV objective over the
+complete partial-tree space and export an omission-resistant regeneration
+manifest.
 
 ## Sections
 
@@ -22,7 +24,8 @@ suite.
 3. Exact Dynamic Programming
 4. Robustness Identity
 5. Statistical TV Ambiguity
-6. Exact Rational and Portfolio Verification
-7. Heuristics and Counterexamples
-8. Matched-Resource and Distribution-Shift Experiments
-9. Limitations and Open Questions
+6. Direct TV-DRO Exhaustive Optimality
+7. Exact Rational and Portfolio Verification
+8. Heuristics and Counterexamples
+9. Matched-Resource, Temporal, Coverage, and Shift Experiments
+10. Limitations and Open Questions

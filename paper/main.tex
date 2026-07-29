@@ -27,7 +27,9 @@ solutions. We report both wins and losses and distinguish mathematical,
 empirical, and external-validation claims. AutoDRO additionally derives a
 finite-sample total-variation radius from integer query counts, evaluates the
 worst-case expectation of every generated candidate exactly, and automatically
-selects budget, solver, and executable fallback under a memory constraint.
+selects budget, solver, and executable fallback under a memory constraint. On
+proof-sized instances, a direct solver exhaustively enumerates the partial-tree
+space and is globally optimal for the TV objective.
 \end{abstract}
 
 \section{Problem}
@@ -84,6 +86,17 @@ solvers, and fallbacks, filters candidates by memory, and returns the minimum
 verified portfolio score. This is an exact selection guarantee over the
 generated portfolio, not over trees omitted by a heuristic portfolio.
 
+\section{Direct TV-DRO Optimality}
+For $s=0$, an interval has exactly one partial tree: its unresolved leaf. For
+$s>0$, every valid tree has a unique root threshold $k$, a left tree with
+$s_L$ splits, and a right tree with $s-1-s_L$ splits. Enumerating all legal
+$k$ and $s_L$ and applying this recurrence therefore enumerates every feasible
+ordered partial tree exactly once by induction on $s$. Combining this complete
+enumeration with the exact fixed-tree TV evaluator proves that taking the
+minimum score is globally optimal over the declared split and memory
+constraints and configured fallback set. The implementation records counts by
+split total and a SHA-256 digest of the enumerated tree space.
+
 \section{Relation To Prior Work}
 Classical alphabetic and height-limited trees optimize a full tree
 \cite{hutucker1971,larmore1994}. CertiGap instead limits the freely
@@ -98,8 +111,14 @@ The repository contains exact cross-validation, a standalone certificate
 checker, synthetic and public-frequency workloads, temporal holdout, pruning
 ablation, and C++ lookup measurements. Floating-point DP is not itself a
 machine proof; the rational evaluator verifies submitted fixed-round trees.
-The AutoDRO shift benchmark uses the test distribution only after selection
-and reports when fixed balanced search remains preferable.
+The 120-row AutoDRO shift benchmark compares TV and nominal selection over an
+identical tuned portfolio. TV selection records three wins, three losses, and
+eighteen ties against nominal selection across 24 train/test pairs. A separate
+181-case complete-space validation includes a strict witness where direct TV
+optimization beats the Huber-generated portfolio. Across 3,000 deterministic
+i.i.d. multinomial trials, empirical coverage of the inferred TV ball is at
+least 0.996, while a separate sliding-window simulation reports the explicit
+tradeoff between rebuild count and regret.
 External implementations, independent hardware reproduction, and a
 domain-owner pilot remain external validation requirements.
 

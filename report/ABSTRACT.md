@@ -8,8 +8,8 @@ The project contributes:
 1. an exact generalized frontier dynamic program for deterministic executable fallbacks;
 2. a scalable candidate-pruned C++ heuristic and an unbounded-gap result for one-step greedy;
 3. structural, entropy-bound, proof-trace, and rational-arithmetic verification layers;
-4. exact finite-support TV-DRO candidate evaluation and auditable automatic portfolio selection;
-5. reproducible synthetic, public-workload, temporal, shift, and matched-budget C++ benchmarks.
+4. direct finite-support TV-DRO optimization with a complete small-instance search-space proof;
+5. omission-resistant portfolio manifests and reproducible synthetic, public-workload, temporal, shift, and C++ benchmarks.
 
 Current prototype evidence:
 

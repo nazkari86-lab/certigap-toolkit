@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 import re
 from pathlib import Path
 
@@ -23,6 +24,12 @@ def csv_rows(name: str) -> tuple[list[str], int]:
         return list(reader.fieldnames or []), len(rows)
 
 
+def csv_records(name: str) -> list[dict[str, str]]:
+    path = RESULTS / name
+    with path.open(encoding="utf-8", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
 def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
     minimum_rows = {
         "experiment_sweep.csv": 240,
@@ -33,6 +40,9 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "temporal_holdout.csv": 9,
         "cpp_lookup_latency.csv": 24,
         "autodro_shift.csv": 24,
+        "direct_tv_validation.csv": 100,
+        "uncertainty_validation.csv": 12,
+        "online_adaptation.csv": 4,
     }
     observed: dict[str, int] = {}
     for name, minimum in minimum_rows.items():
@@ -71,7 +81,83 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
     autodro_artifact = json.loads(
         (RESULTS / "autodro_selection_example.json").read_text(encoding="utf-8")
     )
-    verify_autodro_selection_artifact(autodro_artifact)
+    autodro_verified = verify_autodro_selection_artifact(autodro_artifact)
+    if not autodro_verified["completeness_verified"]:
+        raise ValueError("AutoDRO artifact does not verify portfolio completeness")
+
+    shift_rows = csv_records("autodro_shift.csv")
+    shift_groups: dict[tuple[str, str], dict[str, dict[str, str]]] = {}
+    for row in shift_rows:
+        shift_groups.setdefault((row["scenario"], row["n"]), {})[row["method"]] = row
+    required_methods = {
+        "tuned_tv_dro",
+        "tuned_nominal",
+        "fixed_beam",
+        "fixed_balanced",
+        "fixed_weighted",
+    }
+    if len(shift_groups) != 24 or any(set(group) != required_methods for group in shift_groups.values()):
+        raise ValueError("AutoDRO shift matrix is incomplete")
+    for group in shift_groups.values():
+        tv, nominal = group["tuned_tv_dro"], group["tuned_nominal"]
+        if tv["candidate_count"] != nominal["candidate_count"]:
+            raise ValueError("TV and nominal portfolios have unequal candidate counts")
+        for row in group.values():
+            if not all(
+                math.isfinite(float(row[field]))
+                for field in ("test_mean_cost", "test_max_cost", "selection_seconds")
+            ):
+                raise ValueError("AutoDRO shift matrix contains non-finite metrics")
+
+    direct_rows = csv_records("direct_tv_validation.csv")
+    gaps = [float(row["heuristic_gap"]) for row in direct_rows]
+    if any(gap < -1e-9 for gap in gaps):
+        raise ValueError("direct TV exhaustive search lost to a heuristic subset")
+    witnesses = [
+        row
+        for row in direct_rows
+        if row["case_family"] == "fixed_tv_separation_witness"
+    ]
+    if len(witnesses) != 1 or float(witnesses[0]["heuristic_gap"]) <= 0.06:
+        raise ValueError("direct TV separation witness is missing or too weak")
+    if any(
+        len(row["tree_space_sha256"]) != 64
+        or "globally optimal" not in row["scope"]
+        for row in direct_rows
+    ):
+        raise ValueError("direct TV validation lacks complete-space provenance")
+
+    temporal_rows = csv_records("temporal_holdout.csv")
+    temporal_groups: dict[str, set[str]] = {}
+    for row in temporal_rows:
+        temporal_groups.setdefault(row["n"], set()).add(row["method"])
+    if set(temporal_groups) != {"32", "64", "128"} or any(
+        methods != {"tuned_nominal", "tuned_tv_010", "tuned_tv_020"}
+        for methods in temporal_groups.values()
+    ):
+        raise ValueError("temporal holdout matrix is incomplete")
+
+    uncertainty_rows = csv_records("uncertainty_validation.csv")
+    if any(float(row["empirical_coverage"]) < 0.95 for row in uncertainty_rows):
+        raise ValueError("finite-sample TV coverage fell below its target")
+    uncertainty_groups: dict[tuple[str, str], list[dict[str, str]]] = {}
+    for row in uncertainty_rows:
+        uncertainty_groups.setdefault((row["distribution"], row["n"]), []).append(row)
+    for group in uncertainty_groups.values():
+        ordered = sorted(group, key=lambda row: int(row["sample_size"]))
+        radii = [float(row["mean_tv_radius"]) for row in ordered]
+        if any(left <= right for left, right in zip(radii, radii[1:])):
+            raise ValueError("mean inferred TV radius did not shrink with sample size")
+
+    adaptation_rows = sorted(
+        csv_records("online_adaptation.csv"),
+        key=lambda row: float(row["drift_threshold"]),
+    )
+    rebuilds = [int(row["rebuilds_including_initial"]) for row in adaptation_rows]
+    if any(left < right for left, right in zip(rebuilds, rebuilds[1:])):
+        raise ValueError("higher drift threshold unexpectedly increased rebuild count")
+    if abs(float(adaptation_rows[0]["mean_regret"])) > 1e-9:
+        raise ValueError("always-refit adaptation does not match the oracle")
     return observed
 
 

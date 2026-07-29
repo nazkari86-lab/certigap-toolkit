@@ -1,16 +1,21 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
 import unittest
 
 from certigap import (
     CertiGapAutoDRO,
     ExecutionCostModel,
+    enumerate_partial_trees,
+    evaluate_tree_with_fallback,
     fit_autodro,
     multinomial_uncertainty,
     verify_autodro_selection_artifact,
     worst_case_tv_expectation,
 )
+from certigap.autodro import AutoDROVerificationError, _deserialize_tree
 
 
 class AutoDROTests(unittest.TestCase):
@@ -154,12 +159,85 @@ class AutoDROTests(unittest.TestCase):
         )
         summary = model.summary()
         artifact = model.export_selection_artifact()
-        self.assertEqual(artifact["model"], "CertiGap-AutoDRO-v1")
-        self.assertEqual(summary["selection_scope"], "portfolio")
+        self.assertEqual(artifact["model"], "CertiGap-AutoDRO-v2")
+        self.assertIn("globally optimal", summary["selection_scope"])
         self.assertNotIn("tree", artifact["selected"])
         self.assertGreaterEqual(model.query_cost(1), 0)
         verified = verify_autodro_selection_artifact(artifact)
         self.assertTrue(verified["verified"])
+        self.assertTrue(verified["completeness_verified"])
+
+    def test_direct_tv_solver_matches_independent_tree_enumeration(self) -> None:
+        counts = [30, 7, 3, 2, 1]
+        radius = 0.2
+        result = fit_autodro(
+            counts,
+            2,
+            tv_radius=radius,
+            solvers=["balanced"],
+            fallbacks=["fixed_rounds"],
+            direct_tv_limit=5,
+        )
+        nominal = result.uncertainty.nominal
+        brute = min(
+            worst_case_tv_expectation(
+                nominal,
+                evaluate_tree_with_fallback(tree, list(nominal), 0.0, "fixed_rounds")[
+                    "per_key_costs"
+                ],
+                radius,
+            )["robust_expectation"]
+            for tree in enumerate_partial_trees(5, 2)
+        )
+        self.assertAlmostEqual(result.selected["robust_score"], brute)
+        self.assertIsNotNone(result.portfolio_manifest["direct_tree_space"])
+
+    def test_direct_tv_has_strict_huber_portfolio_separation_witness(self) -> None:
+        counts = [1134, 165, 7077, 2112, 1313, 1368, 8649]
+        exact = fit_autodro(
+            counts, 2, tv_radius=0.1, exact_limit=8, direct_tv_limit=7
+        )
+        heuristic = fit_autodro(
+            counts, 2, tv_radius=0.1, exact_limit=8, direct_tv_limit=0
+        )
+        self.assertEqual(exact.selected["solver"], "direct_tv_exact")
+        self.assertLess(
+            exact.selected["robust_score"],
+            heuristic.selected["robust_score"] - 0.06,
+        )
+
+    def test_v2_verifier_rejects_omitted_winner_even_with_rewritten_digest(self) -> None:
+        result = fit_autodro([8, 4, 2, 1], 2, tv_radius=0.1, exact_limit=4)
+        artifact = result.export_selection_artifact()
+        tampered = copy.deepcopy(artifact)
+        original = tampered["leaderboard"][0]["robust_score"]
+        first_worse = next(
+            index
+            for index, row in enumerate(tampered["leaderboard"])
+            if row["robust_score"] > original + 1e-9
+        )
+        tampered["leaderboard"] = tampered["leaderboard"][first_worse:]
+        tampered["selected"] = tampered["leaderboard"][0]
+        tampered["portfolio_manifest"]["candidate_count"] = len(tampered["leaderboard"])
+        encoded = json.dumps(
+            tampered["leaderboard"], sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+        tampered["portfolio_manifest"]["leaderboard_sha256"] = hashlib.sha256(encoded).hexdigest()
+        with self.assertRaisesRegex(ValueError, "incomplete"):
+            verify_autodro_selection_artifact(tampered)
+
+    def test_tree_deserializer_enforces_depth_limit(self) -> None:
+        tree: dict = {"type": "leaf", "interval": [20, 20]}
+        for left in range(19, 0, -1):
+            tree = {
+                "type": "split",
+                "interval": [left, 20],
+                "threshold": left,
+                "left": {"type": "leaf", "interval": [left, left]},
+                "right": tree,
+            }
+        with self.assertRaisesRegex(AutoDROVerificationError, "maximum depth"):
+            _deserialize_tree(tree, 1, 20, max_depth=5)
 
     def test_selection_verifier_rejects_tampered_score(self) -> None:
         result = fit_autodro([8, 4, 2, 1], 2, tv_radius=0.1, exact_limit=4)
@@ -193,6 +271,15 @@ class AutoDROTests(unittest.TestCase):
         model = CertiGapAutoDRO().fit([2, 1], max_budget=1, tv_radius=0.1)
         with self.assertRaisesRegex(ValueError, "key universe"):
             model.update_counts([1, 2, 3])
+
+    def test_sliding_window_refits_only_after_drift_threshold(self) -> None:
+        model = CertiGapAutoDRO().fit([100, 10, 1], 2, tv_radius=0.1)
+        before = model.export_tree()
+        model.update_window([99, 10, 1], min_tv_drift=0.1)
+        self.assertFalse(model.summary()["last_adaptation"]["refit"])
+        self.assertEqual(model.export_tree(), before)
+        model.update_window([1, 10, 100], min_tv_drift=0.1)
+        self.assertTrue(model.summary()["last_adaptation"]["refit"])
 
 
 if __name__ == "__main__":

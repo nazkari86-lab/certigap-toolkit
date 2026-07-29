@@ -62,13 +62,52 @@ The selected score is
 
 Exact DP candidates are included by default only when `n <= exact_limit`.
 
+## Direct TV-DRO Exact Search
+
+When `n <= direct_tv_limit` (default `8`), AutoDRO enumerates every ordered
+partial tree with at most the configured split budget, evaluates every
+configured fallback, and minimizes the TV-DRO execution score directly.
+
+**Theorem G.** Direct-TV search is globally optimal over all ordered partial
+trees satisfying the split and memory constraints and over the configured
+fallback set.
+
+**Proof.** For zero splits, the only valid tree is the interval leaf. For
+`s > 0` splits, every valid tree has a unique root threshold, a left subtree
+with `s_L` splits, and a right subtree with `s - 1 - s_L` splits. Conversely,
+every such combination is valid. Induction on `s` proves that the generator
+enumerates every feasible tree exactly once. Theorem F computes the exact TV
+worst-case expectation of each tree. Taking the minimum of the complete finite
+set after applying the declared constraints is globally optimal. `QED`
+
+The manifest records counts by exact split total and a SHA-256 digest of the
+ordered tree space. The fixed witness in `results/direct_tv_validation.csv`
+shows that direct TV optimization can strictly beat the Huber portfolio.
+
+## Streaming Adaptation
+
+`update_window(counts, min_tv_drift=...)` measures empirical TV drift and
+refits only after a declared threshold. `update_counts(..., decay=...)`
+supports forgetting when an explicit TV radius is supplied. These are rebuild
+policies, not low-latency in-place mutation.
+
+## Verifiable Portfolio Manifest
+
+Version 2 artifacts bind the deterministic generator configuration, candidate
+count, leaderboard digest, and direct-tree-space digest. The verifier rebuilds
+the portfolio and rejects omitted candidates even if the selected row and
+digest are rewritten. Key count, candidate count, tree depth, and node count
+are bounded before expensive verification.
+
 ## Guarantee Boundary
 
 - Worst-case expectation is exact for each generated candidate.
-- Selection is exact over the enumerated, deduplicated portfolio.
+- Selection is exact over the regenerated, deduplicated portfolio.
+- For `n <= direct_tv_limit`, selection is globally exact over every feasible
+  partial tree and configured fallback.
 - The result is not claimed globally optimal over every possible tree unless
   the portfolio itself exhausts the feasible tree family.
 - Default costs are comparison-equivalent units, not nanoseconds.
 - Nanosecond claims require calibration samples from the deployment target.
-- Re-fitting after additional integer counts is supported through
-  `update_counts`; low-latency in-place tree mutation is not yet implemented.
+- Cumulative, decayed, and sliding-window rebuild policies are supported;
+  low-latency in-place tree mutation is not yet implemented.

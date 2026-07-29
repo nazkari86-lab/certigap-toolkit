@@ -25,4 +25,7 @@
 ## Best Short Pitch
 
 Most search structures decide **how to arrange all data**.
-CertiGap decides **how much of the order is worth materializing at all**, under a strict budget and unreliable predictions, and proves how close its answer is to optimal.
+CertiGap decides **how much of the order is worth materializing at all** under
+a strict budget and unreliable predictions. It proves global TV-DRO optimality
+on exhaustively enumerable instances and reports an explicit portfolio
+boundary on larger heuristic instances.

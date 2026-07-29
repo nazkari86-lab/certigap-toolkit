@@ -1,4 +1,4 @@
-from .api import CertiGapToolkit, FitResult, baseline_learned_segment
+from .api import CertiGapToolkit, FitResult, baseline_learned_segment, solve_with
 from .autodro import (
     AutoDROFitResult,
     AutoDROVerificationError,
@@ -12,6 +12,7 @@ from .autodro import (
 )
 from .branch_and_bound import branch_and_bound_exact
 from .cpp_bindings import CppCertiGap
+from .direct_tv import enumerate_partial_trees, exact_tree_space_manifest
 from .exact_verifier import verify_serialized_tree_exact
 from .generalized import (
     evaluate_tree_with_fallback,
@@ -74,10 +75,12 @@ __all__ = [
     "CppCertiGap",
     "certify_tree",
     "entropy_lower_bound",
+    "enumerate_partial_trees",
     "effective_budget",
     "evaluate_tree",
     "evaluate_tree_with_fallback",
     "ExecutionCostModel",
+    "exact_tree_space_manifest",
     "FitResult",
     "frontier_dp_best",
     "fixed_rounds_profile",
@@ -95,6 +98,7 @@ __all__ = [
     "normalize_weights",
     "power_of_two_greedy_family",
     "split_count",
+    "solve_with",
     "validate_problem",
     "UncertaintyModel",
     "verify_certificate_artifact",

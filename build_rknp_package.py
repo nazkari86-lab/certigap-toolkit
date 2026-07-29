@@ -41,8 +41,9 @@ def build_abstract_ru(summary_text: str) -> str:
 1. точный generalized frontier DP для произвольного детерминированного interval fallback;
 2. масштабируемую C++ эвристику и доказанное семейство неограниченной ошибки one-step greedy;
 3. независимые floating-point, proof-trace и rational-arithmetic проверки;
-4. синтетические, публичные, temporal и matched-budget C++ эксперименты.
-5. AutoDRO-выбор бюджета, solver и fallback в статистической TV-окрестности.
+4. direct TV-DRO перебор с доказанной полнотой на малых экземплярах;
+5. проверяемый AutoDRO-выбор бюджета, solver и fallback с защитой от удаления кандидатов;
+6. синтетические, публичные, temporal и matched-budget C++ эксперименты.
 
 Текущее состояние прототипа подтверждается следующими результатами:
 
@@ -92,6 +93,8 @@ CertiGap не строит полное поисковое дерево на в�
 - вместе со структурой возвращаются проверяемая стоимость, entropy-нижняя граница и, на малых задачах, exhaustive proof trace;
 - exact DP обобщён на реальные per-key стоимости midpoint binary search и пользовательские fallback-профили;
 - AutoDRO автоматически выбирает структуру по query counts, memory limit и измеряемой cost model;
+- direct TV-DRO solver глобально оптимален на полном малом пространстве деревьев;
+- verifier версии 2 повторно генерирует портфель и обнаруживает удаление кандидатов;
 - проект сочетает точный алгоритм, эвристику и независимую проверку результата.
 
 ## 6. Методы
@@ -195,7 +198,16 @@ def main() -> None:
     proof_text = read(DOCS_DIR / "FORMAL_RESULTS.md")
     generalized_text = read(DOCS_DIR / "GENERALIZED_FALLBACK.md")
     lookup_text = read(RESULTS_DIR / "cpp_lookup_latency.md")
-    autodro_text = read(RESULTS_DIR / "autodro_shift.md")
+    autodro_text = "\n\n".join(
+        read(path)
+        for path in (
+            RESULTS_DIR / "autodro_shift.md",
+            RESULTS_DIR / "direct_tv_validation.md",
+            RESULTS_DIR / "temporal_holdout.md",
+            RESULTS_DIR / "uncertainty_validation.md",
+            RESULTS_DIR / "online_adaptation.md",
+        )
+    )
     autodro_theory_text = read(DOCS_DIR / "AUTODRO.md")
     counterexample_text = read(RESULTS_DIR / "counterexamples.md") if (RESULTS_DIR / "counterexamples.md").exists() else ""
     family_text = read(DOCS_DIR / "GREEDY_COUNTEREXAMPLE_FAMILY.md") if (DOCS_DIR / "GREEDY_COUNTEREXAMPLE_FAMILY.md").exists() else ""

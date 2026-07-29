@@ -251,5 +251,24 @@ exists that transfers mass in ascending donor-cost and descending receiver-cost
 order. The algorithm performs exactly these transfers until the TV budget or
 all profitable capacity is exhausted. `QED`
 
-This theorem certifies the robust score of a fixed candidate. AutoDRO selection
-is globally exact only over the submitted candidate portfolio.
+This theorem certifies the robust score of a fixed candidate.
+
+## Theorem G: Direct TV-DRO Exhaustive Optimality
+
+For a key universe `[1,n]`, split budget `B`, declared memory constraint, and a
+finite configured fallback set, direct-TV search returns a globally
+minimum-score ordered partial tree.
+
+For exact split total zero, the only tree on interval `[l,r]` is its unresolved
+leaf. For `s > 0`, every tree has a unique root threshold `k`, a left subtree
+with `s_L` splits, and a right subtree with `s - 1 - s_L` splits. Conversely,
+combining any recursively enumerated pair under a legal `k` produces a unique
+valid tree. Induction on `s` proves complete, duplicate-free enumeration.
+
+Theorem F gives the exact robust expectation for each enumerated tree and
+fallback. Memory-infeasible trees are removed by the declared constraint.
+Taking the minimum remaining score is therefore globally optimal. `QED`
+
+The guarantee applies when exhaustive direct search is enabled. For larger
+instances, AutoDRO verifies selection over a deterministically regenerated
+heuristic portfolio but does not claim global tree-space optimality.

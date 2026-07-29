@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from dataclasses import asdict, dataclass
 from math import isfinite, log, sqrt
 from statistics import median
 from typing import Iterable, Sequence
 
-from .api import SolverName, _solver_dispatch
-from .core import IntervalLeaf, SplitNode, Tree, effective_budget, split_count
+from .api import SolverName, solve_with
+from .core import IntervalLeaf, SplitNode, Tree, _to_serializable, effective_budget, split_count
+from .direct_tv import enumerate_partial_trees, exact_tree_space_manifest
 from .generalized import (
     FallbackName,
     evaluate_tree_with_fallback,
@@ -95,6 +97,7 @@ class AutoDROFitResult:
     leaderboard: list[dict]
     memory_limit_bytes: int | None
     max_budget: int
+    portfolio_manifest: dict
 
     def query_cost(self, key: int) -> int:
         if key < 1 or key > len(self.counts):
@@ -111,7 +114,7 @@ class AutoDROFitResult:
 
     def export_selection_artifact(self) -> dict:
         artifact = {
-            "model": "CertiGap-AutoDRO-v1",
+            "model": "CertiGap-AutoDRO-v2",
             "counts": self.counts,
             "uncertainty": asdict(self.uncertainty),
             "cost_model": asdict(self.cost_model),
@@ -119,7 +122,8 @@ class AutoDROFitResult:
             "max_budget": self.max_budget,
             "selected": _public_candidate(self.selected),
             "leaderboard": [_public_candidate(row) for row in self.leaderboard],
-            "scope": "best candidate in the enumerated portfolio; not a global optimality certificate",
+            "portfolio_manifest": self.portfolio_manifest,
+            "scope": self.portfolio_manifest["selection_scope"],
         }
         verify_autodro_selection_artifact(artifact)
         return artifact
@@ -142,7 +146,7 @@ class AutoDROFitResult:
             {
                 "tv_radius": self.uncertainty.tv_radius,
                 "portfolio_candidates": len(self.leaderboard),
-                "selection_scope": "portfolio",
+                "selection_scope": self.portfolio_manifest["selection_scope"],
             }
         )
         return result
@@ -304,7 +308,22 @@ def _public_candidate(candidate: dict) -> dict:
     return {key: value for key, value in candidate.items() if key not in private}
 
 
-def _deserialize_tree(serialized: dict, expected_left: int, expected_right: int) -> Tree:
+def _deserialize_tree(
+    serialized: dict,
+    expected_left: int,
+    expected_right: int,
+    *,
+    depth: int = 0,
+    node_counter: list[int] | None = None,
+    max_depth: int = 256,
+    max_nodes: int = 20_000,
+) -> Tree:
+    if depth > max_depth:
+        raise AutoDROVerificationError("serialized tree exceeds maximum depth")
+    counter = node_counter if node_counter is not None else [0]
+    counter[0] += 1
+    if counter[0] > max_nodes:
+        raise AutoDROVerificationError("serialized tree exceeds maximum node count")
     if not isinstance(serialized, dict) or serialized.get("interval") != [expected_left, expected_right]:
         raise AutoDROVerificationError("serialized tree interval mismatch")
     if serialized.get("type") == "leaf":
@@ -322,8 +341,24 @@ def _deserialize_tree(serialized: dict, expected_left: int, expected_right: int)
         expected_left,
         expected_right,
         threshold,
-        _deserialize_tree(serialized["left"], expected_left, threshold),
-        _deserialize_tree(serialized["right"], threshold + 1, expected_right),
+        _deserialize_tree(
+            serialized["left"],
+            expected_left,
+            threshold,
+            depth=depth + 1,
+            node_counter=counter,
+            max_depth=max_depth,
+            max_nodes=max_nodes,
+        ),
+        _deserialize_tree(
+            serialized["right"],
+            threshold + 1,
+            expected_right,
+            depth=depth + 1,
+            node_counter=counter,
+            max_depth=max_depth,
+            max_nodes=max_nodes,
+        ),
     )
 
 
@@ -331,12 +366,28 @@ def _close(left: float, right: float, tolerance: float = 1e-9) -> bool:
     return abs(float(left) - float(right)) <= tolerance * max(1.0, abs(float(left)), abs(float(right)))
 
 
-def verify_autodro_selection_artifact(artifact: dict) -> dict:
-    """Independently recompute arithmetic for every submitted portfolio candidate."""
+def _canonical_sha256(value: object) -> str:
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def verify_autodro_selection_artifact(
+    artifact: dict,
+    *,
+    verify_completeness: bool = True,
+    max_keys: int = 10_000,
+    max_candidates: int = 5_000,
+) -> dict:
+    """Recompute candidate arithmetic and, for v2, regenerate the portfolio."""
     try:
-        if artifact.get("model") != "CertiGap-AutoDRO-v1":
+        if not isinstance(artifact, dict):
+            raise AutoDROVerificationError("artifact must be an object")
+        model_version = artifact.get("model")
+        if model_version not in {"CertiGap-AutoDRO-v1", "CertiGap-AutoDRO-v2"}:
             raise AutoDROVerificationError("unknown AutoDRO artifact model")
         counts = _validated_counts(artifact["counts"])
+        if len(counts) > max_keys:
+            raise AutoDROVerificationError("artifact exceeds maximum key count")
         claimed_uncertainty = artifact["uncertainty"]
         source = claimed_uncertainty["radius_source"]
         if source not in {"inferred", "explicit"}:
@@ -369,6 +420,8 @@ def verify_autodro_selection_artifact(artifact: dict) -> dict:
         leaderboard = artifact["leaderboard"]
         if not isinstance(leaderboard, list) or not leaderboard:
             raise AutoDROVerificationError("leaderboard must not be empty")
+        if len(leaderboard) > max_candidates:
+            raise AutoDROVerificationError("artifact exceeds maximum candidate count")
         recomputed: list[dict] = []
         for candidate in leaderboard:
             fallback = candidate["fallback"]
@@ -436,16 +489,54 @@ def verify_autodro_selection_artifact(artifact: dict) -> dict:
             raise AutoDROVerificationError("leaderboard is not sorted by the declared objective")
         if artifact["selected"] != leaderboard[0]:
             raise AutoDROVerificationError("selected candidate is not the leaderboard minimum")
+        completeness_verified = False
+        if model_version == "CertiGap-AutoDRO-v2":
+            manifest = artifact.get("portfolio_manifest")
+            if not isinstance(manifest, dict):
+                raise AutoDROVerificationError("v2 artifact requires a portfolio manifest")
+            _validate_manifest_limits(manifest, max_budget, len(counts))
+            if manifest.get("leaderboard_sha256") != _canonical_sha256(leaderboard):
+                raise AutoDROVerificationError("leaderboard digest does not match manifest")
+            if int(manifest.get("candidate_count", -1)) != len(leaderboard):
+                raise AutoDROVerificationError("candidate count does not match manifest")
+            if verify_completeness:
+                _verify_portfolio_completeness(artifact, counts, cost_model, uncertainty)
+                completeness_verified = True
         return {
             "verified": True,
             "candidate_count": len(leaderboard),
             "selected_robust_score": expected_order[0]["score"],
-            "scope": "submitted portfolio arithmetic",
+            "completeness_verified": completeness_verified,
+            "scope": (
+                "regenerated deterministic portfolio"
+                if completeness_verified
+                else "submitted portfolio arithmetic"
+            ),
         }
     except AutoDROVerificationError:
         raise
-    except (KeyError, TypeError, ValueError) as error:
+    except (KeyError, TypeError, ValueError, RecursionError) as error:
         raise AutoDROVerificationError(f"malformed AutoDRO artifact: {error}") from error
+
+
+def _validate_manifest_limits(manifest: dict, max_budget: int, key_count: int) -> None:
+    budgets = manifest.get("budgets")
+    etas = manifest.get("training_etas")
+    solvers = manifest.get("solvers")
+    fallbacks = manifest.get("fallbacks")
+    if not all(isinstance(values, list) and values for values in (budgets, etas, solvers, fallbacks)):
+        raise AutoDROVerificationError("manifest search grids must be non-empty lists")
+    if len(budgets) > 65 or max_budget > 64:
+        raise AutoDROVerificationError("manifest regeneration budget exceeds safety limit")
+    if len(etas) > 64 or len(solvers) > 32 or len(fallbacks) > 8:
+        raise AutoDROVerificationError("manifest search grid exceeds safety limit")
+    if len(budgets) * len(etas) * len(solvers) * len(fallbacks) > 20_000:
+        raise AutoDROVerificationError("manifest regeneration work exceeds safety limit")
+    direct_limit = int(manifest.get("direct_tv_limit", -1))
+    if direct_limit < 0 or direct_limit > 8:
+        raise AutoDROVerificationError("direct TV verification limit exceeds safety limit")
+    if key_count <= direct_limit and max_budget > 7:
+        raise AutoDROVerificationError("direct tree-space budget exceeds safety limit")
 
 
 def _training_eta_grid(radius: float, requested: Sequence[float] | None) -> tuple[float, ...]:
@@ -470,6 +561,7 @@ def fit_autodro(
     cost_model: ExecutionCostModel | None = None,
     memory_limit_bytes: int | None = None,
     exact_limit: int = 16,
+    direct_tv_limit: int = 8,
 ) -> AutoDROFitResult:
     values = _validated_counts(counts)
     n = len(values)
@@ -477,6 +569,8 @@ def fit_autodro(
         raise ValueError("max_budget must be non-negative")
     if exact_limit < 1:
         raise ValueError("exact_limit must be positive")
+    if not 0 <= direct_tv_limit <= 8:
+        raise ValueError("direct_tv_limit must lie in [0, 8]")
     effective_max_budget = effective_budget(max_budget, n)
     selected_budgets = (
         tuple(range(effective_max_budget + 1))
@@ -505,13 +599,86 @@ def fit_autodro(
 
     candidates: dict[tuple[str, str], dict] = {}
     normalized = list(uncertainty.nominal)
+
+    def add_candidate(
+        tree: Tree,
+        *,
+        solver: str,
+        budget: int,
+        training_eta: float | None,
+        fallback: FallbackName,
+    ) -> None:
+        evaluated = evaluate_tree_with_fallback(
+            tree,
+            normalized,
+            0.0 if training_eta is None else training_eta,
+            fallback,
+        )
+        serialized = evaluated["serialized_tree"]
+        identity = (json.dumps(serialized, sort_keys=True), fallback)
+        source = {
+            "solver": solver,
+            "budget": budget,
+            "training_eta": training_eta,
+            "fallback": fallback,
+        }
+        if identity in candidates:
+            candidates[identity]["sources"].append(source)
+            if solver == "direct_tv_exact":
+                candidates[identity].update(
+                    {
+                        "solver": solver,
+                        "budget": budget,
+                        "training_eta": None,
+                    }
+                )
+            return
+        comparisons, execution_costs = _tree_execution_costs(
+            tree,
+            n,
+            fallback,
+            model,
+        )
+        splits = split_count(tree)
+        memory_bytes = model.key_bytes * n + model.node_bytes * (2 * splits + 1)
+        if memory_limit_bytes is not None and memory_bytes > memory_limit_bytes:
+            return
+        robust = worst_case_tv_expectation(
+            uncertainty.nominal,
+            execution_costs,
+            uncertainty.tv_radius,
+        )
+        maximum = max(execution_costs)
+        score = (
+            robust["robust_expectation"]
+            + model.tail_weight * maximum
+            + model.memory_cost_per_byte * memory_bytes
+            + model.build_cost_per_split * splits
+        )
+        candidates[identity] = {
+            **source,
+            "sources": [source],
+            "robust_score": score,
+            "robust_mean_cost": robust["robust_expectation"],
+            "nominal_mean_cost": robust["nominal_expectation"],
+            "max_execution_cost": maximum,
+            "split_count": splits,
+            "memory_bytes": memory_bytes,
+            "used_tv_radius": robust["used_tv_radius"],
+            "adversarial_distribution": robust["adversarial_distribution"],
+            "per_key_comparisons": comparisons,
+            "per_key_execution_costs": execution_costs,
+            "serialized_tree": serialized,
+            "tree": tree,
+        }
+
     for budget in selected_budgets:
         for training_eta in eta_grid:
             for solver in portfolio:
                 if solver == "binary_search":
                     base_tree: Tree = IntervalLeaf(1, n)
                 else:
-                    base_result = _solver_dispatch(normalized, budget, training_eta, solver)
+                    base_result = solve_with(normalized, budget, training_eta, solver)
                     base_tree = base_result["tree"]
                 for fallback in fallbacks:
                     tree = base_tree
@@ -522,22 +689,31 @@ def fit_autodro(
                             training_eta,
                             fallback,
                         )["tree"]
-                    evaluated = evaluate_tree_with_fallback(
+                    add_candidate(
                         tree,
-                        normalized,
-                        training_eta,
-                        fallback,
+                        solver=solver,
+                        budget=budget,
+                        training_eta=training_eta,
+                        fallback=fallback,
                     )
-                    serialized = evaluated["serialized_tree"]
-                    identity = (json.dumps(serialized, sort_keys=True), fallback)
-                    if identity in candidates:
-                        continue
+
+    direct_space: dict | None = None
+    if n <= direct_tv_limit:
+        direct_space = exact_tree_space_manifest(n, effective_max_budget)
+        all_trees = enumerate_partial_trees(n, effective_max_budget)
+        for budget in selected_budgets:
+            eligible = tuple(tree for tree in all_trees if split_count(tree) <= budget)
+            for fallback in fallbacks:
+                best_tree: Tree | None = None
+                best_key: tuple[float, int, str] | None = None
+                for tree in eligible:
                     comparisons, execution_costs = _tree_execution_costs(
                         tree,
                         n,
                         fallback,
                         model,
                     )
+                    del comparisons
                     splits = split_count(tree)
                     memory_bytes = model.key_bytes * n + model.node_bytes * (2 * splits + 1)
                     if memory_limit_bytes is not None and memory_bytes > memory_limit_bytes:
@@ -547,31 +723,28 @@ def fit_autodro(
                         execution_costs,
                         uncertainty.tv_radius,
                     )
-                    maximum = max(execution_costs)
                     score = (
                         robust["robust_expectation"]
-                        + model.tail_weight * maximum
+                        + model.tail_weight * max(execution_costs)
                         + model.memory_cost_per_byte * memory_bytes
                         + model.build_cost_per_split * splits
                     )
-                    candidates[identity] = {
-                        "solver": solver,
-                        "budget": budget,
-                        "training_eta": training_eta,
-                        "fallback": fallback,
-                        "robust_score": score,
-                        "robust_mean_cost": robust["robust_expectation"],
-                        "nominal_mean_cost": robust["nominal_expectation"],
-                        "max_execution_cost": maximum,
-                        "split_count": splits,
-                        "memory_bytes": memory_bytes,
-                        "used_tv_radius": robust["used_tv_radius"],
-                        "adversarial_distribution": robust["adversarial_distribution"],
-                        "per_key_comparisons": comparisons,
-                        "per_key_execution_costs": execution_costs,
-                        "serialized_tree": serialized,
-                        "tree": tree,
-                    }
+                    key = (
+                        score,
+                        memory_bytes,
+                        json.dumps(_to_serializable(tree), sort_keys=True),
+                    )
+                    if best_key is None or key < best_key:
+                        best_key = key
+                        best_tree = tree
+                if best_tree is not None:
+                    add_candidate(
+                        best_tree,
+                        solver="direct_tv_exact",
+                        budget=budget,
+                        training_eta=None,
+                        fallback=fallback,
+                    )
 
     if not candidates:
         raise ValueError("no portfolio candidate satisfies the supplied constraints")
@@ -585,6 +758,25 @@ def fit_autodro(
             row["fallback"],
         ),
     )
+    public_leaderboard = [_public_candidate(row) for row in leaderboard]
+    full_direct_scope = direct_space is not None
+    portfolio_manifest = {
+        "generator": "certigap-autodro-deterministic-v2",
+        "budgets": list(selected_budgets),
+        "training_etas": list(eta_grid),
+        "solvers": list(portfolio),
+        "fallbacks": list(fallbacks),
+        "exact_limit": exact_limit,
+        "direct_tv_limit": direct_tv_limit,
+        "candidate_count": len(leaderboard),
+        "leaderboard_sha256": _canonical_sha256(public_leaderboard),
+        "direct_tree_space": direct_space,
+        "selection_scope": (
+            "globally optimal over every partial tree and configured fallback"
+            if full_direct_scope
+            else "best candidate in the regenerated deterministic portfolio"
+        ),
+    }
     return AutoDROFitResult(
         counts=values,
         uncertainty=uncertainty,
@@ -593,7 +785,39 @@ def fit_autodro(
         leaderboard=leaderboard,
         memory_limit_bytes=memory_limit_bytes,
         max_budget=effective_max_budget,
+        portfolio_manifest=portfolio_manifest,
     )
+
+
+def _verify_portfolio_completeness(
+    artifact: dict,
+    counts: tuple[float, ...],
+    cost_model: ExecutionCostModel,
+    uncertainty: UncertaintyModel,
+) -> None:
+    manifest = artifact["portfolio_manifest"]
+    if manifest.get("generator") != "certigap-autodro-deterministic-v2":
+        raise AutoDROVerificationError("unknown portfolio generator")
+    regenerated = fit_autodro(
+        counts,
+        int(artifact["max_budget"]),
+        budgets=manifest["budgets"],
+        confidence=uncertainty.confidence,
+        pseudocount=uncertainty.pseudocount,
+        tv_radius=None if uncertainty.radius_source == "inferred" else uncertainty.tv_radius,
+        training_etas=manifest["training_etas"],
+        solvers=manifest["solvers"],
+        fallbacks=manifest["fallbacks"],
+        cost_model=cost_model,
+        memory_limit_bytes=artifact["memory_limit_bytes"],
+        exact_limit=int(manifest["exact_limit"]),
+        direct_tv_limit=int(manifest["direct_tv_limit"]),
+    )
+    regenerated_leaderboard = [_public_candidate(row) for row in regenerated.leaderboard]
+    if _canonical_sha256(regenerated_leaderboard) != _canonical_sha256(artifact["leaderboard"]):
+        raise AutoDROVerificationError("submitted portfolio is incomplete or was not regenerated")
+    if regenerated.portfolio_manifest != manifest:
+        raise AutoDROVerificationError("portfolio manifest does not recompute")
 
 
 class CertiGapAutoDRO:
@@ -601,6 +825,7 @@ class CertiGapAutoDRO:
         self._fit: AutoDROFitResult | None = None
         self._max_budget: int | None = None
         self._fit_options: dict = {}
+        self._last_adaptation: dict | None = None
 
     def fit(self, counts: Iterable[float], max_budget: int, **kwargs) -> "CertiGapAutoDRO":
         self._fit = fit_autodro(counts, max_budget, **kwargs)
@@ -608,13 +833,61 @@ class CertiGapAutoDRO:
         self._fit_options = dict(kwargs)
         return self
 
-    def update_counts(self, additional_counts: Iterable[float]) -> "CertiGapAutoDRO":
+    def update_counts(
+        self,
+        additional_counts: Iterable[float],
+        *,
+        decay: float = 1.0,
+    ) -> "CertiGapAutoDRO":
         current = self._require_fit()
         additions = _validated_counts(additional_counts)
         if len(additions) != len(current.counts):
             raise ValueError("additional counts must preserve the key universe")
-        combined = tuple(old + new for old, new in zip(current.counts, additions))
-        return self.fit(combined, int(self._max_budget), **self._fit_options)
+        if not isfinite(decay) or not 0 < decay <= 1:
+            raise ValueError("decay must lie in (0, 1]")
+        if decay != 1.0 and self._fit_options.get("tv_radius") is None:
+            raise ValueError("decayed fractional counts require an explicit tv_radius")
+        combined = tuple(decay * old + new for old, new in zip(current.counts, additions))
+        previous = current.uncertainty.nominal
+        self.fit(combined, int(self._max_budget), **self._fit_options)
+        updated = self._require_fit().uncertainty.nominal
+        self._last_adaptation = {
+            "mode": "decayed_counts" if decay != 1.0 else "cumulative_counts",
+            "decay": decay,
+            "tv_drift": 0.5 * sum(abs(left - right) for left, right in zip(previous, updated)),
+            "refit": True,
+        }
+        return self
+
+    def update_window(
+        self,
+        window_counts: Iterable[float],
+        *,
+        min_tv_drift: float = 0.0,
+        force: bool = False,
+    ) -> "CertiGapAutoDRO":
+        current = self._require_fit()
+        window = _validated_counts(window_counts)
+        if len(window) != len(current.counts):
+            raise ValueError("window counts must preserve the key universe")
+        if not isfinite(min_tv_drift) or not 0 <= min_tv_drift <= 1:
+            raise ValueError("min_tv_drift must lie in [0, 1]")
+        total = sum(window)
+        empirical = tuple(value / total for value in window)
+        drift = 0.5 * sum(
+            abs(left - right)
+            for left, right in zip(current.uncertainty.empirical, empirical)
+        )
+        should_refit = force or drift >= min_tv_drift
+        if should_refit:
+            self.fit(window, int(self._max_budget), **self._fit_options)
+        self._last_adaptation = {
+            "mode": "sliding_window",
+            "tv_drift": drift,
+            "threshold": min_tv_drift,
+            "refit": should_refit,
+        }
+        return self
 
     def _require_fit(self) -> AutoDROFitResult:
         if self._fit is None:
@@ -634,7 +907,10 @@ class CertiGapAutoDRO:
         return self._require_fit().export_selection_artifact()
 
     def summary(self) -> dict:
-        return self._require_fit().summary()
+        result = self._require_fit().summary()
+        if self._last_adaptation is not None:
+            result["last_adaptation"] = dict(self._last_adaptation)
+        return result
 
     def leaderboard(self) -> list[dict]:
         return [_public_candidate(row) for row in self._require_fit().leaderboard]

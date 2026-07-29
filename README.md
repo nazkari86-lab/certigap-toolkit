@@ -22,6 +22,9 @@ It ships with:
 - a C++ core plus Python bindings;
 - a candidate-pruned C++ beam heuristic for large ordered workloads.
 - AutoDRO selection across budgets, solvers, and executable fallbacks.
+- direct TV-DRO exhaustive optimization with global small-instance guarantees;
+- version 2 artifacts with deterministic portfolio regeneration;
+- cumulative, decayed, and sliding-window adaptation policies.
 
 License:
 
@@ -98,12 +101,20 @@ model = CertiGapAutoDRO().fit(
 print(model.summary())
 print(model.estimated_query_cost(1))
 artifact = model.export_selection_artifact()
+
+# Rebuild only after a material empirical distribution shift.
+model.update_window(
+    window_counts=[1100, 500, 120, 30, 5],
+    min_tv_drift=0.05,
+)
 ```
 
 AutoDRO enumerates the configured portfolio, rejects candidates above the
 memory limit, evaluates each candidate exactly over a total-variation ambiguity
 ball, and returns the minimum verified portfolio score. It does not claim
-global optimality outside that portfolio. See
+global optimality outside that portfolio for large instances. For
+`n <= direct_tv_limit`, it exhaustively enumerates every feasible partial tree
+and provides a global TV-DRO optimum over the configured fallbacks. See
 [`docs/AUTODRO.md`](docs/AUTODRO.md).
 
 ## Quick Start
@@ -212,13 +223,17 @@ Generated artifacts live in [`results/`](results):
 - [`cpp_lookup_latency.md`](results/cpp_lookup_latency.md): post-build lookup latency and routing-footprint microbenchmark
 - [`pruning_validation.md`](results/pruning_validation.md): candidate-limit ablation against the exact oracle
 - [`temporal_holdout.md`](results/temporal_holdout.md): early-to-late MovieLens shift evaluation
+- [`autodro_shift.md`](results/autodro_shift.md): fair TV-vs-nominal tuned-portfolio ablation
+- [`direct_tv_validation.md`](results/direct_tv_validation.md): complete-tree-space validation and strict separation witness
+- [`uncertainty_validation.md`](results/uncertainty_validation.md): 3,000 finite-sample i.i.d. coverage trials
+- [`online_adaptation.md`](results/online_adaptation.md): drift-threshold rebuild/regret simulation
 
 Figures live in [`figures/`](figures):
 
 - [`mean_gaps.svg`](figures/mean_gaps.svg)
 - [`mean_times.svg`](figures/mean_times.svg)
 
-As of **Saturday, July 25, 2026**:
+As of **Wednesday, July 29, 2026**:
 
 - `240` benchmark rows were analyzed in the main exact-referenced sweep;
 - beam mean absolute objective gap vs exact is `0.0006` (`0.02%` mean relative gap);
@@ -278,6 +293,9 @@ What is already done:
 - independent structural and certificate-arithmetic verifier
 - systematic small-instance exact validation and Python/C++ reference equivalence checks
 - a proved infinite family with an unbounded absolute gap for one-step greedy
+- globally exact direct TV-DRO search on exhaustively enumerable instances
+- complete v2 portfolio manifests and omission-resistant verification
+- fair tuned TV-vs-nominal distribution-shift ablation
 
 Current limits and open research work:
 

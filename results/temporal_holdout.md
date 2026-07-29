@@ -1,15 +1,15 @@
 # Temporal Holdout: MovieLens 100K
 
-Trees are fitted on the earliest 80% of timestamped ratings and evaluated on the final 20%. Movie identifier order is preserved; this is a distribution-shift experiment, not a causal production study.
+Identical tuned portfolios are fitted on the earliest 80% of timestamped ratings and evaluated on the final 20%. Only the TV selection radius changes. Movie identifier order is preserved; this is a public temporal shift test, not a production latency study.
 
-| n | eta | Train objective | Future average cost | Future max cost |
-|---:|---:|---:|---:|---:|
-| 32 | 0.00 | 4.446388 | 4.474450 | 9 |
-| 32 | 0.15 | 4.760955 | 4.560300 | 6 |
-| 32 | 0.30 | 4.979610 | 4.560300 | 6 |
-| 64 | 0.00 | 5.446388 | 5.474450 | 10 |
-| 64 | 0.15 | 5.760955 | 5.560300 | 7 |
-| 64 | 0.30 | 5.979610 | 5.560300 | 7 |
-| 128 | 0.00 | 6.483388 | 6.505450 | 10 |
-| 128 | 0.15 | 6.760955 | 6.560300 | 8 |
-| 128 | 0.30 | 6.979610 | 6.560300 | 8 |
+| n | Method | rho | Solver | Fallback | Splits | Future average | Future max |
+|---:|---|---:|---|---|---:|---:|---:|
+| 32 | tuned_nominal | 0.00 | beam | fixed_rounds | 6 | 4.474450 | 9 |
+| 32 | tuned_tv_010 | 0.10 | beam | fixed_rounds | 2 | 4.560300 | 6 |
+| 32 | tuned_tv_020 | 0.20 | beam | fixed_rounds | 2 | 4.560300 | 6 |
+| 64 | tuned_nominal | 0.00 | beam | fixed_rounds | 6 | 5.474450 | 10 |
+| 64 | tuned_tv_010 | 0.10 | beam | fixed_rounds | 2 | 5.560300 | 7 |
+| 64 | tuned_tv_020 | 0.20 | beam | fixed_rounds | 2 | 5.560300 | 7 |
+| 128 | tuned_nominal | 0.00 | beam | fixed_rounds | 5 | 6.505450 | 10 |
+| 128 | tuned_tv_010 | 0.10 | beam | fixed_rounds | 2 | 6.560300 | 8 |
+| 128 | tuned_tv_020 | 0.20 | beam | fixed_rounds | 2 | 6.560300 | 8 |

@@ -44,6 +44,9 @@ jobs:
           python generate_counterexamples.py --mode fast
           python generate_proof_artifacts.py
           python generate_autodro_benchmark.py
+          python generate_direct_tv_validation.py
+          python generate_uncertainty_validation.py
+          python generate_online_adaptation.py
           python generate_figures.py
 
       - name: Verify committed scientific artifacts

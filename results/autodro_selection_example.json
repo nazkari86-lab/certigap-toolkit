@@ -139,6 +139,26 @@
         "type": "split"
       },
       "solver": "beam",
+      "sources": [
+        {
+          "budget": 3,
+          "fallback": "fixed_rounds",
+          "solver": "beam",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 3,
+          "fallback": "fixed_rounds",
+          "solver": "beam",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 3,
+          "fallback": "fixed_rounds",
+          "solver": "beam",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 3,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -238,6 +258,26 @@
         "type": "split"
       },
       "solver": "beam",
+      "sources": [
+        {
+          "budget": 3,
+          "fallback": "midpoint_binary",
+          "solver": "beam",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 3,
+          "fallback": "midpoint_binary",
+          "solver": "beam",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 3,
+          "fallback": "midpoint_binary",
+          "solver": "beam",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 3,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -292,6 +332,98 @@
         "type": "leaf"
       },
       "solver": "beam",
+      "sources": [
+        {
+          "budget": 0,
+          "fallback": "fixed_rounds",
+          "solver": "beam",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 0,
+          "fallback": "fixed_rounds",
+          "solver": "greedy",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 0,
+          "fallback": "fixed_rounds",
+          "solver": "balanced",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 0,
+          "fallback": "fixed_rounds",
+          "solver": "weighted",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 0,
+          "fallback": "fixed_rounds",
+          "solver": "learned_segment",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 0,
+          "fallback": "fixed_rounds",
+          "solver": "beam",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 0,
+          "fallback": "fixed_rounds",
+          "solver": "greedy",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 0,
+          "fallback": "fixed_rounds",
+          "solver": "balanced",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 0,
+          "fallback": "fixed_rounds",
+          "solver": "weighted",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 0,
+          "fallback": "fixed_rounds",
+          "solver": "learned_segment",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 0,
+          "fallback": "fixed_rounds",
+          "solver": "beam",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 0,
+          "fallback": "fixed_rounds",
+          "solver": "greedy",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 0,
+          "fallback": "fixed_rounds",
+          "solver": "balanced",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 0,
+          "fallback": "fixed_rounds",
+          "solver": "weighted",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 0,
+          "fallback": "fixed_rounds",
+          "solver": "learned_segment",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 0,
       "training_eta": 0.0,
       "used_tv_radius": 0.0
@@ -346,6 +478,98 @@
         "type": "leaf"
       },
       "solver": "beam",
+      "sources": [
+        {
+          "budget": 0,
+          "fallback": "midpoint_binary",
+          "solver": "beam",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 0,
+          "fallback": "midpoint_binary",
+          "solver": "greedy",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 0,
+          "fallback": "midpoint_binary",
+          "solver": "balanced",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 0,
+          "fallback": "midpoint_binary",
+          "solver": "weighted",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 0,
+          "fallback": "midpoint_binary",
+          "solver": "learned_segment",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 0,
+          "fallback": "midpoint_binary",
+          "solver": "beam",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 0,
+          "fallback": "midpoint_binary",
+          "solver": "greedy",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 0,
+          "fallback": "midpoint_binary",
+          "solver": "balanced",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 0,
+          "fallback": "midpoint_binary",
+          "solver": "weighted",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 0,
+          "fallback": "midpoint_binary",
+          "solver": "learned_segment",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 0,
+          "fallback": "midpoint_binary",
+          "solver": "beam",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 0,
+          "fallback": "midpoint_binary",
+          "solver": "greedy",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 0,
+          "fallback": "midpoint_binary",
+          "solver": "balanced",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 0,
+          "fallback": "midpoint_binary",
+          "solver": "weighted",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 0,
+          "fallback": "midpoint_binary",
+          "solver": "learned_segment",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 0,
       "training_eta": 0.0,
       "used_tv_radius": 0.0
@@ -415,6 +639,44 @@
         "type": "split"
       },
       "solver": "balanced",
+      "sources": [
+        {
+          "budget": 1,
+          "fallback": "fixed_rounds",
+          "solver": "balanced",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 1,
+          "fallback": "fixed_rounds",
+          "solver": "learned_segment",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 1,
+          "fallback": "fixed_rounds",
+          "solver": "balanced",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 1,
+          "fallback": "fixed_rounds",
+          "solver": "learned_segment",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 1,
+          "fallback": "fixed_rounds",
+          "solver": "balanced",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 1,
+          "fallback": "fixed_rounds",
+          "solver": "learned_segment",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 1,
       "training_eta": 0.0,
       "used_tv_radius": 0.0
@@ -484,6 +746,44 @@
         "type": "split"
       },
       "solver": "balanced",
+      "sources": [
+        {
+          "budget": 1,
+          "fallback": "midpoint_binary",
+          "solver": "balanced",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 1,
+          "fallback": "midpoint_binary",
+          "solver": "learned_segment",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 1,
+          "fallback": "midpoint_binary",
+          "solver": "balanced",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 1,
+          "fallback": "midpoint_binary",
+          "solver": "learned_segment",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 1,
+          "fallback": "midpoint_binary",
+          "solver": "balanced",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 1,
+          "fallback": "midpoint_binary",
+          "solver": "learned_segment",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 1,
       "training_eta": 0.0,
       "used_tv_radius": 0.0
@@ -568,6 +868,26 @@
         "type": "split"
       },
       "solver": "balanced",
+      "sources": [
+        {
+          "budget": 2,
+          "fallback": "fixed_rounds",
+          "solver": "balanced",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 2,
+          "fallback": "fixed_rounds",
+          "solver": "balanced",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 2,
+          "fallback": "fixed_rounds",
+          "solver": "balanced",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 2,
       "training_eta": 0.0,
       "used_tv_radius": 0.0
@@ -652,6 +972,26 @@
         "type": "split"
       },
       "solver": "balanced",
+      "sources": [
+        {
+          "budget": 2,
+          "fallback": "midpoint_binary",
+          "solver": "balanced",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 2,
+          "fallback": "midpoint_binary",
+          "solver": "balanced",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 2,
+          "fallback": "midpoint_binary",
+          "solver": "balanced",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 2,
       "training_eta": 0.0,
       "used_tv_radius": 0.0
@@ -751,6 +1091,44 @@
         "type": "split"
       },
       "solver": "balanced",
+      "sources": [
+        {
+          "budget": 3,
+          "fallback": "fixed_rounds",
+          "solver": "balanced",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 3,
+          "fallback": "fixed_rounds",
+          "solver": "learned_segment",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 3,
+          "fallback": "fixed_rounds",
+          "solver": "balanced",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 3,
+          "fallback": "fixed_rounds",
+          "solver": "learned_segment",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 3,
+          "fallback": "fixed_rounds",
+          "solver": "balanced",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 3,
+          "fallback": "fixed_rounds",
+          "solver": "learned_segment",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 3,
       "training_eta": 0.0,
       "used_tv_radius": 0.0
@@ -850,6 +1228,44 @@
         "type": "split"
       },
       "solver": "balanced",
+      "sources": [
+        {
+          "budget": 3,
+          "fallback": "midpoint_binary",
+          "solver": "balanced",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 3,
+          "fallback": "midpoint_binary",
+          "solver": "learned_segment",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 3,
+          "fallback": "midpoint_binary",
+          "solver": "balanced",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 3,
+          "fallback": "midpoint_binary",
+          "solver": "learned_segment",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 3,
+          "fallback": "midpoint_binary",
+          "solver": "balanced",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 3,
+          "fallback": "midpoint_binary",
+          "solver": "learned_segment",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 3,
       "training_eta": 0.0,
       "used_tv_radius": 0.0
@@ -964,6 +1380,26 @@
         "type": "split"
       },
       "solver": "balanced",
+      "sources": [
+        {
+          "budget": 4,
+          "fallback": "fixed_rounds",
+          "solver": "balanced",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 4,
+          "fallback": "fixed_rounds",
+          "solver": "balanced",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 4,
+          "fallback": "fixed_rounds",
+          "solver": "balanced",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 4,
       "training_eta": 0.0,
       "used_tv_radius": 0.0
@@ -1078,6 +1514,26 @@
         "type": "split"
       },
       "solver": "balanced",
+      "sources": [
+        {
+          "budget": 4,
+          "fallback": "midpoint_binary",
+          "solver": "balanced",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 4,
+          "fallback": "midpoint_binary",
+          "solver": "balanced",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 4,
+          "fallback": "midpoint_binary",
+          "solver": "balanced",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 4,
       "training_eta": 0.0,
       "used_tv_radius": 0.0
@@ -1147,6 +1603,98 @@
         "type": "split"
       },
       "solver": "beam",
+      "sources": [
+        {
+          "budget": 1,
+          "fallback": "midpoint_binary",
+          "solver": "beam",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 1,
+          "fallback": "midpoint_binary",
+          "solver": "greedy",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 1,
+          "fallback": "midpoint_binary",
+          "solver": "weighted",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 1,
+          "fallback": "midpoint_binary",
+          "solver": "beam",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 1,
+          "fallback": "midpoint_binary",
+          "solver": "greedy",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 1,
+          "fallback": "midpoint_binary",
+          "solver": "weighted",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 1,
+          "fallback": "midpoint_binary",
+          "solver": "beam",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 1,
+          "fallback": "midpoint_binary",
+          "solver": "greedy",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 1,
+          "fallback": "midpoint_binary",
+          "solver": "weighted",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 2,
+          "fallback": "midpoint_binary",
+          "solver": "greedy",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 2,
+          "fallback": "midpoint_binary",
+          "solver": "greedy",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 3,
+          "fallback": "midpoint_binary",
+          "solver": "greedy",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 3,
+          "fallback": "midpoint_binary",
+          "solver": "greedy",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 4,
+          "fallback": "midpoint_binary",
+          "solver": "greedy",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 4,
+          "fallback": "midpoint_binary",
+          "solver": "greedy",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 1,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -1261,6 +1809,20 @@
         "type": "split"
       },
       "solver": "beam",
+      "sources": [
+        {
+          "budget": 4,
+          "fallback": "midpoint_binary",
+          "solver": "beam",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 4,
+          "fallback": "midpoint_binary",
+          "solver": "beam",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 4,
       "training_eta": 0.15,
       "used_tv_radius": 0.2
@@ -1375,6 +1937,20 @@
         "type": "split"
       },
       "solver": "beam",
+      "sources": [
+        {
+          "budget": 4,
+          "fallback": "fixed_rounds",
+          "solver": "beam",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 4,
+          "fallback": "fixed_rounds",
+          "solver": "beam",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 4,
       "training_eta": 0.15,
       "used_tv_radius": 0.2
@@ -1444,6 +2020,98 @@
         "type": "split"
       },
       "solver": "beam",
+      "sources": [
+        {
+          "budget": 1,
+          "fallback": "fixed_rounds",
+          "solver": "beam",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 1,
+          "fallback": "fixed_rounds",
+          "solver": "greedy",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 1,
+          "fallback": "fixed_rounds",
+          "solver": "weighted",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 1,
+          "fallback": "fixed_rounds",
+          "solver": "beam",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 1,
+          "fallback": "fixed_rounds",
+          "solver": "greedy",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 1,
+          "fallback": "fixed_rounds",
+          "solver": "weighted",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 1,
+          "fallback": "fixed_rounds",
+          "solver": "beam",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 1,
+          "fallback": "fixed_rounds",
+          "solver": "greedy",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 1,
+          "fallback": "fixed_rounds",
+          "solver": "weighted",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 2,
+          "fallback": "fixed_rounds",
+          "solver": "greedy",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 2,
+          "fallback": "fixed_rounds",
+          "solver": "greedy",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 3,
+          "fallback": "fixed_rounds",
+          "solver": "greedy",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 3,
+          "fallback": "fixed_rounds",
+          "solver": "greedy",
+          "training_eta": 0.2
+        },
+        {
+          "budget": 4,
+          "fallback": "fixed_rounds",
+          "solver": "greedy",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 4,
+          "fallback": "fixed_rounds",
+          "solver": "greedy",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 1,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -1543,6 +2211,20 @@
         "type": "split"
       },
       "solver": "greedy",
+      "sources": [
+        {
+          "budget": 3,
+          "fallback": "fixed_rounds",
+          "solver": "greedy",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 4,
+          "fallback": "fixed_rounds",
+          "solver": "greedy",
+          "training_eta": 0.0
+        }
+      ],
       "split_count": 3,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -1642,6 +2324,20 @@
         "type": "split"
       },
       "solver": "greedy",
+      "sources": [
+        {
+          "budget": 3,
+          "fallback": "midpoint_binary",
+          "solver": "greedy",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 4,
+          "fallback": "midpoint_binary",
+          "solver": "greedy",
+          "training_eta": 0.0
+        }
+      ],
       "split_count": 3,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -1726,6 +2422,14 @@
         "type": "split"
       },
       "solver": "greedy",
+      "sources": [
+        {
+          "budget": 2,
+          "fallback": "midpoint_binary",
+          "solver": "greedy",
+          "training_eta": 0.0
+        }
+      ],
       "split_count": 2,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -1810,6 +2514,26 @@
         "type": "split"
       },
       "solver": "beam",
+      "sources": [
+        {
+          "budget": 2,
+          "fallback": "midpoint_binary",
+          "solver": "beam",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 2,
+          "fallback": "midpoint_binary",
+          "solver": "beam",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 2,
+          "fallback": "midpoint_binary",
+          "solver": "beam",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 2,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -1894,6 +2618,26 @@
         "type": "split"
       },
       "solver": "weighted",
+      "sources": [
+        {
+          "budget": 2,
+          "fallback": "midpoint_binary",
+          "solver": "weighted",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 2,
+          "fallback": "midpoint_binary",
+          "solver": "weighted",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 2,
+          "fallback": "midpoint_binary",
+          "solver": "weighted",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 2,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -1978,6 +2722,26 @@
         "type": "split"
       },
       "solver": "beam",
+      "sources": [
+        {
+          "budget": 2,
+          "fallback": "fixed_rounds",
+          "solver": "beam",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 2,
+          "fallback": "fixed_rounds",
+          "solver": "beam",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 2,
+          "fallback": "fixed_rounds",
+          "solver": "beam",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 2,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -2092,6 +2856,14 @@
         "type": "split"
       },
       "solver": "beam",
+      "sources": [
+        {
+          "budget": 4,
+          "fallback": "midpoint_binary",
+          "solver": "beam",
+          "training_eta": 0.0
+        }
+      ],
       "split_count": 4,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -2206,6 +2978,26 @@
         "type": "split"
       },
       "solver": "weighted",
+      "sources": [
+        {
+          "budget": 4,
+          "fallback": "midpoint_binary",
+          "solver": "weighted",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 4,
+          "fallback": "midpoint_binary",
+          "solver": "weighted",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 4,
+          "fallback": "midpoint_binary",
+          "solver": "weighted",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 4,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -2320,6 +3112,14 @@
         "type": "split"
       },
       "solver": "beam",
+      "sources": [
+        {
+          "budget": 4,
+          "fallback": "fixed_rounds",
+          "solver": "beam",
+          "training_eta": 0.0
+        }
+      ],
       "split_count": 4,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -2404,6 +3204,14 @@
         "type": "split"
       },
       "solver": "greedy",
+      "sources": [
+        {
+          "budget": 2,
+          "fallback": "fixed_rounds",
+          "solver": "greedy",
+          "training_eta": 0.0
+        }
+      ],
       "split_count": 2,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -2503,6 +3311,26 @@
         "type": "split"
       },
       "solver": "weighted",
+      "sources": [
+        {
+          "budget": 3,
+          "fallback": "midpoint_binary",
+          "solver": "weighted",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 3,
+          "fallback": "midpoint_binary",
+          "solver": "weighted",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 3,
+          "fallback": "midpoint_binary",
+          "solver": "weighted",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 3,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -2587,6 +3415,26 @@
         "type": "split"
       },
       "solver": "weighted",
+      "sources": [
+        {
+          "budget": 2,
+          "fallback": "fixed_rounds",
+          "solver": "weighted",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 2,
+          "fallback": "fixed_rounds",
+          "solver": "weighted",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 2,
+          "fallback": "fixed_rounds",
+          "solver": "weighted",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 2,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -2701,6 +3549,26 @@
         "type": "split"
       },
       "solver": "weighted",
+      "sources": [
+        {
+          "budget": 4,
+          "fallback": "fixed_rounds",
+          "solver": "weighted",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 4,
+          "fallback": "fixed_rounds",
+          "solver": "weighted",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 4,
+          "fallback": "fixed_rounds",
+          "solver": "weighted",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 4,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -2800,6 +3668,26 @@
         "type": "split"
       },
       "solver": "weighted",
+      "sources": [
+        {
+          "budget": 3,
+          "fallback": "fixed_rounds",
+          "solver": "weighted",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 3,
+          "fallback": "fixed_rounds",
+          "solver": "weighted",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 3,
+          "fallback": "fixed_rounds",
+          "solver": "weighted",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 3,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -2884,6 +3772,26 @@
         "type": "split"
       },
       "solver": "learned_segment",
+      "sources": [
+        {
+          "budget": 2,
+          "fallback": "midpoint_binary",
+          "solver": "learned_segment",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 2,
+          "fallback": "midpoint_binary",
+          "solver": "learned_segment",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 2,
+          "fallback": "midpoint_binary",
+          "solver": "learned_segment",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 2,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -2998,6 +3906,26 @@
         "type": "split"
       },
       "solver": "learned_segment",
+      "sources": [
+        {
+          "budget": 4,
+          "fallback": "midpoint_binary",
+          "solver": "learned_segment",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 4,
+          "fallback": "midpoint_binary",
+          "solver": "learned_segment",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 4,
+          "fallback": "midpoint_binary",
+          "solver": "learned_segment",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 4,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -3112,6 +4040,26 @@
         "type": "split"
       },
       "solver": "learned_segment",
+      "sources": [
+        {
+          "budget": 4,
+          "fallback": "fixed_rounds",
+          "solver": "learned_segment",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 4,
+          "fallback": "fixed_rounds",
+          "solver": "learned_segment",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 4,
+          "fallback": "fixed_rounds",
+          "solver": "learned_segment",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 4,
       "training_eta": 0.0,
       "used_tv_radius": 0.2
@@ -3196,6 +4144,26 @@
         "type": "split"
       },
       "solver": "learned_segment",
+      "sources": [
+        {
+          "budget": 2,
+          "fallback": "fixed_rounds",
+          "solver": "learned_segment",
+          "training_eta": 0.0
+        },
+        {
+          "budget": 2,
+          "fallback": "fixed_rounds",
+          "solver": "learned_segment",
+          "training_eta": 0.15
+        },
+        {
+          "budget": 2,
+          "fallback": "fixed_rounds",
+          "solver": "learned_segment",
+          "training_eta": 0.2
+        }
+      ],
       "split_count": 2,
       "training_eta": 0.0,
       "used_tv_radius": 0.10199340527577935
@@ -3203,8 +4171,40 @@
   ],
   "max_budget": 4,
   "memory_limit_bytes": null,
-  "model": "CertiGap-AutoDRO-v1",
-  "scope": "best candidate in the enumerated portfolio; not a global optimality certificate",
+  "model": "CertiGap-AutoDRO-v2",
+  "portfolio_manifest": {
+    "budgets": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "candidate_count": 34,
+    "direct_tree_space": null,
+    "direct_tv_limit": 8,
+    "exact_limit": 8,
+    "fallbacks": [
+      "fixed_rounds",
+      "midpoint_binary"
+    ],
+    "generator": "certigap-autodro-deterministic-v2",
+    "leaderboard_sha256": "f4a1751057bc51c9cec0172e87cb8ee1470ad3ac97c425fd68d0859708b4d27d",
+    "selection_scope": "best candidate in the regenerated deterministic portfolio",
+    "solvers": [
+      "beam",
+      "greedy",
+      "balanced",
+      "weighted",
+      "learned_segment"
+    ],
+    "training_etas": [
+      0.0,
+      0.15,
+      0.2
+    ]
+  },
+  "scope": "best candidate in the regenerated deterministic portfolio",
   "selected": {
     "adversarial_distribution": [
       0.04612809752198241,
@@ -3300,6 +4300,26 @@
       "type": "split"
     },
     "solver": "beam",
+    "sources": [
+      {
+        "budget": 3,
+        "fallback": "fixed_rounds",
+        "solver": "beam",
+        "training_eta": 0.0
+      },
+      {
+        "budget": 3,
+        "fallback": "fixed_rounds",
+        "solver": "beam",
+        "training_eta": 0.15
+      },
+      {
+        "budget": 3,
+        "fallback": "fixed_rounds",
+        "solver": "beam",
+        "training_eta": 0.2
+      }
+    ],
     "split_count": 3,
     "training_eta": 0.0,
     "used_tv_radius": 0.2

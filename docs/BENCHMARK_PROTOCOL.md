@@ -85,16 +85,30 @@ PYTHONPATH=. python3 generate_lookup_benchmark.py
 
 ## AutoDRO Distribution Shift
 
-`generate_autodro_benchmark.py` uses four predefined train/test scenarios at
-`n=32` and `n=64`. AutoDRO receives only integer training counts and a fixed TV
-radius of `0.2`; the test distribution is used only after selection. Fixed beam
-and fixed balanced structures use `B=4` and `eta=0.15`.
+`generate_autodro_benchmark.py` uses eight predefined train/test scenarios at
+`n=32`, `64`, and `128`. The primary pair compares TV radius `0.2` with radius
+`0.0` over the identical budgets, eta grid, solver set, and fallback set. Fixed
+beam, balanced, and weighted trees remain secondary reference lines.
 
-The 24 published rows report test-distribution mean comparison cost, maximum
-cost, split count, and analytical bytes. AutoDRO wins against fixed beam in
-`5/8` cases and fixed balanced in `4/8`. In hot-reversal cases the selected TV
-radius is too small and balanced search remains better. These are deterministic
-comparison-cost results, not hardware latency.
+The 120 published rows report selection time, candidate count, test mean and
+maximum comparison cost, split count, and analytical bytes. TV selection has
+`3` wins, `3` losses, and `18` ties against nominal selection across 24 paired
+cases. This mixed result prevents attributing gains from broader tuning to DRO.
+The test distribution is never used during selection.
+
+`generate_direct_tv_validation.py` separately exhausts 181 proof-sized tree
+spaces. It verifies that direct TV search never loses to the heuristic subset
+and retains a strict separation witness where the direct objective improves
+the robust score by more than `0.06`.
+
+`generate_uncertainty_validation.py` runs 3,000 deterministic i.i.d.
+multinomial trials over uniform/Zipf distributions, two alphabet sizes, and
+three sample sizes. It checks empirical coverage and radius contraction. It
+does not validate dependent streams.
+
+`generate_online_adaptation.py` evaluates four empirical-TV rebuild thresholds
+on a deterministic 12-window drift stream and reports rebuild count and regret
+against always refitting.
 
 ```bash
 PYTHONPATH=. python3 generate_autodro_benchmark.py

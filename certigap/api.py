@@ -62,7 +62,7 @@ def _normalize_weights(weights: list[float]) -> list[float]:
     return [weight / total for weight in values]
 
 
-def _solver_dispatch(weights: list[float], budget: int, eta: float, solver: SolverName) -> dict:
+def solve_with(weights: list[float], budget: int, eta: float, solver: SolverName) -> dict:
     if solver == "exact":
         return frontier_dp_best(weights, budget, eta)
     if solver == "cost_cap":
@@ -129,7 +129,7 @@ class CertiGapToolkit:
     ) -> "CertiGapToolkit":
         normalized = _normalize_weights(weights)
         effective = effective_budget(budget, len(normalized))
-        result = _solver_dispatch(normalized, effective, eta, solver)
+        result = solve_with(normalized, effective, eta, solver)
         self._fit = FitResult(
             weights=normalized,
             budget=effective,
@@ -176,7 +176,7 @@ class CertiGapToolkit:
         solvers = solvers or ["exact", "beam", "greedy", "balanced", "weighted", "binary_search", "learned_segment"]
         rows = []
         for solver in solvers:
-            result = _solver_dispatch(self._fit.weights, self._fit.budget, self._fit.eta, solver)
+            result = solve_with(self._fit.weights, self._fit.budget, self._fit.eta, solver)
             rows.append(
                 {
                     "solver": solver,

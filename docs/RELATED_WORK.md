@@ -50,6 +50,11 @@ AutoDRO does not claim a new generic ambiguity set. Its narrower contribution
 is integrating exact finite-support TV evaluation with budgeted partial-search
 portfolio selection, memory constraints, and executable interval fallbacks.
 
+The direct-TV solver strengthens this claim on proof-sized instances: it
+optimizes the TV objective over the complete finite family of budgeted partial
+trees instead of selecting only trees optimized for Huber objectives. A strict
+separation witness shows that the two candidate families are not equivalent.
+
 The project currently provides internal baseline implementations only.
 Reproducing external robust-BST and learned-index code under matched memory,
 hardware, and workload protocols remains future empirical work.

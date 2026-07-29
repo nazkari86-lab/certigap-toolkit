@@ -4,6 +4,7 @@
 
 - [core.py](certigap/core.py)
 - [AutoDRO core](certigap/autodro.py)
+- [Direct TV tree-space enumerator](certigap/direct_tv.py)
 - [__init__.py](certigap/__init__.py)
 
 ## Generators
@@ -19,6 +20,9 @@
 - [generate_cpp_scaling.py](generate_cpp_scaling.py)
 - [generate_lookup_benchmark.py](generate_lookup_benchmark.py)
 - [generate_autodro_benchmark.py](generate_autodro_benchmark.py)
+- [generate_direct_tv_validation.py](generate_direct_tv_validation.py)
+- [generate_uncertainty_validation.py](generate_uncertainty_validation.py)
+- [generate_online_adaptation.py](generate_online_adaptation.py)
 - [verify_artifacts.py](verify_artifacts.py)
 - [generate_pruning_validation.py](generate_pruning_validation.py)
 - [generate_temporal_holdout.py](generate_temporal_holdout.py)
@@ -42,6 +46,9 @@
 - [C++ lookup environment metadata](results/cpp_lookup_metadata.json)
 - [AutoDRO distribution-shift benchmark](results/autodro_shift.md)
 - [Verified AutoDRO selection example](results/autodro_selection_example.json)
+- [Direct TV exact-space validation](results/direct_tv_validation.md)
+- [Finite-sample uncertainty validation](results/uncertainty_validation.md)
+- [Online adaptation simulation](results/online_adaptation.md)
 - [AutoDRO theorem and API](docs/AUTODRO.md)
 - [Generalized executable fallback theorem](docs/GENERALIZED_FALLBACK.md)
 - [LaTeX paper](paper/main.tex)
@@ -83,6 +90,6 @@ The package is a reproducible research prototype. Its claims are limited to the 
 
 Open research work:
 
-- a fully formal asymptotic greedy-counterexample family;
-- any stronger approximation or structural theorem beyond the current prototype.
+- a scalable direct-TV approximation or certified-gap theorem;
+- external robust-BST and learned-index implementations under matched resources;
 - independent replication of the runtime and memory benchmark on other machines.
