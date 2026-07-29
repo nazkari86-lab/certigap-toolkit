@@ -238,6 +238,8 @@ def main() -> None:
         for path in (
             DOCS_DIR / "AUTOINDEX.md",
             RESULTS_DIR / "autoindex_validation.md",
+            DOCS_DIR / "COMPILER_INTEGRATION.md",
+            RESULTS_DIR / "compiler_integration_validation.md",
         )
     )
     counterexample_text = read(RESULTS_DIR / "counterexamples.md") if (RESULTS_DIR / "counterexamples.md").exists() else ""

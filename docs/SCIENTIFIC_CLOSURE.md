@@ -67,6 +67,18 @@ This closes candidate-omission and train/holdout-leakage risks for the declared
 portfolio. It does not close global structure selection, calibrated
 wall-clock prediction, storage-engine integration, or external replication.
 
+## Profile-Guided C++ Compilation
+
+The versioned JSON compiler validates traces, verifies the complete AutoIndex
+artifact, and emits deterministic C++17 configuration source. Cross-language
+tests execute all backend families, all three aggregates, updates, and
+snapshot isolation. Twenty-four generated-header artifacts are byte-stable.
+
+This closes the gap between a Python paper prototype and a build-time reusable
+C++ component. The generated C++ snapshot is deliberately documented as an
+`O(n)` value-copy. Native path-copy persistence, insert/delete, concurrency,
+disk pages, and direct storage-engine integration remain external work.
+
 ## Honest Boundaries
 
 - The C++ pruned beam is empirical: it has no approximation theorem and no proof certificate.

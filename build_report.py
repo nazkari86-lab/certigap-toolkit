@@ -212,6 +212,8 @@ def main() -> None:
         for path in (
             DOCS_DIR / "AUTOINDEX.md",
             RESULTS_DIR / "autoindex_validation.md",
+            DOCS_DIR / "COMPILER_INTEGRATION.md",
+            RESULTS_DIR / "compiler_integration_validation.md",
         )
     )
 
@@ -246,7 +248,9 @@ def main() -> None:
             + "\n\n"
             + dynamic_range_theory_text
             + "\n\n"
-            + read_text(DOCS_DIR / "AUTOINDEX.md"),
+            + read_text(DOCS_DIR / "AUTOINDEX.md")
+            + "\n\n"
+            + read_text(DOCS_DIR / "COMPILER_INTEGRATION.md"),
             roadmap_text,
         ),
         encoding="utf-8",

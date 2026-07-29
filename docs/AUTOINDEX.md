@@ -59,3 +59,6 @@ measurements. The verifier includes these coefficients in regeneration.
 The current universe is static and rank-addressed. Insert/delete, disk-page
 layouts, concurrency, and storage-engine latency remain outside the verified
 scope.
+
+For deterministic JSON-to-C++ code generation and CMake wiring, see
+[`COMPILER_INTEGRATION.md`](COMPILER_INTEGRATION.md).

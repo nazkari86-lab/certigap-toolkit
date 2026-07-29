@@ -70,6 +70,19 @@
 - independent candidate regeneration and tamper tests
 - 120-row temporal and constraint validation matrix
 
+## Phase 9: Profile-Guided C++ Compilation
+
+- strict versioned JSON trace schema
+- installed `certigap-compile` CLI
+- independently verified artifact before code generation
+- deterministic C++17 header generation
+- compile-time backend and aggregate selection
+- emitted complete CertiRange topology
+- reusable array, Fenwick, segment-tree, and CertiRange runtime
+- source-checkout and installed-package CMake integration
+- cross-language sum/min/max/update/snapshot tests
+- 24-row deterministic code-generation validation
+
 ## External Closure
 
 - independent proof review or machine-assisted formalization

@@ -377,3 +377,27 @@ enter the selection key. Thus they cannot affect the selected winner. This
 theorem is a portfolio-completeness guarantee in declared primitive visits,
 not global optimality over unlisted data structures and not a wall-clock
 latency guarantee. `QED`
+
+## Theorem M: Generated C++ Configuration Fidelity
+
+Let `A` be an AutoIndex artifact accepted by the independent verifier. The
+code generator first verifies `A`, then emits its selected backend, aggregate,
+key count, artifact digest, and, for CertiRange, the deterministically completed
+topology. Identical artifact and namespace inputs therefore emit identical
+header bytes.
+
+For array, Fenwick, and segment-tree backends, the generated configuration
+selects the corresponding executable recurrence directly. For CertiRange,
+the emitted topology is the same completion whose canonical hash was checked
+in `A`. Structural induction over that topology proves every internal state is
+the configured monoid aggregate of its interval. The same induction proves
+range queries and point updates agree with the array specification.
+
+A C++ snapshot is an independent value-copy of all runtime state. Subsequent
+updates cannot mutate the copy, so snapshot observations preserve the
+pre-update state. This proves semantic isolation but only with `O(n)` copying;
+the stronger Python path-copy complexity is not claimed for generated C++.
+
+Thus generated C++ execution preserves the selected configuration and
+point/range/update semantics. This is source-level fidelity, not equivalence
+of machine code across C++ compilers. `QED`

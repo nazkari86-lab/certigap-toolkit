@@ -1,0 +1,28 @@
+{
+  "schema": "certigap-compile-input-v1",
+  "values": [
+    0, 1, 2, 3, 4, 5, 6, 7,
+    8, 9, 10, 11, 12, 13, 14, 15
+  ],
+  "train_trace": {
+    "n": 16,
+    "operations": [
+      {"kind": "range", "left": 1, "right": 6},
+      {"kind": "range", "left": 1, "right": 6},
+      {"kind": "range", "left": 2, "right": 8},
+      {"kind": "update", "left": 2, "value": 100}
+    ]
+  },
+  "holdout_trace": {
+    "n": 16,
+    "operations": [
+      {"kind": "range", "left": 8, "right": 16},
+      {"kind": "get", "left": 16}
+    ]
+  },
+  "constraints": {
+    "aggregate": "sum",
+    "budget": 4,
+    "require_persistent_snapshots": true
+  }
+}

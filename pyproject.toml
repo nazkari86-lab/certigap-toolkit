@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "certigap-toolkit"
-version = "1.4.0"
+version = "1.5.0"
 description = "Certified workload-adaptive index compilation and robust partial search"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,5 +16,12 @@ classifiers = [
   "Topic :: Scientific/Engineering",
 ]
 
+[project.scripts]
+certigap-compile = "certigap.compiler:main"
+
 [tool.setuptools.packages.find]
 include = ["certigap*"]
+
+[tool.setuptools.data-files]
+"include/certigap" = ["cpp/certigap_autoindex.hpp"]
+"share/certigap/schemas" = ["schemas/certigap_compile_input_v1.schema.json"]

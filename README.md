@@ -220,6 +220,25 @@ evaluation-only. Default structural visits are not presented as nanoseconds;
 per-backend unit costs can be calibrated from target measurements. See
 [`docs/AUTOINDEX.md`](docs/AUTOINDEX.md).
 
+## C++ Compiler Integration
+
+Compile a strict JSON trace into a verified artifact and C++17 header:
+
+```bash
+certigap-compile compile trace.json \
+  --artifact build/selection.json \
+  --header build/generated_index.hpp
+
+certigap-compile verify build/selection.json
+certigap-compile include-dir
+```
+
+The generated `Index` exposes `get`, `range_query`, `point_update`, and
+`snapshot`. Selection is resolved at C++ compile time. A complete buildable
+CMake project is available in
+[`examples/cmake_autoindex`](examples/cmake_autoindex); see
+[`docs/COMPILER_INTEGRATION.md`](docs/COMPILER_INTEGRATION.md).
+
 ## Quick Start
 
 Run the full project build:

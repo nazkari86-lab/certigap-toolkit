@@ -48,6 +48,7 @@ jobs:
           python generate_uncertainty_validation.py
           python generate_online_adaptation.py
           python generate_autoindex_validation.py
+          python generate_compiler_integration_validation.py
           python generate_figures.py
 
       - name: Verify committed scientific artifacts
@@ -67,3 +68,11 @@ jobs:
 
       - name: Build installable wheel
         run: python -m pip wheel . --no-deps --wheel-dir /tmp/certigap-wheel
+
+      - name: Build generated CMake example
+        env:
+          PYTHONPATH: .
+        run: |
+          cmake -S examples/cmake_autoindex -B /tmp/certigap-cmake
+          cmake --build /tmp/certigap-cmake --parallel 2
+          /tmp/certigap-cmake/certigap_autoindex_example

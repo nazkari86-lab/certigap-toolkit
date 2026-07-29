@@ -54,6 +54,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "cpp_dynamic_range.csv": 36,
         "range_optimizer_validation.csv": 114,
         "autoindex_validation.csv": 120,
+        "compiler_integration_validation.csv": 24,
     }
     observed: dict[str, int] = {}
     for name, minimum in minimum_rows.items():
@@ -282,6 +283,21 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         regret = float(selected["selected_holdout_regret"])
         if not math.isfinite(regret) or regret < -1e-9:
             raise ValueError("AutoIndex holdout regret is invalid")
+
+    compiler_rows = csv_records("compiler_integration_validation.csv")
+    if (
+        len({row["group_id"] for row in compiler_rows}) != 24
+        or any(
+            row["candidate_count"] != "5"
+            or row["artifact_verified"] != "True"
+            or row["constraints_canonical"] != "True"
+            or len(row["artifact_sha256"]) != 64
+            or len(row["header_sha256"]) != 64
+            or int(row["header_bytes"]) <= 0
+            for row in compiler_rows
+        )
+    ):
+        raise ValueError("compiler integration validation is incomplete")
 
     optimizer_rows = csv_records("range_optimizer_validation.csv")
     exact_optimizer_rows = [

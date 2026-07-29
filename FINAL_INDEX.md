@@ -13,6 +13,8 @@
 - [Range optimizer verifier](certigap/range_optimizer_verifier.py)
 - [Certified AutoIndex](certigap/autoindex.py)
 - [Independent AutoIndex verifier](certigap/autoindex_verifier.py)
+- [JSON/C++ compiler](certigap/compiler.py)
+- [Reusable C++ AutoIndex runtime](cpp/certigap_autoindex.hpp)
 - [__init__.py](certigap/__init__.py)
 
 ## Generators
@@ -36,6 +38,7 @@
 - [generate_cpp_dynamic_range.py](generate_cpp_dynamic_range.py)
 - [generate_range_optimizer_validation.py](generate_range_optimizer_validation.py)
 - [generate_autoindex_validation.py](generate_autoindex_validation.py)
+- [generate_compiler_integration_validation.py](generate_compiler_integration_validation.py)
 - [verify_artifacts.py](verify_artifacts.py)
 - [generate_pruning_validation.py](generate_pruning_validation.py)
 - [generate_temporal_holdout.py](generate_temporal_holdout.py)
@@ -43,6 +46,7 @@
 - [build_all.py](build_all.py)
 - [AutoDRO catalog example](examples/autodro_catalog.py)
 - [Certified AutoIndex example](examples/certified_autoindex.py)
+- [Generated CMake example](examples/cmake_autoindex)
 
 ## Main Results
 
@@ -72,10 +76,12 @@
 - [Range optimizer artifact](results/range_optimizer_example.json)
 - [AutoIndex validation](results/autoindex_validation.md)
 - [Verified AutoIndex selection example](results/autoindex_selection_example.json)
+- [Compiler integration validation](results/compiler_integration_validation.md)
 - [AutoDRO theorem and API](docs/AUTODRO.md)
 - [Anytime theorem and certificate contract](docs/ANYTIME_TV.md)
 - [Dynamic CertiRange theorem and API](docs/DYNAMIC_RANGE.md)
 - [Certified AutoIndex theorem and API](docs/AUTOINDEX.md)
+- [Compiler and CMake integration](docs/COMPILER_INTEGRATION.md)
 - [Generalized executable fallback theorem](docs/GENERALIZED_FALLBACK.md)
 - [LaTeX paper](paper/main.tex)
 - [pruning_validation.md](results/pruning_validation.md)

@@ -61,3 +61,9 @@ The verifier intentionally repeats candidate generation and scoring rather
 than trusting compiler summaries. It therefore has the same asymptotic cost
 as selection. Portfolio storage is `O(m+n)` because the certificate includes
 the complete training and optional holdout traces plus two routing trees.
+
+Generated array, Fenwick, and segment-tree headers have `O(1)` configuration
+size. A generated CertiRange header contains its complete `2n-1` topology and
+therefore has `O(n)` source size. Runtime bounds match the selected backend.
+The generated C++ snapshot operation copies runtime vectors and takes `O(n)`
+time and space; it is semantic snapshot isolation, not path-copy persistence.

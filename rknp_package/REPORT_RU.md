@@ -587,6 +587,30 @@ theorem is a portfolio-completeness guarantee in declared primitive visits,
 not global optimality over unlisted data structures and not a wall-clock
 latency guarantee. `QED`
 
+## Theorem M: Generated C++ Configuration Fidelity
+
+Let `A` be an AutoIndex artifact accepted by the independent verifier. The
+code generator first verifies `A`, then emits its selected backend, aggregate,
+key count, artifact digest, and, for CertiRange, the deterministically completed
+topology. Identical artifact and namespace inputs therefore emit identical
+header bytes.
+
+For array, Fenwick, and segment-tree backends, the generated configuration
+selects the corresponding executable recurrence directly. For CertiRange,
+the emitted topology is the same completion whose canonical hash was checked
+in `A`. Structural induction over that topology proves every internal state is
+the configured monoid aggregate of its interval. The same induction proves
+range queries and point updates agree with the array specification.
+
+A C++ snapshot is an independent value-copy of all runtime state. Subsequent
+updates cannot mutate the copy, so snapshot observations preserve the
+pre-update state. This proves semantic isolation but only with `O(n)` copying;
+the stronger Python path-copy complexity is not claimed for generated C++.
+
+Thus generated C++ execution preserves the selected configuration and
+point/range/update semantics. This is source-level fidelity, not equivalence
+of machine code across C++ compilers. `QED`
+
 # Generalized Executable Fallback Model
 
 ## Motivation
@@ -1469,6 +1493,9 @@ The current universe is static and rank-addressed. Insert/delete, disk-page
 layouts, concurrency, and storage-engine latency remain outside the verified
 scope.
 
+For deterministic JSON-to-C++ code generation and CMake wiring, see
+[`COMPILER_INTEGRATION.md`](COMPILER_INTEGRATION.md).
+
 # Certified AutoIndex validation
 
 - Rows: `120` (`24` complete portfolios).
@@ -1479,6 +1506,162 @@ scope.
 - Maximum chronological-holdout regret: `118.320000` primitive visits.
 
 Selection uses training operations only. Holdout measures temporal generalization and is never consulted by the compiler. Scores are declared structural primitive visits, not wall-clock latency.
+
+# Compiler And CMake Integration
+
+CertiGap uses a profile-guided build step. It is not a GCC or Clang plugin:
+the compiler consumes an operation trace before the C++ build, verifies all
+five portfolio candidates, and emits a normal C++17 configuration header.
+
+## Install
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install certigap_toolkit-1.5.0-py3-none-any.whl
+
+certigap-compile include-dir
+```
+
+The last command prints the directory containing
+`certigap_autoindex.hpp`.
+
+## Input
+
+The strict schema is
+[`schemas/certigap_compile_input_v1.schema.json`](../schemas/certigap_compile_input_v1.schema.json).
+Keys are 1-based ranks in a fixed ordered universe.
+
+```json
+{
+  "schema": "certigap-compile-input-v1",
+  "values": [0, 1, 2, 3],
+  "train_trace": {
+    "n": 4,
+    "operations": [
+      {"kind": "range", "left": 1, "right": 3},
+      {"kind": "get", "left": 1},
+      {"kind": "update", "left": 2, "value": 10}
+    ]
+  },
+  "holdout_trace": {
+    "n": 4,
+    "operations": [{"kind": "range", "left": 2, "right": 4}]
+  },
+  "constraints": {
+    "aggregate": "sum",
+    "budget": 3,
+    "memory_limit_slots": 64
+  }
+}
+```
+
+`right` defaults to `left`; `value` defaults to zero. Unknown fields, invalid
+ranges, non-finite values, unsupported constraints, and conflicting output
+paths fail closed.
+
+## Compile And Verify
+
+```bash
+certigap-compile compile trace.json \
+  --artifact build/selection.json \
+  --header build/generated_index.hpp \
+  --namespace my_project::generated
+
+certigap-compile verify build/selection.json
+```
+
+The generated header embeds:
+
+- selected backend and aggregate;
+- key-universe size;
+- verified artifact SHA-256;
+- exact completed topology for a selected CertiRange backend;
+- verified training score.
+
+The verifier is run before code generation. Repeating compilation with the
+same input and namespace produces byte-identical header text.
+
+## C++ Usage
+
+```cpp
+#include "generated_index.hpp"
+
+std::vector<double> values = load_values();
+my_project::generated::Index index(values);
+
+double item = index.get(1);
+double total = index.range_query(1, 10);
+index.point_update(2, 100.0);
+
+auto old_view = index.snapshot();
+```
+
+The reusable header supports array, Fenwick, segment tree, and both CertiRange
+variants. Selection is compile-time through `if constexpr`; no runtime
+portfolio dispatch remains. `sum`, `min`, and `max` are supported, while
+Fenwick is statically restricted to `sum`.
+
+C++ `snapshot()` currently returns an independent value-copy in `O(n)` space
+and time. It preserves old values correctly but does not claim the Python
+CertiRange runtime's `O(h)` path-copy efficiency.
+
+## CMake
+
+The complete source-checkout example is in
+[`examples/cmake_autoindex`](../examples/cmake_autoindex).
+
+```bash
+cmake -S examples/cmake_autoindex -B build/cmake-autoindex
+cmake --build build/cmake-autoindex
+build/cmake-autoindex/certigap_autoindex_example
+```
+
+For an installed package, obtain the include path during configuration:
+
+```cmake
+execute_process(
+    COMMAND certigap-compile include-dir
+    OUTPUT_VARIABLE CERTIGAP_INCLUDE_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    COMMAND_ERROR_IS_FATAL ANY
+)
+
+add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/generated_index.hpp"
+           "${CMAKE_CURRENT_BINARY_DIR}/selection.json"
+    COMMAND certigap-compile compile "${CMAKE_SOURCE_DIR}/trace.json"
+            --artifact "${CMAKE_CURRENT_BINARY_DIR}/selection.json"
+            --header "${CMAKE_CURRENT_BINARY_DIR}/generated_index.hpp"
+    DEPENDS "${CMAKE_SOURCE_DIR}/trace.json"
+    VERBATIM
+)
+
+target_include_directories(
+    app PRIVATE
+    "${CMAKE_CURRENT_BINARY_DIR}"
+    "${CERTIGAP_INCLUDE_DIR}"
+)
+```
+
+## Claim Boundary
+
+The artifact certifies selection over the declared fixed portfolio and
+analytical/calibrated work model. The generated header preserves that selected
+configuration. It does not prove that GCC and Clang emit identical machine
+code, nor that analytical work units equal production latency. Backend unit
+costs should be calibrated on the target system when latency matters.
+
+# Compiler integration validation
+
+- Deterministic generated headers: `24/24`.
+- Independently verified source artifacts: `24/24`.
+- Candidate count per artifact: `5`.
+- Selected backend distribution: `{'certirange_range': 5, 'fenwick': 4, 'segment_tree': 3, 'sorted_array': 12}`.
+- Cross-language executable coverage is enforced by `tests/test_compiler_integration.py`.
+- The CMake example compiles a generated CertiRange topology and checks snapshot isolation.
+
+Header hashes cover exact generated C++ source. They certify deterministic code generation from a verified artifact, not compiler binary equivalence across toolchains.
 
 ## 10. Вывод
 
