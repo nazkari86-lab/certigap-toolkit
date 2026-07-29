@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use CertiGap, cite this software and the accompanying technical report."
-title: "CertiGap-AutoDRO: Automatic Portfolio Selection for Budgeted Robust Prefix Search"
+title: "CertiGap-AutoDRO: Certified Anytime Optimization for Budgeted Robust Prefix Search"
 type: software
 authors:
   - family-names: "Nurlanuly"
@@ -8,5 +8,5 @@ authors:
 repository-code: "https://github.com/nazkari86-lab/certigap-toolkit"
 url: "https://github.com/nazkari86-lab/certigap-toolkit"
 license: MIT
-version: 1.1.0
-date-released: 2026-07-29
+version: 1.2.0
+date-released: 2026-07-30

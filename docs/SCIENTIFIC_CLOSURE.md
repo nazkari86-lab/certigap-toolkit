@@ -29,6 +29,14 @@
 - A 12-window drift simulation showing that threshold 0.03 halves rebuilds
   without measured regret on that stream, while threshold 0.15 reduces
   rebuilds further at measurable regret.
+- A scalable best-first TV-DRO solver with componentwise, entropy, and
+  conditional-entropy lower bounds and a replay-verified optimality interval.
+- Twelve of twelve complete-tree-space oracle matches and 36 monotone
+  certified scaling trajectories over 16, 32, and 64 keys.
+- A formal mean-cost regret bound `g + 2 delta R` for online distribution
+  drift and a horizon-aware rebuild certificate.
+- Real C++ post-build lookup measurements on two additional YCSB-inspired
+  read-only distributions, explicitly separated from official YCSB evidence.
 
 ## Honest Boundaries
 
@@ -38,6 +46,8 @@
   verifies submitted-tree costs but does not machine-prove DP enumeration.
 - Movie identifier order is not semantic locality; the temporal result is one public dataset, not a production deployment claim.
 - Runtime measurements are machine-specific.
+- Nonzero anytime gaps are unresolved intervals, not global-optimality claims.
+- YCSB-inspired distributions are not an official YCSB or storage-engine run.
 - The rational evaluator verifies submitted-tree arithmetic; it is not a
   machine-checked proof that the DP enumerates every feasible tree.
 
@@ -52,5 +62,6 @@ These cannot be completed truthfully by local code generation:
 5. A non-trivial approximation theorem for the candidate-pruned scalable path.
 6. Prospective validation of the inferred TV radius under non-stationary real
    query streams.
-7. A scalable direct-TV algorithm with a non-trivial approximation or
-   optimality-gap guarantee beyond the exhaustive small-instance limit.
+7. Tighter large-instance gaps or an approximation ratio beyond the current
+   certified anytime intervals.
+8. An official YCSB experiment integrated with RocksDB or SQLite.

@@ -43,7 +43,9 @@ def build_abstract_ru(summary_text: str) -> str:
 3. независимые floating-point, proof-trace и rational-arithmetic проверки;
 4. direct TV-DRO перебор с доказанной полнотой на малых экземплярах;
 5. проверяемый AutoDRO-выбор бюджета, solver и fallback с защитой от удаления кандидатов;
-6. синтетические, публичные, temporal и matched-budget C++ эксперименты.
+6. масштабируемый anytime TV-DRO Branch-and-Bound с проверяемым интервалом оптимальности;
+7. формальную границу regret `g + 2 delta R` при изменении распределения;
+8. синтетические, публичные, temporal и matched-budget C++ эксперименты.
 
 Текущее состояние прототипа подтверждается следующими результатами:
 
@@ -94,6 +96,9 @@ CertiGap не строит полное поисковое дерево на в�
 - exact DP обобщён на реальные per-key стоимости midpoint binary search и пользовательские fallback-профили;
 - AutoDRO автоматически выбирает структуру по query counts, memory limit и измеряемой cost model;
 - direct TV-DRO solver глобально оптимален на полном малом пространстве деревьев;
+- anytime TV-DRO solver возвращает replay-verified нижнюю границу и gap;
+- conditional-entropy bound усиливает поиск на больших пространствах;
+- online certificate ограничивает regret величиной `g + 2 delta R`;
 - verifier версии 2 повторно генерирует портфель и обнаруживает удаление кандидатов;
 - проект сочетает точный алгоритм, эвристику и независимую проверку результата.
 
@@ -105,6 +110,8 @@ CertiGap не строит полное поисковое дерево на в�
 - entropy lower bound;
 - Lagrangian lower bound;
 - независимый structural checker.
+- independently replayed anytime frontier certificate;
+- TV-drift mean-cost regret bound.
 
 ## 7. Текущие результаты
 
@@ -115,6 +122,8 @@ CertiGap не строит полное поисковое дерево на в�
 - beam-search строго улучшает greedy baseline;
 - во многих случаях beam совпадает с exact optimum;
 - на proof-sized случаях branch-and-bound trace независимо подтверждает оптимальность.
+- anytime solver совпадает с complete-tree-space oracle в 12 из 12 случаев;
+- 36 scalable trajectories имеют независимо проверенные монотонные интервалы.
 
 ## 8. Примеры сертификатов
 
@@ -126,7 +135,7 @@ CertiGap не строит полное поисковое дерево на в�
 
 ## 10. Вывод
 
-На текущем этапе CertiGap оформлен как воспроизводимый research-прототип: есть generalized exact solver, две независимые exact-рекуррентности, rational checker, proof trace, C++ heuristic и matched-budget benchmark. Теоремы ещё не проходили внешнюю или машинную формальную проверку. Главный оставшийся теоретический шаг — получить нетривиальную approximation guarantee для candidate-pruned solver; главный внешний шаг — независимое воспроизведение и production pilot.
+На текущем этапе CertiGap оформлен как воспроизводимый research-прототип: есть generalized exact solver, две независимые exact-рекуррентности, rational checker, proof trace, scalable anytime TV-DRO interval, C++ heuristic и matched-budget benchmark. Теоремы ещё не проходили внешнюю или машинную формальную проверку. Главный оставшийся теоретический шаг — получить более тесные large-instance bounds или approximation guarantee; главный внешний шаг — официальный YCSB/storage-engine эксперимент, независимое воспроизведение и production pilot.
 """
 
 
@@ -139,7 +148,9 @@ def build_theses_ru() -> str:
 4. Для более крупных случаев реализована beam-search эвристика, существенно лучше greedy baseline.
 5. Стоимость решения независимо проверяется, а exact proof trace доступен на малых экземплярах.
 6. Эксперименты показывают, что на скошенных распределениях beam почти всегда совпадает с exact optimum, а greedy заметно хуже.
-7. Проект хорошо подходит для РКНП как теоретико-алгоритмическая работа с воспроизводимым результатом.
+7. Anytime solver возвращает проверяемый интервал оптимальности на пространствах, где полный перебор недоступен.
+8. При TV-сдвиге online certificate ограничивает mean-cost regret через `g + 2 delta R`.
+9. Проект хорошо подходит для РКНП как теоретико-алгоритмическая работа с воспроизводимым результатом.
 """
 
 
@@ -169,6 +180,7 @@ CertiGap: робастный префиксный поиск с исполняе
 - exact frontier DP;
 - greedy baseline;
 - beam-search heuristic;
+- anytime TV-DRO Branch-and-Bound;
 - checker + lower bounds.
 
 ## Слайд 5. Результаты
@@ -182,12 +194,14 @@ CertiGap: робастный префиксный поиск с исполняе
 - independently recomputed entropy bound;
 - rational arithmetic для integer counts;
 - exhaustive proof trace на малых случаях.
+- replay-verified anytime frontier и optimality gap.
 
 ## Слайд 7. Вывод
 
 - идея научно сильная;
 - результаты воспроизводимы;
 - проект готов к дальнейшему формальному усилению.
+- nonzero anytime gap честно остаётся незакрытым интервалом.
 """
 
 
@@ -206,9 +220,11 @@ def main() -> None:
             RESULTS_DIR / "temporal_holdout.md",
             RESULTS_DIR / "uncertainty_validation.md",
             RESULTS_DIR / "online_adaptation.md",
+            RESULTS_DIR / "anytime_validation.md",
         )
     )
     autodro_theory_text = read(DOCS_DIR / "AUTODRO.md")
+    anytime_theory_text = read(DOCS_DIR / "ANYTIME_TV.md")
     counterexample_text = read(RESULTS_DIR / "counterexamples.md") if (RESULTS_DIR / "counterexamples.md").exists() else ""
     family_text = read(DOCS_DIR / "GREEDY_COUNTEREXAMPLE_FAMILY.md") if (DOCS_DIR / "GREEDY_COUNTEREXAMPLE_FAMILY.md").exists() else ""
     speed_quality_text = read(RESULTS_DIR / "speed_quality_summary.md") if (RESULTS_DIR / "speed_quality_summary.md").exists() else ""
@@ -226,6 +242,8 @@ def main() -> None:
             + generalized_text
             + "\n\n"
             + autodro_theory_text
+            + "\n\n"
+            + anytime_theory_text
             + "\n\n"
             + autodro_text
             + "\n\n"

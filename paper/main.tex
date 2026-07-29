@@ -2,7 +2,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb,booktabs,hyperref}
 
-\title{CertiGap-AutoDRO: Automatic Portfolio Selection for\\Budgeted Robust Prefix Search}
+\title{CertiGap-AutoDRO: Certified Anytime Optimization for\\Budgeted Robust Prefix Search}
 \author{Dulat Nurlanuly}
 \date{}
 
@@ -29,7 +29,9 @@ finite-sample total-variation radius from integer query counts, evaluates the
 worst-case expectation of every generated candidate exactly, and automatically
 selects budget, solver, and executable fallback under a memory constraint. On
 proof-sized instances, a direct solver exhaustively enumerates the partial-tree
-space and is globally optimal for the TV objective.
+space and is globally optimal for the TV objective. For larger spaces, a
+best-first anytime solver returns a feasible upper bound and independently
+replayable lower bound after any declared expansion limit.
 \end{abstract}
 
 \section{Problem}
@@ -97,6 +99,39 @@ minimum score is globally optimal over the declared split and memory
 constraints and configured fallback set. The implementation records counts by
 split total and a SHA-256 digest of the enumerated tree space.
 
+\section{Scalable Anytime TV-DRO}
+A search state contains a partial tree and a canonical set of unresolved
+leaves. Expanding the first unresolved leaf either closes it with the fallback
+or enumerates every legal threshold split. These alternatives partition all
+completions. For unresolved keys we assign only routing cost already incurred
+and zero future fallback cost. This vector is componentwise no larger than
+every completion, hence its worst-case TV expectation is a lower bound.
+
+We strengthen it with two coding bounds. Every binary search code has nominal
+mean depth at least $H(\hat p)$ and maximum depth at least
+$\lceil\log_2 n\rceil$. For a partial state, each open interval contributes
+its current routing depth plus the entropy of its conditional distribution,
+while closed intervals contribute exact fallback cost. Taking the maximum of
+these admissible bounds gives $L_s$ for state $s$. If $U$ is a feasible
+incumbent, then
+\[
+\min\{U,\min_{s\in\mathcal F}L_s\}\leq OPT\leq U.
+\]
+A standalone verifier replays every best-first transition, recomputes bounds
+and incumbents, reconstructs the remaining frontier, and validates the stop
+condition and structural digest.
+
+\section{Online Drift Certificate}
+For $\delta=\operatorname{TV}(p,q)$ and a cost vector of range at most $R$,
+$|\mathbb E_p c-\mathbb E_q c|\leq\delta R$. If a reference policy has
+optimization gap $g$, applying this inequality to it and to the new optimum
+gives current-distribution mean-cost regret at most
+\[
+g+2\delta R.
+\]
+This result supports a conservative horizon-aware rebuild trigger; it is not a
+claim about unmeasured mutation or storage-engine latency.
+
 \section{Relation To Prior Work}
 Classical alphabetic and height-limited trees optimize a full tree
 \cite{hutucker1971,larmore1994}. CertiGap instead limits the freely
@@ -119,6 +154,13 @@ optimization beats the Huber-generated portfolio. Across 3,000 deterministic
 i.i.d. multinomial trials, empirical coverage of the inferred TV ball is at
 least 0.996, while a separate sliding-window simulation reports the explicit
 tradeoff between rebuild count and regret.
+The anytime matrix matches complete tree-space optimization in 12 of 12 small
+cases and contains 36 replay-verified trajectories for $n=16,32,64$.
+Certified intervals are monotone with additional expansions; uniform
+power-of-two cases close immediately through the entropy bound, while skewed
+cases retain explicitly reported nonzero gaps. The C++ lookup benchmark also
+includes read-only 80/20-hotspot and latest-biased YCSB-inspired
+distributions, but is not presented as an official YCSB or RocksDB result.
 External implementations, independent hardware reproduction, and a
 domain-owner pilot remain external validation requirements.
 

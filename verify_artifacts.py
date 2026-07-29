@@ -7,7 +7,7 @@ import math
 import re
 from pathlib import Path
 
-from certigap import verify_autodro_selection_artifact
+from certigap import verify_anytime_tv_certificate, verify_autodro_selection_artifact
 
 
 ROOT = Path(__file__).resolve().parent
@@ -38,11 +38,12 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "scaling_benchmark.csv": 450 if require_max_scaling else 1,
         "speed_quality.csv": 1_152,
         "temporal_holdout.csv": 9,
-        "cpp_lookup_latency.csv": 24,
+        "cpp_lookup_latency.csv": 40,
         "autodro_shift.csv": 24,
         "direct_tv_validation.csv": 100,
         "uncertainty_validation.csv": 12,
         "online_adaptation.csv": 4,
+        "anytime_validation.csv": 48,
     }
     observed: dict[str, int] = {}
     for name, minimum in minimum_rows.items():
@@ -67,6 +68,17 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
     }
     if not required_lookup_fields.issubset(lookup_fields):
         raise ValueError("lookup CSV uses an obsolete or incomplete schema")
+    lookup_workloads = {
+        row["workload"] for row in csv_records("cpp_lookup_latency.csv")
+    }
+    if not {
+        "uniform",
+        "zipf",
+        "hot_tail",
+        "ycsb_hotspot_80_20",
+        "ycsb_latest_biased",
+    }.issubset(lookup_workloads):
+        raise ValueError("lookup benchmark lacks required workload families")
 
     provenance = json.loads((RESULTS / "benchmark_provenance.json").read_text(encoding="utf-8"))
     loaded_sources = [
@@ -158,6 +170,40 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         raise ValueError("higher drift threshold unexpectedly increased rebuild count")
     if abs(float(adaptation_rows[0]["mean_regret"])) > 1e-9:
         raise ValueError("always-refit adaptation does not match the oracle")
+
+    anytime_rows = csv_records("anytime_validation.csv")
+    exact_rows = [row for row in anytime_rows if row["phase"] == "exact_oracle"]
+    if len(exact_rows) != 12 or any(
+        abs(float(row["oracle_gap"])) > 1e-9
+        or row["exact"] != "True"
+        or row["verified"] != "True"
+        for row in exact_rows
+    ):
+        raise ValueError("anytime exact-oracle validation failed")
+    trajectories: dict[tuple[str, str], list[dict[str, str]]] = {}
+    for row in anytime_rows:
+        if row["phase"] == "scaling_trajectory":
+            trajectories.setdefault((row["n"], row["distribution"]), []).append(row)
+    if len(trajectories) != 9:
+        raise ValueError("anytime scaling matrix is incomplete")
+    for group in trajectories.values():
+        ordered = sorted(group, key=lambda row: int(row["max_expansions"]))
+        if [int(row["max_expansions"]) for row in ordered] != [0, 25, 100, 400]:
+            raise ValueError("anytime expansion trajectory is incomplete")
+        uppers = [float(row["score"]) for row in ordered]
+        lowers = [float(row["global_lower_bound"]) for row in ordered]
+        gaps = [float(row["relative_gap"]) for row in ordered]
+        if (
+            any(left < right - 1e-9 for left, right in zip(uppers, uppers[1:]))
+            or any(left > right + 1e-9 for left, right in zip(lowers, lowers[1:]))
+            or any(left < right - 1e-9 for left, right in zip(gaps, gaps[1:]))
+        ):
+            raise ValueError("anytime certified intervals are not monotone")
+    anytime_artifact = json.loads(
+        (RESULTS / "anytime_certificate_example.json").read_text(encoding="utf-8")
+    )
+    if not verify_anytime_tv_certificate(anytime_artifact)["verified"]:
+        raise ValueError("anytime example certificate did not replay")
     return observed
 
 

@@ -31,6 +31,8 @@ class RknpPackageTests(unittest.TestCase):
         abstract = build_rknp_package.build_abstract_ru(summary)
         self.assertIn("Аннотация", abstract)
         self.assertIn("Rows analyzed", abstract)
+        self.assertIn("anytime TV-DRO", abstract)
+        self.assertIn("g + 2 delta R", abstract)
 
 
 if __name__ == "__main__":

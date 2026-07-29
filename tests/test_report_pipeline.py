@@ -20,6 +20,7 @@ class ReportPipelineTests(unittest.TestCase):
         abstract = build_report.build_abstract(summary)
         self.assertIn("Mean beam absolute objective gap vs exact", abstract)
         self.assertIn("CertiGap studies", abstract)
+        self.assertIn("scalable anytime TV-DRO", abstract)
 
     def test_build_report_includes_current_results(self) -> None:
         report = build_report.build_report(

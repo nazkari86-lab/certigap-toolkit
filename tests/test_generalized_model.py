@@ -115,7 +115,17 @@ class GeneralizedModelTests(unittest.TestCase):
         )
         output = subprocess.check_output([str(binary), "64", "1000", "3"], cwd=ROOT, text=True)
         rows = list(csv.DictReader(output.splitlines()))
-        self.assertEqual(len(rows), 15)
+        self.assertEqual(len(rows), 25)
+        self.assertEqual(
+            {row["workload"] for row in rows},
+            {
+                "uniform",
+                "zipf",
+                "hot_tail",
+                "ycsb_hotspot_80_20",
+                "ycsb_latest_biased",
+            },
+        )
         for row in rows:
             self.assertIn("total_index_bytes", row)
             if row["solver"] in {"certigap_pruned", "balanced_budgeted", "weighted_budgeted"}:

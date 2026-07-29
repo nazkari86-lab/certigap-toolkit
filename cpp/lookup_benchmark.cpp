@@ -107,12 +107,24 @@ int main(int argc, char** argv) {
         }
     }
     std::cout << "workload,solver,n,budget,queries,repeats,fallback,median_batch_ns_per_query,p95_batch_ns_per_query,routing_nodes,auxiliary_bytes,total_index_bytes\n";
-    for (const std::string workload : {"uniform", "zipf", "hot_tail"}) {
+    for (const std::string workload : {
+        "uniform",
+        "zipf",
+        "hot_tail",
+        "ycsb_hotspot_80_20",
+        "ycsb_latest_biased",
+    }) {
         std::vector<double> p(n + 1, 0.0);
         for (int i = 1; i <= n; ++i) {
             if (workload == "uniform") p[i] = 1.0;
             else if (workload == "zipf") p[i] = 1.0 / std::pow(i, 1.15);
-            else p[i] = i > n * 9 / 10 ? 30.0 : 1.0;
+            else if (workload == "hot_tail") p[i] = i > n * 9 / 10 ? 30.0 : 1.0;
+            else if (workload == "ycsb_hotspot_80_20") {
+                int hot_keys = std::max(1, n / 5);
+                p[i] = i <= hot_keys ? 0.8 / hot_keys : 0.2 / std::max(1, n - hot_keys);
+            } else {
+                p[i] = std::exp(6.0 * (static_cast<double>(i) / n - 1.0));
+            }
         }
         double sum = std::accumulate(p.begin() + 1, p.end(), 0.0);
         for (int i = 1; i <= n; ++i) p[i] /= sum;

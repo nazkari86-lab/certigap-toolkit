@@ -9,7 +9,8 @@ The project contributes:
 2. a scalable candidate-pruned C++ heuristic and an unbounded-gap result for one-step greedy;
 3. structural, entropy-bound, proof-trace, and rational-arithmetic verification layers;
 4. direct finite-support TV-DRO optimization with a complete small-instance search-space proof;
-5. omission-resistant portfolio manifests and reproducible synthetic, public-workload, temporal, shift, and C++ benchmarks.
+5. scalable anytime TV-DRO search with replay-verified optimality intervals;
+6. omission-resistant manifests, online drift certificates, and reproducible synthetic, public-workload, temporal, shift, and C++ benchmarks.
 
 Current prototype evidence:
 

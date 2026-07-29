@@ -5,6 +5,9 @@
 - [core.py](certigap/core.py)
 - [AutoDRO core](certigap/autodro.py)
 - [Direct TV tree-space enumerator](certigap/direct_tv.py)
+- [Anytime TV-DRO solver](certigap/anytime_tv.py)
+- [Independent anytime replay verifier](certigap/anytime_verifier.py)
+- [Online drift certificates](certigap/online.py)
 - [__init__.py](certigap/__init__.py)
 
 ## Generators
@@ -23,6 +26,7 @@
 - [generate_direct_tv_validation.py](generate_direct_tv_validation.py)
 - [generate_uncertainty_validation.py](generate_uncertainty_validation.py)
 - [generate_online_adaptation.py](generate_online_adaptation.py)
+- [generate_anytime_validation.py](generate_anytime_validation.py)
 - [verify_artifacts.py](verify_artifacts.py)
 - [generate_pruning_validation.py](generate_pruning_validation.py)
 - [generate_temporal_holdout.py](generate_temporal_holdout.py)
@@ -49,7 +53,10 @@
 - [Direct TV exact-space validation](results/direct_tv_validation.md)
 - [Finite-sample uncertainty validation](results/uncertainty_validation.md)
 - [Online adaptation simulation](results/online_adaptation.md)
+- [Anytime TV-DRO validation](results/anytime_validation.md)
+- [Anytime replay certificate](results/anytime_certificate_example.json)
 - [AutoDRO theorem and API](docs/AUTODRO.md)
+- [Anytime theorem and certificate contract](docs/ANYTIME_TV.md)
 - [Generalized executable fallback theorem](docs/GENERALIZED_FALLBACK.md)
 - [LaTeX paper](paper/main.tex)
 - [pruning_validation.md](results/pruning_validation.md)
@@ -90,6 +97,7 @@ The package is a reproducible research prototype. Its claims are limited to the 
 
 Open research work:
 
-- a scalable direct-TV approximation or certified-gap theorem;
+- tighter scalable TV-DRO bounds and approximation ratios;
+- an official YCSB integration with RocksDB or SQLite;
 - external robust-BST and learned-index implementations under matched resources;
 - independent replication of the runtime and memory benchmark on other machines.

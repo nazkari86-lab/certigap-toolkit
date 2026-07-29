@@ -37,10 +37,20 @@
 - fair tuned TV-versus-nominal benchmark
 - temporal, finite-sample coverage, and online rebuild-threshold validation
 
+## Phase 6: Scalable Certified Robust Search
+
+- best-first anytime TV-DRO Branch-and-Bound
+- componentwise, entropy, and conditional-entropy lower bounds
+- independently replayed frontier and optimality-gap certificate
+- exact-oracle agreement and monotone scaling trajectories
+- formal online TV-drift regret bound
+- YCSB-inspired post-build C++ lookup workloads
+
 ## External Closure
 
 - independent proof review or machine-assisted formalization
 - matched external robust-BST and learned-index implementations
 - independent hardware reproduction
 - prospective domain-owner trace and production pilot
-- scalable direct-TV approximation or certified optimality-gap theorem
+- tighter large-instance bounds and approximation ratios
+- official YCSB integration with RocksDB or SQLite

@@ -38,7 +38,8 @@ def build_abstract(summary_text: str) -> str:
             "2. a scalable candidate-pruned C++ heuristic and an unbounded-gap result for one-step greedy;",
             "3. structural, entropy-bound, proof-trace, and rational-arithmetic verification layers;",
             "4. direct finite-support TV-DRO optimization with a complete small-instance search-space proof;",
-            "5. omission-resistant portfolio manifests and reproducible synthetic, public-workload, temporal, shift, and C++ benchmarks.",
+            "5. scalable anytime TV-DRO search with replay-verified optimality intervals;",
+            "6. omission-resistant manifests, online drift certificates, and reproducible synthetic, public-workload, temporal, shift, and C++ benchmarks.",
             "",
             "Current prototype evidence:",
             "",
@@ -184,6 +185,7 @@ def main() -> None:
             RESULTS_DIR / "temporal_holdout.md",
             RESULTS_DIR / "uncertainty_validation.md",
             RESULTS_DIR / "online_adaptation.md",
+            RESULTS_DIR / "anytime_validation.md",
         )
     )
 
@@ -203,12 +205,15 @@ def main() -> None:
         ),
         encoding="utf-8",
     )
+    anytime_theory_text = read_text(DOCS_DIR / "ANYTIME_TV.md")
     (REPORT_DIR / "APPENDIX.md").write_text(
         build_appendix(
             certificate_text
             + ("\n\n" + speed_quality_text if speed_quality_text else "")
             + ("\n\n" + counterexample_text if counterexample_text else "")
-            + ("\n\n" + technical_note_text if technical_note_text else ""),
+            + ("\n\n" + technical_note_text if technical_note_text else "")
+            + "\n\n"
+            + anytime_theory_text,
             roadmap_text,
         ),
         encoding="utf-8",

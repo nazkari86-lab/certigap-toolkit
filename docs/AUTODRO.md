@@ -91,6 +91,18 @@ refits only after a declared threshold. `update_counts(..., decay=...)`
 supports forgetting when an explicit TV radius is supplied. These are rebuild
 policies, not low-latency in-place mutation.
 
+For a reference solution with certified optimization gap `g`,
+`online_regret_certificate` additionally bounds mean-cost regret after TV drift
+`delta` by `g + 2 delta R`. This can drive a conservative rebuild decision over
+a declared query horizon and rebuild cost.
+
+## Scalable Certified Search
+
+`anytime_tv_branch_and_bound` searches the direct TV objective beyond the
+exhaustive `direct_tv_limit`. It returns a feasible upper bound, admissible
+lower bound, and replay-verified gap after any configured expansion limit.
+The complete proof and certificate contract are in `ANYTIME_TV.md`.
+
 ## Verifiable Portfolio Manifest
 
 Version 2 artifacts bind the deterministic generator configuration, candidate
@@ -111,3 +123,5 @@ are bounded before expensive verification.
 - Nanosecond claims require calibration samples from the deployment target.
 - Cumulative, decayed, and sliding-window rebuild policies are supported;
   low-latency in-place tree mutation is not yet implemented.
+- Anytime search certifies a numerical interval; it claims global optimality
+  only when the interval gap is zero.

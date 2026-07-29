@@ -23,6 +23,7 @@ def main() -> None:
     run([python, "generate_lookup_benchmark.py"])
     run([python, "generate_autodro_benchmark.py"])
     run([python, "generate_direct_tv_validation.py"])
+    run([python, "generate_anytime_validation.py"])
     run([python, "generate_uncertainty_validation.py"])
     run([python, "generate_online_adaptation.py"])
     run([python, "generate_pruning_validation.py"])

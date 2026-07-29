@@ -2,30 +2,30 @@
 <style>text{font-family:Menlo,monospace;font-size:14px;} .title{font-size:20px;font-weight:bold;} .bar{fill:#1f77b4;} .label{fill:#111;} .value{fill:#333;}</style>
 <text class="title" x="20" y="30">CertiGap Mean Times (ms)</text>
 <text class="label" x="20" y="68">Exact mean time:</text>
-<rect class="bar" x="330" y="50" width="24.75" height="28" rx="4"/>
-<text class="value" x="362.75" y="68">2.567000</text>
+<rect class="bar" x="330" y="50" width="21.29" height="28" rx="4"/>
+<text class="value" x="359.29" y="68">2.479000</text>
 <text class="label" x="20" y="108">Beam mean time:</text>
-<rect class="bar" x="330" y="90" width="44.09" height="28" rx="4"/>
-<text class="value" x="382.09" y="108">4.573000</text>
+<rect class="bar" x="330" y="90" width="39.90" height="28" rx="4"/>
+<text class="value" x="377.90" y="108">4.646000</text>
 <text class="label" x="20" y="148">Greedy mean time:</text>
-<rect class="bar" x="330" y="130" width="2.04" height="28" rx="4"/>
-<text class="value" x="340.04" y="148">0.212000</text>
+<rect class="bar" x="330" y="130" width="1.91" height="28" rx="4"/>
+<text class="value" x="339.91" y="148">0.222000</text>
 <text class="label" x="20" y="188">Balanced mean time:</text>
-<rect class="bar" x="330" y="170" width="0.12" height="28" rx="4"/>
-<text class="value" x="338.12" y="188">0.012000</text>
+<rect class="bar" x="330" y="170" width="0.11" height="28" rx="4"/>
+<text class="value" x="338.11" y="188">0.013000</text>
 <text class="label" x="20" y="228">Weighted mean time:</text>
-<rect class="bar" x="330" y="210" width="0.16" height="28" rx="4"/>
-<text class="value" x="338.16" y="228">0.017000</text>
+<rect class="bar" x="330" y="210" width="0.15" height="28" rx="4"/>
+<text class="value" x="338.15" y="228">0.017000</text>
 <text class="label" x="20" y="268">Beam mean time:</text>
 <rect class="bar" x="330" y="250" width="490.00" height="28" rx="4"/>
-<text class="value" x="828.00" y="268">50.828000</text>
+<text class="value" x="828.00" y="268">57.052000</text>
 <text class="label" x="20" y="308">Greedy mean time:</text>
-<rect class="bar" x="330" y="290" width="12.93" height="28" rx="4"/>
-<text class="value" x="350.93" y="308">1.341000</text>
+<rect class="bar" x="330" y="290" width="14.21" height="28" rx="4"/>
+<text class="value" x="352.21" y="308">1.654000</text>
 <text class="label" x="20" y="348">Balanced mean time:</text>
-<rect class="bar" x="330" y="330" width="0.21" height="28" rx="4"/>
-<text class="value" x="338.21" y="348">0.022000</text>
+<rect class="bar" x="330" y="330" width="0.23" height="28" rx="4"/>
+<text class="value" x="338.23" y="348">0.027000</text>
 <text class="label" x="20" y="388">Weighted mean time:</text>
-<rect class="bar" x="330" y="370" width="0.36" height="28" rx="4"/>
-<text class="value" x="338.36" y="388">0.037000</text>
+<rect class="bar" x="330" y="370" width="0.37" height="28" rx="4"/>
+<text class="value" x="338.37" y="388">0.043000</text>
 </svg>

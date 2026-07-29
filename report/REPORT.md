@@ -296,9 +296,9 @@ See `counterexamples.md` for automatically discovered hot-block families where o
 
 ## Small Cases With Exact Reference
 
-- Exact mean time: `2.537 ms`
-- Beam mean time: `4.670 ms`
-- Greedy mean time: `0.224 ms`
+- Exact mean time: `2.479 ms`
+- Beam mean time: `4.646 ms`
+- Greedy mean time: `0.222 ms`
 - Balanced mean time: `0.013 ms`
 - Weighted mean time: `0.017 ms`
 - Beam mean absolute objective gap vs exact: `0.000979`
@@ -310,10 +310,10 @@ See `counterexamples.md` for automatically discovered hot-block families where o
 
 ## Large Cases Without Exact Reference
 
-- Beam mean time: `53.103 ms`
-- Greedy mean time: `1.448 ms`
-- Balanced mean time: `0.024 ms`
-- Weighted mean time: `0.039 ms`
+- Beam mean time: `57.052 ms`
+- Greedy mean time: `1.654 ms`
+- Balanced mean time: `0.027 ms`
+- Weighted mean time: `0.043 ms`
 
 ## Solver Tradeoff
 
@@ -370,6 +370,7 @@ Top automatically discovered hot-block instances where one-step greedy is much w
 This measures only rank lookup after each structure is built. Times are local-machine measurements, not cross-machine or production claims.
 
 - Queries are sampled from each workload distribution with a deterministic PRNG.
+- `ycsb_hotspot_80_20` and `ycsb_latest_biased` are YCSB-inspired read-only distributions, not runs of the official YCSB harness.
 - CertiGap uses the candidate-pruned C++ beam (`B=min(6,n-1)`, `eta=0.15`, width 32, candidate limit 16).
 - CertiGap and budgeted trees use at most `B=min(6,n-1)` materialized splits and fixed-round interval fallback.
 - `balanced_full_reference` and `std_lower_bound` are explicitly unconstrained references, not equal-budget competitors.
@@ -378,45 +379,65 @@ This measures only rank lookup after each structure is built. Times are local-ma
 
 | Workload | Solver | n | B | Median batch ns/query | p95 batch ns/query | Nodes | Auxiliary bytes | Total bytes |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| uniform | certigap_pruned | 1000 | 6 | 16.574 | 16.909 | 1 | 48 | 4048 |
-| uniform | balanced_budgeted | 1000 | 6 | 18.637 | 19.711 | 13 | 624 | 4624 |
-| uniform | weighted_budgeted | 1000 | 6 | 18.592 | 19.480 | 13 | 624 | 4624 |
-| uniform | balanced_full_reference | 1000 | 999 | 16.546 | 18.773 | 1999 | 95952 | 99952 |
-| uniform | std_lower_bound | 1000 | 0 | 15.670 | 15.947 | 0 | 0 | 4000 |
-| zipf | certigap_pruned | 1000 | 6 | 26.138 | 27.782 | 11 | 528 | 4528 |
-| zipf | balanced_budgeted | 1000 | 6 | 15.908 | 16.136 | 13 | 624 | 4624 |
-| zipf | weighted_budgeted | 1000 | 6 | 25.656 | 27.144 | 13 | 624 | 4624 |
-| zipf | balanced_full_reference | 1000 | 999 | 15.514 | 15.666 | 1999 | 95952 | 99952 |
-| zipf | std_lower_bound | 1000 | 0 | 15.312 | 17.053 | 0 | 0 | 4000 |
-| hot_tail | certigap_pruned | 1000 | 6 | 22.645 | 31.178 | 13 | 624 | 4624 |
-| hot_tail | balanced_budgeted | 1000 | 6 | 15.471 | 15.593 | 13 | 624 | 4624 |
-| hot_tail | weighted_budgeted | 1000 | 6 | 24.494 | 24.996 | 13 | 624 | 4624 |
-| hot_tail | balanced_full_reference | 1000 | 999 | 16.198 | 16.809 | 1999 | 95952 | 99952 |
-| hot_tail | std_lower_bound | 1000 | 0 | 15.600 | 16.460 | 0 | 0 | 4000 |
-| uniform | certigap_pruned | 10000 | 6 | 28.711 | 41.829 | 5 | 240 | 40240 |
-| uniform | balanced_budgeted | 10000 | 6 | 27.275 | 29.340 | 13 | 624 | 40624 |
-| uniform | weighted_budgeted | 10000 | 6 | 27.286 | 31.902 | 13 | 624 | 40624 |
-| uniform | balanced_full_reference | 10000 | 9999 | 55.459 | 58.687 | 19999 | 959952 | 999952 |
-| uniform | std_lower_bound | 10000 | 0 | 38.827 | 40.326 | 0 | 0 | 40000 |
-| zipf | certigap_pruned | 10000 | 6 | 27.978 | 28.682 | 13 | 624 | 40624 |
-| zipf | balanced_budgeted | 10000 | 6 | 23.843 | 24.185 | 13 | 624 | 40624 |
-| zipf | weighted_budgeted | 10000 | 6 | 28.185 | 29.325 | 13 | 624 | 40624 |
-| zipf | balanced_full_reference | 10000 | 9999 | 51.785 | 52.753 | 19999 | 959952 | 999952 |
-| zipf | std_lower_bound | 10000 | 0 | 44.082 | 46.504 | 0 | 0 | 40000 |
-| hot_tail | certigap_pruned | 10000 | 6 | 23.108 | 24.370 | 13 | 624 | 40624 |
-| hot_tail | balanced_budgeted | 10000 | 6 | 25.067 | 27.748 | 13 | 624 | 40624 |
-| hot_tail | weighted_budgeted | 10000 | 6 | 26.932 | 27.520 | 13 | 624 | 40624 |
-| hot_tail | balanced_full_reference | 10000 | 9999 | 49.320 | 51.558 | 19999 | 959952 | 999952 |
-| hot_tail | std_lower_bound | 10000 | 0 | 38.837 | 47.130 | 0 | 0 | 40000 |
+| uniform | certigap_pruned | 1000 | 6 | 16.436 | 16.866 | 1 | 48 | 4048 |
+| uniform | balanced_budgeted | 1000 | 6 | 18.527 | 18.749 | 13 | 624 | 4624 |
+| uniform | weighted_budgeted | 1000 | 6 | 18.456 | 18.836 | 13 | 624 | 4624 |
+| uniform | balanced_full_reference | 1000 | 999 | 16.151 | 16.679 | 1999 | 95952 | 99952 |
+| uniform | std_lower_bound | 1000 | 0 | 15.552 | 15.944 | 0 | 0 | 4000 |
+| zipf | certigap_pruned | 1000 | 6 | 25.614 | 26.704 | 11 | 528 | 4528 |
+| zipf | balanced_budgeted | 1000 | 6 | 15.678 | 16.225 | 13 | 624 | 4624 |
+| zipf | weighted_budgeted | 1000 | 6 | 25.186 | 25.917 | 13 | 624 | 4624 |
+| zipf | balanced_full_reference | 1000 | 999 | 15.374 | 16.073 | 1999 | 95952 | 99952 |
+| zipf | std_lower_bound | 1000 | 0 | 15.088 | 15.755 | 0 | 0 | 4000 |
+| hot_tail | certigap_pruned | 1000 | 6 | 21.831 | 22.519 | 13 | 624 | 4624 |
+| hot_tail | balanced_budgeted | 1000 | 6 | 15.522 | 15.876 | 13 | 624 | 4624 |
+| hot_tail | weighted_budgeted | 1000 | 6 | 24.192 | 25.346 | 13 | 624 | 4624 |
+| hot_tail | balanced_full_reference | 1000 | 999 | 16.106 | 16.577 | 1999 | 95952 | 99952 |
+| hot_tail | std_lower_bound | 1000 | 0 | 15.501 | 16.123 | 0 | 0 | 4000 |
+| ycsb_hotspot_80_20 | certigap_pruned | 1000 | 6 | 24.692 | 25.643 | 13 | 624 | 4624 |
+| ycsb_hotspot_80_20 | balanced_budgeted | 1000 | 6 | 16.831 | 17.224 | 13 | 624 | 4624 |
+| ycsb_hotspot_80_20 | weighted_budgeted | 1000 | 6 | 16.219 | 16.466 | 13 | 624 | 4624 |
+| ycsb_hotspot_80_20 | balanced_full_reference | 1000 | 999 | 15.893 | 16.260 | 1999 | 95952 | 99952 |
+| ycsb_hotspot_80_20 | std_lower_bound | 1000 | 0 | 15.374 | 15.742 | 0 | 0 | 4000 |
+| ycsb_latest_biased | certigap_pruned | 1000 | 6 | 28.326 | 29.018 | 13 | 624 | 4624 |
+| ycsb_latest_biased | balanced_budgeted | 1000 | 6 | 14.703 | 15.817 | 13 | 624 | 4624 |
+| ycsb_latest_biased | weighted_budgeted | 1000 | 6 | 26.401 | 26.918 | 13 | 624 | 4624 |
+| ycsb_latest_biased | balanced_full_reference | 1000 | 999 | 18.673 | 26.755 | 1999 | 95952 | 99952 |
+| ycsb_latest_biased | std_lower_bound | 1000 | 0 | 19.996 | 29.051 | 0 | 0 | 4000 |
+| uniform | certigap_pruned | 10000 | 6 | 29.483 | 42.514 | 5 | 240 | 40240 |
+| uniform | balanced_budgeted | 10000 | 6 | 40.318 | 43.050 | 13 | 624 | 40624 |
+| uniform | weighted_budgeted | 10000 | 6 | 27.806 | 29.757 | 13 | 624 | 40624 |
+| uniform | balanced_full_reference | 10000 | 9999 | 56.518 | 64.310 | 19999 | 959952 | 999952 |
+| uniform | std_lower_bound | 10000 | 0 | 40.845 | 46.249 | 0 | 0 | 40000 |
+| zipf | certigap_pruned | 10000 | 6 | 29.593 | 34.589 | 13 | 624 | 40624 |
+| zipf | balanced_budgeted | 10000 | 6 | 24.563 | 28.187 | 13 | 624 | 40624 |
+| zipf | weighted_budgeted | 10000 | 6 | 29.327 | 34.547 | 13 | 624 | 40624 |
+| zipf | balanced_full_reference | 10000 | 9999 | 56.032 | 64.146 | 19999 | 959952 | 999952 |
+| zipf | std_lower_bound | 10000 | 0 | 44.236 | 46.169 | 0 | 0 | 40000 |
+| hot_tail | certigap_pruned | 10000 | 6 | 22.789 | 23.756 | 13 | 624 | 40624 |
+| hot_tail | balanced_budgeted | 10000 | 6 | 24.669 | 25.330 | 13 | 624 | 40624 |
+| hot_tail | weighted_budgeted | 10000 | 6 | 27.071 | 27.659 | 13 | 624 | 40624 |
+| hot_tail | balanced_full_reference | 10000 | 9999 | 48.577 | 50.151 | 19999 | 959952 | 999952 |
+| hot_tail | std_lower_bound | 10000 | 0 | 38.813 | 39.600 | 0 | 0 | 40000 |
+| ycsb_hotspot_80_20 | certigap_pruned | 10000 | 6 | 21.882 | 22.715 | 3 | 144 | 40144 |
+| ycsb_hotspot_80_20 | balanced_budgeted | 10000 | 6 | 25.125 | 25.843 | 13 | 624 | 40624 |
+| ycsb_hotspot_80_20 | weighted_budgeted | 10000 | 6 | 23.972 | 24.977 | 13 | 624 | 40624 |
+| ycsb_hotspot_80_20 | balanced_full_reference | 10000 | 9999 | 50.989 | 52.120 | 19999 | 959952 | 999952 |
+| ycsb_hotspot_80_20 | std_lower_bound | 10000 | 0 | 39.153 | 40.139 | 0 | 0 | 40000 |
+| ycsb_latest_biased | certigap_pruned | 10000 | 6 | 30.556 | 31.370 | 7 | 336 | 40336 |
+| ycsb_latest_biased | balanced_budgeted | 10000 | 6 | 23.978 | 24.734 | 13 | 624 | 40624 |
+| ycsb_latest_biased | weighted_budgeted | 10000 | 6 | 32.435 | 33.242 | 13 | 624 | 40624 |
+| ycsb_latest_biased | balanced_full_reference | 10000 | 9999 | 51.153 | 52.214 | 19999 | 959952 | 999952 |
+| ycsb_latest_biased | std_lower_bound | 10000 | 0 | 38.882 | 39.963 | 0 | 0 | 40000 |
 
 ## Matched-Budget Interpretation
 
-- CertiGap has lower median batch lookup time than `balanced_budgeted` in `2/6` measured workload-size cases.
-- CertiGap has lower median batch lookup time than `weighted_budgeted` in `4/6` measured workload-size cases.
+- CertiGap has lower median batch lookup time than `balanced_budgeted` in `4/10` measured workload-size cases.
+- CertiGap has lower median batch lookup time than `weighted_budgeted` in `5/10` measured workload-size cases.
 
 ## Limits
 
-This is not a hardware-routing, cache-miss, or external-library benchmark. It is reproducible CPU-level evidence that the exported CertiGap decision tree executes real lookups with an explicit storage footprint. Production claims require a target key encoding, allocator, CPU, and independent external baselines.
+This is not an official YCSB, RocksDB, hardware-routing, cache-miss, or external-library benchmark. It is reproducible CPU-level evidence that the exported CertiGap decision tree executes real lookups with an explicit storage footprint. Production claims require a target storage engine, key encoding, allocator, CPU, and independent external baselines.
 
 ## AutoDRO Under Distribution Shift
 
@@ -426,123 +447,123 @@ This is not a hardware-routing, cache-miss, or external-library benchmark. It is
 
 | Scenario | n | Method | Solver | Fallback | Splits | Bytes | Candidates | Select s | Test mean | Test max |
 |---|---:|---|---|---|---:|---:|---:|---:|---:|---:|
-| hot_reversal | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1680 | 6.63636 | 7.00000 |
-| hot_reversal | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1629 | 6.63636 | 7.00000 |
+| hot_reversal | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1823 | 6.63636 | 7.00000 |
+| hot_reversal | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1681 | 6.63636 | 7.00000 |
 | hot_reversal | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 1 | 0.0000 | 6.82955 | 7.00000 |
 | hot_reversal | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | hot_reversal | 32 | fixed_weighted | weighted | fixed_rounds | 3 | 464 | 1 | 0.0000 | 6.82955 | 7.00000 |
-| hot_reversal | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.4513 | 7.67614 | 8.00000 |
-| hot_reversal | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.4485 | 7.67614 | 8.00000 |
+| hot_reversal | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.4764 | 7.67614 | 8.00000 |
+| hot_reversal | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.4806 | 7.67614 | 8.00000 |
 | hot_reversal | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 1 | 0.0000 | 7.82955 | 8.00000 |
 | hot_reversal | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | hot_reversal | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 7.82955 | 8.00000 |
-| hot_reversal | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.4242 | 8.71591 | 9.00000 |
-| hot_reversal | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.4239 | 8.71591 | 9.00000 |
+| hot_reversal | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 2.0555 | 8.71591 | 9.00000 |
+| hot_reversal | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.6337 | 8.71591 | 9.00000 |
 | hot_reversal | 128 | fixed_beam | beam | fixed_rounds | 2 | 752 | 1 | 0.0000 | 8.82955 | 9.00000 |
 | hot_reversal | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | hot_reversal | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 8.82955 | 9.00000 |
-| partial_hot_drift_15 | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1620 | 3.70974 | 7.00000 |
-| partial_hot_drift_15 | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1676 | 3.70974 | 7.00000 |
+| partial_hot_drift_15 | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1686 | 3.70974 | 7.00000 |
+| partial_hot_drift_15 | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1762 | 3.70974 | 7.00000 |
 | partial_hot_drift_15 | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 1 | 0.0000 | 3.76015 | 7.00000 |
 | partial_hot_drift_15 | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | partial_hot_drift_15 | 32 | fixed_weighted | weighted | fixed_rounds | 3 | 464 | 1 | 0.0000 | 3.76015 | 7.00000 |
-| partial_hot_drift_15 | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.4535 | 4.71571 | 8.00000 |
-| partial_hot_drift_15 | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.4500 | 4.71571 | 8.00000 |
+| partial_hot_drift_15 | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.4863 | 4.71571 | 8.00000 |
+| partial_hot_drift_15 | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.4544 | 4.71571 | 8.00000 |
 | partial_hot_drift_15 | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 1 | 0.0000 | 4.76015 | 8.00000 |
 | partial_hot_drift_15 | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | partial_hot_drift_15 | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 4.76015 | 8.00000 |
-| partial_hot_drift_15 | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.4309 | 5.72167 | 9.00000 |
-| partial_hot_drift_15 | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.4299 | 5.72167 | 9.00000 |
+| partial_hot_drift_15 | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.4143 | 5.72167 | 9.00000 |
+| partial_hot_drift_15 | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.4126 | 5.72167 | 9.00000 |
 | partial_hot_drift_15 | 128 | fixed_beam | beam | fixed_rounds | 2 | 752 | 1 | 0.0000 | 5.76015 | 9.00000 |
 | partial_hot_drift_15 | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | partial_hot_drift_15 | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 5.76015 | 9.00000 |
-| partial_hot_drift_35 | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1623 | 4.39836 | 7.00000 |
-| partial_hot_drift_35 | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1628 | 4.39836 | 7.00000 |
+| partial_hot_drift_35 | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1644 | 4.39836 | 7.00000 |
+| partial_hot_drift_35 | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1660 | 4.39836 | 7.00000 |
 | partial_hot_drift_35 | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 1 | 0.0000 | 4.48236 | 7.00000 |
 | partial_hot_drift_35 | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | partial_hot_drift_35 | 32 | fixed_weighted | weighted | fixed_rounds | 3 | 464 | 1 | 0.0000 | 4.48236 | 7.00000 |
-| partial_hot_drift_35 | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.4534 | 5.41228 | 8.00000 |
-| partial_hot_drift_35 | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.4505 | 5.41228 | 8.00000 |
+| partial_hot_drift_35 | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.4627 | 5.41228 | 8.00000 |
+| partial_hot_drift_35 | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.4549 | 5.41228 | 8.00000 |
 | partial_hot_drift_35 | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 1 | 0.0000 | 5.48236 | 8.00000 |
 | partial_hot_drift_35 | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | partial_hot_drift_35 | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 5.48236 | 8.00000 |
-| partial_hot_drift_35 | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.4258 | 6.42620 | 9.00000 |
-| partial_hot_drift_35 | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.4193 | 6.42620 | 9.00000 |
+| partial_hot_drift_35 | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.4352 | 6.42620 | 9.00000 |
+| partial_hot_drift_35 | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.4112 | 6.42620 | 9.00000 |
 | partial_hot_drift_35 | 128 | fixed_beam | beam | fixed_rounds | 2 | 752 | 1 | 0.0000 | 6.48236 | 9.00000 |
 | partial_hot_drift_35 | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | partial_hot_drift_35 | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 6.48236 | 9.00000 |
-| partial_hot_drift_65 | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1638 | 5.43128 | 7.00000 |
-| partial_hot_drift_65 | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1619 | 5.43128 | 7.00000 |
+| partial_hot_drift_65 | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1674 | 5.43128 | 7.00000 |
+| partial_hot_drift_65 | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1642 | 5.43128 | 7.00000 |
 | partial_hot_drift_65 | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 1 | 0.0000 | 5.56568 | 7.00000 |
 | partial_hot_drift_65 | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | partial_hot_drift_65 | 32 | fixed_weighted | weighted | fixed_rounds | 3 | 464 | 1 | 0.0000 | 5.56568 | 7.00000 |
-| partial_hot_drift_65 | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.4527 | 6.45714 | 8.00000 |
-| partial_hot_drift_65 | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.4548 | 6.45714 | 8.00000 |
+| partial_hot_drift_65 | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.4917 | 6.45714 | 8.00000 |
+| partial_hot_drift_65 | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.5225 | 6.45714 | 8.00000 |
 | partial_hot_drift_65 | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 1 | 0.0000 | 6.56568 | 8.00000 |
 | partial_hot_drift_65 | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | partial_hot_drift_65 | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.56568 | 8.00000 |
-| partial_hot_drift_65 | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.4232 | 7.48299 | 9.00000 |
-| partial_hot_drift_65 | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.4225 | 7.48299 | 9.00000 |
+| partial_hot_drift_65 | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.4535 | 7.48299 | 9.00000 |
+| partial_hot_drift_65 | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.4124 | 7.48299 | 9.00000 |
 | partial_hot_drift_65 | 128 | fixed_beam | beam | fixed_rounds | 2 | 752 | 1 | 0.0000 | 7.56568 | 9.00000 |
 | partial_hot_drift_65 | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | partial_hot_drift_65 | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.56568 | 9.00000 |
-| stationary_hot_head | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1612 | 3.19328 | 7.00000 |
-| stationary_hot_head | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1612 | 3.19328 | 7.00000 |
+| stationary_hot_head | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1645 | 3.19328 | 7.00000 |
+| stationary_hot_head | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1751 | 3.19328 | 7.00000 |
 | stationary_hot_head | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 1 | 0.0000 | 3.21849 | 7.00000 |
 | stationary_hot_head | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | stationary_hot_head | 32 | fixed_weighted | weighted | fixed_rounds | 3 | 464 | 1 | 0.0000 | 3.21849 | 7.00000 |
-| stationary_hot_head | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.4504 | 4.19328 | 8.00000 |
-| stationary_hot_head | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.4502 | 4.19328 | 8.00000 |
+| stationary_hot_head | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.4644 | 4.19328 | 8.00000 |
+| stationary_hot_head | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.4680 | 4.19328 | 8.00000 |
 | stationary_hot_head | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 1 | 0.0000 | 4.21849 | 8.00000 |
 | stationary_hot_head | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | stationary_hot_head | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 4.21849 | 8.00000 |
-| stationary_hot_head | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.4274 | 5.19328 | 9.00000 |
-| stationary_hot_head | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.4237 | 5.19328 | 9.00000 |
+| stationary_hot_head | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.6080 | 5.19328 | 9.00000 |
+| stationary_hot_head | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.7111 | 5.19328 | 9.00000 |
 | stationary_hot_head | 128 | fixed_beam | beam | fixed_rounds | 2 | 752 | 1 | 0.0000 | 5.21849 | 9.00000 |
 | stationary_hot_head | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | stationary_hot_head | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 5.21849 | 9.00000 |
-| stationary_zipf | 32 | tuned_tv_dro | beam | fixed_rounds | 3 | 464 | 34 | 0.1669 | 4.30368 | 6.00000 |
-| stationary_zipf | 32 | tuned_nominal | beam | midpoint_binary | 4 | 560 | 34 | 0.1634 | 4.20624 | 7.00000 |
+| stationary_zipf | 32 | tuned_tv_dro | beam | fixed_rounds | 3 | 464 | 34 | 0.1688 | 4.30368 | 6.00000 |
+| stationary_zipf | 32 | tuned_nominal | beam | midpoint_binary | 4 | 560 | 34 | 0.1663 | 4.20624 | 7.00000 |
 | stationary_zipf | 32 | fixed_beam | beam | fixed_rounds | 4 | 560 | 1 | 0.0000 | 4.24755 | 6.00000 |
 | stationary_zipf | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | stationary_zipf | 32 | fixed_weighted | weighted | fixed_rounds | 4 | 560 | 1 | 0.0000 | 4.34144 | 7.00000 |
-| stationary_zipf | 64 | tuned_tv_dro | beam | midpoint_binary | 4 | 688 | 40 | 0.4574 | 4.99841 | 7.00000 |
-| stationary_zipf | 64 | tuned_nominal | beam | midpoint_binary | 4 | 688 | 40 | 0.4578 | 4.94234 | 8.00000 |
+| stationary_zipf | 64 | tuned_tv_dro | beam | midpoint_binary | 4 | 688 | 40 | 0.4598 | 4.99841 | 7.00000 |
+| stationary_zipf | 64 | tuned_nominal | beam | midpoint_binary | 4 | 688 | 40 | 0.4612 | 4.94234 | 8.00000 |
 | stationary_zipf | 64 | fixed_beam | beam | fixed_rounds | 4 | 688 | 1 | 0.0000 | 5.01343 | 7.00000 |
 | stationary_zipf | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | stationary_zipf | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 5.15870 | 8.00000 |
-| stationary_zipf | 128 | tuned_tv_dro | beam | midpoint_binary | 3 | 848 | 38 | 1.4491 | 5.75959 | 8.00000 |
-| stationary_zipf | 128 | tuned_nominal | beam | midpoint_binary | 4 | 944 | 38 | 1.4503 | 5.65590 | 9.00000 |
+| stationary_zipf | 128 | tuned_tv_dro | beam | midpoint_binary | 3 | 848 | 38 | 1.5862 | 5.75959 | 8.00000 |
+| stationary_zipf | 128 | tuned_nominal | beam | midpoint_binary | 4 | 944 | 38 | 1.9753 | 5.65590 | 9.00000 |
 | stationary_zipf | 128 | fixed_beam | beam | fixed_rounds | 3 | 848 | 1 | 0.0000 | 5.79996 | 8.00000 |
 | stationary_zipf | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | stationary_zipf | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 5.94223 | 9.00000 |
-| uniform_to_zipf | 32 | tuned_tv_dro | beam | fixed_rounds | 0 | 176 | 16 | 0.1573 | 5.00000 | 5.00000 |
-| uniform_to_zipf | 32 | tuned_nominal | beam | fixed_rounds | 0 | 176 | 16 | 0.1575 | 5.00000 | 5.00000 |
+| uniform_to_zipf | 32 | tuned_tv_dro | beam | fixed_rounds | 0 | 176 | 16 | 0.1613 | 5.00000 | 5.00000 |
+| uniform_to_zipf | 32 | tuned_nominal | beam | fixed_rounds | 0 | 176 | 16 | 0.1612 | 5.00000 | 5.00000 |
 | uniform_to_zipf | 32 | fixed_beam | beam | fixed_rounds | 0 | 176 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | uniform_to_zipf | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | uniform_to_zipf | 32 | fixed_weighted | weighted | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
-| uniform_to_zipf | 64 | tuned_tv_dro | beam | fixed_rounds | 0 | 304 | 18 | 0.4407 | 6.00000 | 6.00000 |
-| uniform_to_zipf | 64 | tuned_nominal | beam | fixed_rounds | 0 | 304 | 18 | 0.4446 | 6.00000 | 6.00000 |
+| uniform_to_zipf | 64 | tuned_tv_dro | beam | fixed_rounds | 0 | 304 | 18 | 0.4539 | 6.00000 | 6.00000 |
+| uniform_to_zipf | 64 | tuned_nominal | beam | fixed_rounds | 0 | 304 | 18 | 0.5167 | 6.00000 | 6.00000 |
 | uniform_to_zipf | 64 | fixed_beam | beam | fixed_rounds | 0 | 304 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | uniform_to_zipf | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | uniform_to_zipf | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
-| uniform_to_zipf | 128 | tuned_tv_dro | beam | fixed_rounds | 0 | 560 | 18 | 1.3832 | 7.00000 | 7.00000 |
-| uniform_to_zipf | 128 | tuned_nominal | beam | fixed_rounds | 0 | 560 | 18 | 1.3854 | 7.00000 | 7.00000 |
+| uniform_to_zipf | 128 | tuned_tv_dro | beam | fixed_rounds | 0 | 560 | 18 | 1.3985 | 7.00000 | 7.00000 |
+| uniform_to_zipf | 128 | tuned_nominal | beam | fixed_rounds | 0 | 560 | 18 | 1.3781 | 7.00000 | 7.00000 |
 | uniform_to_zipf | 128 | fixed_beam | beam | fixed_rounds | 0 | 560 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | uniform_to_zipf | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | uniform_to_zipf | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
-| zipf_to_uniform | 32 | tuned_tv_dro | beam | fixed_rounds | 3 | 464 | 34 | 0.1657 | 5.50000 | 6.00000 |
-| zipf_to_uniform | 32 | tuned_nominal | beam | midpoint_binary | 4 | 560 | 34 | 0.1667 | 5.75000 | 7.00000 |
+| zipf_to_uniform | 32 | tuned_tv_dro | beam | fixed_rounds | 3 | 464 | 34 | 0.1674 | 5.50000 | 6.00000 |
+| zipf_to_uniform | 32 | tuned_nominal | beam | midpoint_binary | 4 | 560 | 34 | 0.1672 | 5.75000 | 7.00000 |
 | zipf_to_uniform | 32 | fixed_beam | beam | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.50000 | 6.00000 |
 | zipf_to_uniform | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | zipf_to_uniform | 32 | fixed_weighted | weighted | fixed_rounds | 4 | 560 | 1 | 0.0000 | 6.03125 | 7.00000 |
-| zipf_to_uniform | 64 | tuned_tv_dro | beam | midpoint_binary | 4 | 688 | 40 | 0.4641 | 6.46875 | 7.00000 |
-| zipf_to_uniform | 64 | tuned_nominal | beam | midpoint_binary | 4 | 688 | 40 | 0.4580 | 6.82812 | 8.00000 |
+| zipf_to_uniform | 64 | tuned_tv_dro | beam | midpoint_binary | 4 | 688 | 40 | 0.5040 | 6.46875 | 7.00000 |
+| zipf_to_uniform | 64 | tuned_nominal | beam | midpoint_binary | 4 | 688 | 40 | 0.4842 | 6.82812 | 8.00000 |
 | zipf_to_uniform | 64 | fixed_beam | beam | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.50000 | 7.00000 |
 | zipf_to_uniform | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | zipf_to_uniform | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 7.20312 | 8.00000 |
-| zipf_to_uniform | 128 | tuned_tv_dro | beam | midpoint_binary | 3 | 848 | 38 | 1.4474 | 7.59375 | 8.00000 |
-| zipf_to_uniform | 128 | tuned_nominal | beam | midpoint_binary | 4 | 944 | 38 | 1.4472 | 7.82812 | 9.00000 |
+| zipf_to_uniform | 128 | tuned_tv_dro | beam | midpoint_binary | 3 | 848 | 38 | 1.4367 | 7.59375 | 8.00000 |
+| zipf_to_uniform | 128 | tuned_nominal | beam | midpoint_binary | 4 | 944 | 38 | 1.4488 | 7.82812 | 9.00000 |
 | zipf_to_uniform | 128 | fixed_beam | beam | fixed_rounds | 3 | 848 | 1 | 0.0000 | 7.70312 | 8.00000 |
 | zipf_to_uniform | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | zipf_to_uniform | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 8.32812 | 9.00000 |
@@ -662,6 +683,57 @@ A deterministic 12-window stream moves from a hot head to a hot tail and then to
 | 0.03 | 7 | 4.185059 | 4.185059 | -0.000000 | 0.000000 |
 | 0.08 | 7 | 4.185059 | 4.185059 | -0.000000 | 0.000000 |
 | 0.15 | 4 | 4.216119 | 4.185059 | 0.031061 | 0.272727 |
+
+# Anytime TV-DRO Validation
+
+The exact phase compares against independent complete-tree-space enumeration. The scaling phase reports certified intervals, not unverified solution quality.
+
+- Exact oracle matches: `12/12`.
+- Verified scaling trajectory rows: `36`.
+- Exact after 400 expansions: `3/9`.
+
+| n | Workload | Expansions | Upper | Lower | Relative gap | Exact | Seconds |
+|---:|---|---:|---:|---:|---:|:---:|---:|
+| 16 | uniform | 0 | 4.000000 | 4.000000 | 0.000000 | yes | 0.117373 |
+| 16 | uniform | 25 | 4.000000 | 4.000000 | 0.000000 | yes | 0.117894 |
+| 16 | uniform | 100 | 4.000000 | 4.000000 | 0.000000 | yes | 0.118819 |
+| 16 | uniform | 400 | 4.000000 | 4.000000 | 0.000000 | yes | 0.116961 |
+| 16 | zipf | 0 | 3.737221 | 3.403220 | 0.089371 | no | 0.117693 |
+| 16 | zipf | 25 | 3.737221 | 3.426050 | 0.083263 | no | 0.120681 |
+| 16 | zipf | 100 | 3.737221 | 3.437218 | 0.080274 | no | 0.133157 |
+| 16 | zipf | 400 | 3.737221 | 3.462515 | 0.073505 | no | 0.167574 |
+| 16 | hot_tail | 0 | 3.654545 | 3.277613 | 0.103141 | no | 0.117135 |
+| 16 | hot_tail | 25 | 3.654545 | 3.288693 | 0.100109 | no | 0.131423 |
+| 16 | hot_tail | 100 | 3.654545 | 3.292455 | 0.099079 | no | 0.132691 |
+| 16 | hot_tail | 400 | 3.654545 | 3.297565 | 0.097681 | no | 0.154480 |
+| 32 | uniform | 0 | 5.000000 | 5.000000 | 0.000000 | yes | 0.357397 |
+| 32 | uniform | 25 | 5.000000 | 5.000000 | 0.000000 | yes | 0.356258 |
+| 32 | uniform | 100 | 5.000000 | 5.000000 | 0.000000 | yes | 0.357127 |
+| 32 | uniform | 400 | 5.000000 | 5.000000 | 0.000000 | yes | 0.357596 |
+| 32 | zipf | 0 | 4.601010 | 4.149104 | 0.098219 | no | 0.358605 |
+| 32 | zipf | 25 | 4.601010 | 4.158535 | 0.096169 | no | 0.366051 |
+| 32 | zipf | 100 | 4.601010 | 4.168352 | 0.094036 | no | 0.387354 |
+| 32 | zipf | 400 | 4.601010 | 4.182008 | 0.091067 | no | 0.438515 |
+| 32 | hot_tail | 0 | 4.663636 | 4.277613 | 0.082773 | no | 0.362069 |
+| 32 | hot_tail | 25 | 4.663636 | 4.285225 | 0.081141 | no | 0.375709 |
+| 32 | hot_tail | 100 | 4.663636 | 4.286757 | 0.080812 | no | 0.387345 |
+| 32 | hot_tail | 400 | 4.663636 | 4.288841 | 0.080365 | no | 0.442064 |
+| 64 | uniform | 0 | 6.000000 | 6.000000 | 0.000000 | yes | 1.019489 |
+| 64 | uniform | 25 | 6.000000 | 6.000000 | 0.000000 | yes | 1.015215 |
+| 64 | uniform | 100 | 6.000000 | 6.000000 | 0.000000 | yes | 1.016750 |
+| 64 | uniform | 400 | 6.000000 | 6.000000 | 0.000000 | yes | 1.012382 |
+| 64 | zipf | 0 | 5.359076 | 4.863833 | 0.092412 | no | 1.012885 |
+| 64 | zipf | 25 | 5.359076 | 4.879230 | 0.089539 | no | 1.026160 |
+| 64 | zipf | 100 | 5.359076 | 4.884646 | 0.088528 | no | 1.077165 |
+| 64 | zipf | 400 | 5.359076 | 4.896088 | 0.086393 | no | 1.197354 |
+| 64 | hot_tail | 0 | 5.654545 | 5.277613 | 0.066660 | no | 1.012403 |
+| 64 | hot_tail | 25 | 5.654545 | 5.278164 | 0.066563 | no | 1.052370 |
+| 64 | hot_tail | 100 | 5.654545 | 5.278815 | 0.066447 | no | 1.115870 |
+| 64 | hot_tail | 400 | 5.654545 | 5.280205 | 0.066202 | no | 1.262895 |
+
+## Interpretation
+
+A zero reported gap is a proof for the configured TV radius, fallback, memory/build/tail cost model, and split budget. A nonzero gap is an honest unresolved interval, not an optimality claim.
 
 ## Competition Positioning
 

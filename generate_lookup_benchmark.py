@@ -48,6 +48,7 @@ def main() -> None:
         "# C++ Post-Build Lookup Microbenchmark", "",
         "This measures only rank lookup after each structure is built. Times are local-machine measurements, not cross-machine or production claims.", "",
         "- Queries are sampled from each workload distribution with a deterministic PRNG.",
+        "- `ycsb_hotspot_80_20` and `ycsb_latest_biased` are YCSB-inspired read-only distributions, not runs of the official YCSB harness.",
         "- CertiGap uses the candidate-pruned C++ beam (`B=min(6,n-1)`, `eta=0.15`, width 32, candidate limit 16).",
         "- CertiGap and budgeted trees use at most `B=min(6,n-1)` materialized splits and fixed-round interval fallback.",
         "- `balanced_full_reference` and `std_lower_bound` are explicitly unconstrained references, not equal-budget competitors.",
@@ -81,7 +82,7 @@ def main() -> None:
             f"- CertiGap has lower median batch lookup time than `{baseline}` "
             f"in `{wins}/{len(matched_cases)}` measured workload-size cases."
         )
-    lines.extend(["", "## Limits", "", "This is not a hardware-routing, cache-miss, or external-library benchmark. It is reproducible CPU-level evidence that the exported CertiGap decision tree executes real lookups with an explicit storage footprint. Production claims require a target key encoding, allocator, CPU, and independent external baselines."])
+    lines.extend(["", "## Limits", "", "This is not an official YCSB, RocksDB, hardware-routing, cache-miss, or external-library benchmark. It is reproducible CPU-level evidence that the exported CertiGap decision tree executes real lookups with an explicit storage footprint. Production claims require a target storage engine, key encoding, allocator, CPU, and independent external baselines."])
     (RESULTS / "cpp_lookup_latency.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     metadata = {
         "platform": platform.platform(),

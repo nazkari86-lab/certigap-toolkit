@@ -21,6 +21,7 @@ CertiGap: робастный префиксный поиск с исполняе
 - exact frontier DP;
 - greedy baseline;
 - beam-search heuristic;
+- anytime TV-DRO Branch-and-Bound;
 - checker + lower bounds.
 
 ## Слайд 5. Результаты
@@ -40,9 +41,11 @@ CertiGap: робастный префиксный поиск с исполняе
 - independently recomputed entropy bound;
 - rational arithmetic для integer counts;
 - exhaustive proof trace на малых случаях.
+- replay-verified anytime frontier и optimality gap.
 
 ## Слайд 7. Вывод
 
 - идея научно сильная;
 - результаты воспроизводимы;
 - проект готов к дальнейшему формальному усилению.
+- nonzero anytime gap честно остаётся незакрытым интервалом.

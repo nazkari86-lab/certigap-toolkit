@@ -1,4 +1,6 @@
 from .api import CertiGapToolkit, FitResult, baseline_learned_segment, solve_with
+from .anytime_tv import anytime_tv_branch_and_bound
+from .anytime_verifier import AnytimeVerificationError, verify_anytime_tv_certificate
 from .autodro import (
     AutoDROFitResult,
     AutoDROVerificationError,
@@ -19,6 +21,12 @@ from .generalized import (
     fixed_rounds_profile,
     generalized_frontier_dp_best,
     midpoint_binary_profile,
+)
+from .online import (
+    OnlineRegretCertificate,
+    expectation_shift_bound,
+    online_regret_certificate,
+    total_variation_distance,
 )
 from .core import (
     CertificateError,
@@ -58,6 +66,8 @@ __all__ = [
     "IntervalLeaf",
     "SplitNode",
     "all_budget_optima",
+    "anytime_tv_branch_and_bound",
+    "AnytimeVerificationError",
     "AutoDROFitResult",
     "AutoDROVerificationError",
     "baseline_learned_segment",
@@ -96,14 +106,19 @@ __all__ = [
     "midpoint_binary_profile",
     "multinomial_uncertainty",
     "normalize_weights",
+    "OnlineRegretCertificate",
+    "online_regret_certificate",
     "power_of_two_greedy_family",
     "split_count",
+    "expectation_shift_bound",
+    "total_variation_distance",
     "solve_with",
     "validate_problem",
     "UncertaintyModel",
     "verify_certificate_artifact",
     "verify_branch_and_bound_certificate",
     "verify_autodro_selection_artifact",
+    "verify_anytime_tv_certificate",
     "verify_tree",
     "verify_serialized_tree_exact",
     "worst_case_tv_expectation",

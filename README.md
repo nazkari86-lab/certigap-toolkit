@@ -23,8 +23,10 @@ It ships with:
 - a candidate-pruned C++ beam heuristic for large ordered workloads.
 - AutoDRO selection across budgets, solvers, and executable fallbacks.
 - direct TV-DRO exhaustive optimization with global small-instance guarantees;
+- scalable anytime TV-DRO Branch-and-Bound with independently verified gaps;
 - version 2 artifacts with deterministic portfolio regeneration;
-- cumulative, decayed, and sliding-window adaptation policies.
+- cumulative, decayed, and sliding-window adaptation policies;
+- distribution-drift regret certificates for rebuild decisions.
 
 License:
 
@@ -117,6 +119,33 @@ global optimality outside that portfolio for large instances. For
 and provides a global TV-DRO optimum over the configured fallbacks. See
 [`docs/AUTODRO.md`](docs/AUTODRO.md).
 
+## Anytime TV-DRO API
+
+For larger tree spaces, request bounded search and retain a valid optimality
+interval:
+
+```python
+from certigap import anytime_tv_branch_and_bound, verify_anytime_tv_certificate
+
+result = anytime_tv_branch_and_bound(
+    weights=[1200, 430, 90, 20, 4, 2, 1],
+    budget=4,
+    tv_radius=0.1,
+    max_expansions=5_000,
+    target_relative_gap=0.02,
+)
+
+print(result["score"])               # feasible upper bound
+print(result["global_lower_bound"])  # admissible lower bound
+print(result["relative_gap"])
+print(verify_anytime_tv_certificate(result["certificate"]))
+```
+
+The solver combines componentwise TV, entropy, and conditional-entropy lower
+bounds. A zero gap proves global optimality for the declared objective and
+constraints; a nonzero gap remains an unresolved interval. See
+[`docs/ANYTIME_TV.md`](docs/ANYTIME_TV.md).
+
 ## Quick Start
 
 Run the full project build:
@@ -207,6 +236,8 @@ print(result["objective"])
 - [`examples/skewed_kv_lookup.py`](examples/skewed_kv_lookup.py)
 - [`examples/static_hot_cold_catalog.py`](examples/static_hot_cold_catalog.py)
 - [`examples/read_heavy_embedded_index.py`](examples/read_heavy_embedded_index.py)
+- [`examples/anytime_certified_search.py`](examples/anytime_certified_search.py)
+- [`examples/online_regret_certificate.py`](examples/online_regret_certificate.py)
 
 ## Main Results
 
@@ -227,6 +258,7 @@ Generated artifacts live in [`results/`](results):
 - [`direct_tv_validation.md`](results/direct_tv_validation.md): complete-tree-space validation and strict separation witness
 - [`uncertainty_validation.md`](results/uncertainty_validation.md): 3,000 finite-sample i.i.d. coverage trials
 - [`online_adaptation.md`](results/online_adaptation.md): drift-threshold rebuild/regret simulation
+- [`anytime_validation.md`](results/anytime_validation.md): exact-oracle and scalable certified-gap trajectories
 
 Figures live in [`figures/`](figures):
 
@@ -296,11 +328,14 @@ What is already done:
 - globally exact direct TV-DRO search on exhaustively enumerable instances
 - complete v2 portfolio manifests and omission-resistant verification
 - fair tuned TV-vs-nominal distribution-shift ablation
+- scalable anytime TV-DRO search with replay-verified optimality intervals
+- conditional-entropy lower bounds and drift-regret certificates
+- YCSB-inspired read-only C++ lookup workloads
 
 Current limits and open research work:
 
-- stronger approximation or structural theorems beyond the current package.
-- large-scale performance evidence beyond the documented synthetic benchmark range.
+- tighter scalable bounds for strongly skewed large instances.
+- official YCSB plus RocksDB/SQLite integration and independent hardware runs.
 - external or machine-assisted formal review of the written proofs.
 - approximation guarantees for the candidate-pruned C++ heuristic.
 

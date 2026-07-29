@@ -272,3 +272,41 @@ Taking the minimum remaining score is therefore globally optimal. `QED`
 The guarantee applies when exhaustive direct search is enabled. For larger
 instances, AutoDRO verifies selection over a deterministically regenerated
 heuristic portfolio but does not claim global tree-space optimality.
+
+## Theorem H: Certified Anytime TV-DRO Interval
+
+For a partial search state, assign every key in an unresolved leaf its already
+incurred routing cost and zero future fallback cost. This vector is
+componentwise no larger than the execution-cost vector of any completion.
+Worst-case expectation over a fixed TV ball is monotone under componentwise
+inequality. Adding only already incurred memory and build penalties therefore
+gives an admissible state lower bound.
+
+The information-theoretic and conditional-entropy bounds in
+`ANYTIME_TV.md` are independently admissible, so their maximum with the
+componentwise bound is admissible.
+
+The canonical close-or-split expansion partitions every feasible completion.
+If `U` is a feasible incumbent and `L` is the minimum remaining state bound,
+then
+
+`min(U, L) <= OPT <= U`.
+
+The replay verifier reconstructs the complete processed prefix and remaining
+frontier, so the reported interval remains valid at every declared expansion
+limit. `QED`
+
+## Theorem I: Online Mean-Cost Regret Under TV Drift
+
+Let `delta = TV(p,q)`. For any cost vector with range at most `R`,
+
+`|E_p[c] - E_q[c]| <= delta R`.
+
+Let `T_q` have reference-distribution suboptimality at most `g`, and let `T_p`
+be optimal under `p`. Applying the shift inequality to `T_q` and `T_p` gives
+
+`E_p[C(T_q)] - E_p[C(T_p)] <= g + 2 delta R`.
+
+This is the bound implemented by `online_regret_certificate`. It applies to
+mean execution cost and does not silently extend to rebuild latency or an
+unmodeled storage-engine objective. `QED`
