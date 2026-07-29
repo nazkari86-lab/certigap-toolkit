@@ -558,6 +558,35 @@ This proposition is a portfolio-dominance statement, not global optimality.
 Complete small routing spaces are separately enumerated to validate the search
 implementation.
 
+## Theorem L: Certified AutoIndex Portfolio Minimum
+
+Fix the ordered portfolio
+`(array, Fenwick, segment tree, point-proxy CertiRange, range-aware CertiRange)`
+and a training trace. For each candidate, the compiler deterministically
+reconstructs its topology, declared resources, feasibility, and per-operation
+primitive-visit vector. Its score is therefore a deterministic function of the
+trace and constraints.
+Optional positive per-backend coefficients convert raw visits into calibrated
+work units and are part of the independently regenerated constraints.
+
+The compiler retains every candidate, including infeasible candidates and
+their rejection reasons. It chooses the lexicographic minimum of training
+score, memory slots, and published portfolio position among feasible rows.
+Consequently the selected candidate has minimum declared score over the
+complete five-candidate portfolio.
+
+The standalone verifier regenerates all five rows from the trace and
+constraints and compares the complete ordered candidate list before checking
+the winner and canonical digest. Removing a candidate or changing a score,
+feasibility decision, routing tree, holdout evaluation, or selected name is
+therefore rejected even if an attacker recomputes the outer digest.
+
+Holdout operations are scored only after candidate construction and do not
+enter the selection key. Thus they cannot affect the selected winner. This
+theorem is a portfolio-completeness guarantee in declared primitive visits,
+not global optimality over unlisted data structures and not a wall-clock
+latency guarantee. `QED`
+
 # Generalized Executable Fallback Model
 
 ## Motivation
@@ -1377,6 +1406,79 @@ The complete-tree-space checks validate the search implementation on n=8. The sc
 ## Honest result
 
 Fenwick or an iterative segment tree wins raw range-sum throughput in this matrix. CertiRange reduces hot-key depth on skewed traces, but irregular routing and recursive range traversal currently outweigh that comparison saving. The result rejects a blanket speed claim and motivates portfolio selection rather than replacing classical structures.
+
+# Certified AutoIndex
+
+`compile_autoindex` turns an ordered workload trace and explicit constraints
+into an executable index. It evaluates a fixed, deterministic portfolio:
+
+1. contiguous sorted array;
+2. Fenwick tree;
+3. iterative segment tree;
+4. point-proxy CertiRange;
+5. range-aware CertiRange.
+
+Every candidate remains in the exported artifact, including infeasible ones
+and their rejection reasons. The independent verifier reconstructs all five
+candidates, recomputes resources and scores, and rejects omitted candidates,
+changed winners, changed holdout results, or a modified digest.
+
+```python
+from certigap import AutoIndexConstraints, WorkloadTrace, compile_autoindex
+
+trace = WorkloadTrace(32)
+for _ in range(100):
+    trace.add_range(3, 30)
+
+index = compile_autoindex(
+    range(32),
+    trace,
+    constraints=AutoIndexConstraints(aggregate="sum", budget=4),
+)
+print(index.summary())
+print(index.range_query(3, 30))
+```
+
+## Selection Contract
+
+The objective is
+
+`(1-eta) * mean_visits + eta * max_visits + memory_weight * slots + build_weight * build_units`.
+
+The compiler selects the feasible minimum on the training trace. Ties are
+resolved by memory and then the published portfolio order. A chronological
+holdout may be attached, but it is evaluation-only and cannot affect the
+winner.
+
+By default the unit is one declared structural primitive visit. It makes the
+selection replayable, but it is not a nanosecond model. Production selection
+can set `array_unit_cost`, `fenwick_unit_cost`,
+`segment_tree_unit_cost`, and `certirange_unit_cost` from target-system
+measurements. The verifier includes these coefficients in regeneration.
+
+## Constraints And Capabilities
+
+- `aggregate`: `sum`, `min`, or `max`; Fenwick is infeasible outside `sum`.
+- `memory_limit_slots`: excludes structures exceeding the declared model.
+- `max_depth`: bounds candidate height.
+- `require_persistent_snapshots`: restricts selection to CertiRange.
+- `budget`: controls the adaptive CertiRange routing prefix.
+- `*_unit_cost`: calibrates one structural visit for each backend family.
+
+The current universe is static and rank-addressed. Insert/delete, disk-page
+layouts, concurrency, and storage-engine latency remain outside the verified
+scope.
+
+# Certified AutoIndex validation
+
+- Rows: `120` (`24` complete portfolios).
+- Candidate count per portfolio: `5`.
+- Independently replay-verified portfolios: `24/24`.
+- Selection distribution: `{'certirange_range': 5, 'fenwick': 4, 'segment_tree': 3, 'sorted_array': 12}`.
+- Mean chronological-holdout regret: `9.744583` primitive visits.
+- Maximum chronological-holdout regret: `118.320000` primitive visits.
+
+Selection uses training operations only. Holdout measures temporal generalization and is never consulted by the compiler. Scores are declared structural primitive visits, not wall-clock latency.
 
 ## 10. Вывод
 

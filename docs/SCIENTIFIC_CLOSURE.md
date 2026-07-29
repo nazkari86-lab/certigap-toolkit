@@ -55,6 +55,18 @@ The negative performance result is retained: classical Fenwick and iterative
 segment trees remain faster for raw range-sum throughput in the current local
 matrix. Dynamic CertiRange is not presented as their universal replacement.
 
+## Certified AutoIndex Extension
+
+The executable compiler compares exactly five declared structures and exports
+every feasible and infeasible row. Its verifier independently regenerates the
+complete portfolio and proves the selected training minimum. The 120-row
+matrix includes temporal drift, aggregate capability filtering, memory limits,
+and snapshot requirements. Holdout regret is reported rather than hidden.
+
+This closes candidate-omission and train/holdout-leakage risks for the declared
+portfolio. It does not close global structure selection, calibrated
+wall-clock prediction, storage-engine integration, or external replication.
+
 ## Honest Boundaries
 
 - The C++ pruned beam is empirical: it has no approximation theorem and no proof certificate.

@@ -60,6 +60,7 @@ def build_report(
     lookup_text: str = "",
     autodro_text: str = "",
     dynamic_range_text: str = "",
+    autoindex_text: str = "",
 ) -> str:
     return "\n".join(
         [
@@ -108,6 +109,10 @@ def build_report(
             "## Dynamic CertiRange",
             "",
             dynamic_range_text,
+            "",
+            "## Certified AutoIndex",
+            "",
+            autoindex_text,
             "",
             "## Competition Positioning",
             "",
@@ -202,6 +207,13 @@ def main() -> None:
             RESULTS_DIR / "dynamic_range_benchmark.md",
         )
     )
+    autoindex_text = "\n\n".join(
+        read_text(path)
+        for path in (
+            DOCS_DIR / "AUTOINDEX.md",
+            RESULTS_DIR / "autoindex_validation.md",
+        )
+    )
 
     (REPORT_DIR / "ABSTRACT.md").write_text(build_abstract(summary_text), encoding="utf-8")
     (REPORT_DIR / "REPORT.md").write_text(
@@ -217,6 +229,7 @@ def main() -> None:
             lookup_text,
             autodro_text,
             dynamic_range_text,
+            autoindex_text,
         ),
         encoding="utf-8",
     )
@@ -231,7 +244,9 @@ def main() -> None:
             + "\n\n"
             + anytime_theory_text
             + "\n\n"
-            + dynamic_range_theory_text,
+            + dynamic_range_theory_text
+            + "\n\n"
+            + read_text(DOCS_DIR / "AUTOINDEX.md"),
             roadmap_text,
         ),
         encoding="utf-8",

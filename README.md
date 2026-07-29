@@ -30,6 +30,8 @@ It ships with:
 - Dynamic CertiRange point/range/update indexes with persistent snapshots.
 - range-aware workload optimization with independently replayed artifacts.
 - contiguous-node C++ range benchmarks against Fenwick and segment trees.
+- Certified AutoIndex selection across array, Fenwick, segment tree, and two
+  workload-adaptive CertiRange variants.
 
 License:
 
@@ -183,6 +185,40 @@ The range-aware solver evaluates mixed-trace node visits rather than only an
 endpoint proxy. Its balanced candidate is always retained, but large-instance
 beam results are not claimed globally optimal. See
 [`docs/DYNAMIC_RANGE.md`](docs/DYNAMIC_RANGE.md).
+
+## Certified AutoIndex API
+
+Compile the best feasible executable structure from one fixed portfolio:
+
+```python
+from certigap import AutoIndexConstraints, WorkloadTrace, compile_autoindex
+
+trace = WorkloadTrace(32)
+for _ in range(100):
+    trace.add_range(3, 30)
+
+index = compile_autoindex(
+    range(32),
+    trace,
+    constraints=AutoIndexConstraints(
+        aggregate="sum",
+        budget=4,
+        memory_limit_slots=128,
+        fenwick_unit_cost=0.8,  # optional measured backend calibration
+    ),
+)
+
+print(index.summary())
+print(index.range_query(3, 30))
+print(index.export_selection_artifact())
+```
+
+The artifact retains all five candidates and their infeasibility reasons. An
+independent verifier regenerates the portfolio and proves that the selected
+candidate has minimum declared training score. Chronological holdout is
+evaluation-only. Default structural visits are not presented as nanoseconds;
+per-backend unit costs can be calibrated from target measurements. See
+[`docs/AUTOINDEX.md`](docs/AUTOINDEX.md).
 
 ## Quick Start
 

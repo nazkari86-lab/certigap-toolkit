@@ -24,6 +24,7 @@ def main() -> None:
     run([python, "generate_cpp_dynamic_range.py"])
     run([python, "generate_dynamic_range_benchmark.py", "--mode", "full"])
     run([python, "generate_range_optimizer_validation.py"])
+    run([python, "generate_autoindex_validation.py"])
     run([python, "generate_autodro_benchmark.py"])
     run([python, "generate_direct_tv_validation.py"])
     run([python, "generate_anytime_validation.py"])

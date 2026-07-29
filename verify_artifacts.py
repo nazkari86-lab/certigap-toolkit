@@ -9,6 +9,7 @@ from pathlib import Path
 
 from certigap import (
     verify_anytime_tv_certificate,
+    verify_autoindex_artifact,
     verify_autodro_selection_artifact,
     verify_dynamic_range_certificate,
     verify_range_optimizer_artifact,
@@ -52,6 +53,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "dynamic_range_benchmark.csv": 36,
         "cpp_dynamic_range.csv": 36,
         "range_optimizer_validation.csv": 114,
+        "autoindex_validation.csv": 120,
     }
     observed: dict[str, int] = {}
     for name, minimum in minimum_rows.items():
@@ -237,6 +239,49 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         != "post-build mixed operations; p95 across batch means"
     ):
         raise ValueError("C++ dynamic range measurement scope is ambiguous")
+
+    autoindex_artifact = json.loads(
+        (RESULTS / "autoindex_selection_example.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    autoindex_verified = verify_autoindex_artifact(autoindex_artifact)
+    if (
+        not autoindex_verified["completeness_verified"]
+        or autoindex_verified["candidate_count"] != 5
+    ):
+        raise ValueError("AutoIndex example does not prove portfolio completeness")
+    autoindex_rows = csv_records("autoindex_validation.csv")
+    autoindex_groups: dict[str, list[dict[str, str]]] = {}
+    for row in autoindex_rows:
+        autoindex_groups.setdefault(row["group_id"], []).append(row)
+    expected_candidates = {
+        "sorted_array",
+        "fenwick",
+        "segment_tree",
+        "certirange_point",
+        "certirange_range",
+    }
+    if len(autoindex_groups) != 24:
+        raise ValueError("AutoIndex validation matrix is incomplete")
+    for group in autoindex_groups.values():
+        if (
+            {row["candidate"] for row in group} != expected_candidates
+            or len([row for row in group if row["selected"] == "True"]) != 1
+            or any(row["certificate_verified"] != "True" for row in group)
+        ):
+            raise ValueError("AutoIndex portfolio is incomplete or unverified")
+        selected = next(row for row in group if row["selected"] == "True")
+        feasible_scores = [
+            float(row["train_score"])
+            for row in group
+            if row["feasible"] == "True"
+        ]
+        if abs(float(selected["train_score"]) - min(feasible_scores)) > 1e-9:
+            raise ValueError("AutoIndex selected a non-minimum training score")
+        regret = float(selected["selected_holdout_regret"])
+        if not math.isfinite(regret) or regret < -1e-9:
+            raise ValueError("AutoIndex holdout regret is invalid")
 
     optimizer_rows = csv_records("range_optimizer_validation.csv")
     exact_optimizer_rows = [

@@ -233,6 +233,13 @@ def main() -> None:
             RESULTS_DIR / "cpp_dynamic_range.md",
         )
     )
+    autoindex_text = "\n\n".join(
+        read(path)
+        for path in (
+            DOCS_DIR / "AUTOINDEX.md",
+            RESULTS_DIR / "autoindex_validation.md",
+        )
+    )
     counterexample_text = read(RESULTS_DIR / "counterexamples.md") if (RESULTS_DIR / "counterexamples.md").exists() else ""
     family_text = read(DOCS_DIR / "GREEDY_COUNTEREXAMPLE_FAMILY.md") if (DOCS_DIR / "GREEDY_COUNTEREXAMPLE_FAMILY.md").exists() else ""
     speed_quality_text = read(RESULTS_DIR / "speed_quality_summary.md") if (RESULTS_DIR / "speed_quality_summary.md").exists() else ""
@@ -257,7 +264,9 @@ def main() -> None:
             + "\n\n"
             + lookup_text
             + "\n\n"
-            + dynamic_range_text,
+            + dynamic_range_text
+            + "\n\n"
+            + autoindex_text,
         ),
         encoding="utf-8",
     )

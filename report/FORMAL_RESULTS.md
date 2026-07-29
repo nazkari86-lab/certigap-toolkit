@@ -348,3 +348,32 @@ included balanced completion on the declared training workload.
 This proposition is a portfolio-dominance statement, not global optimality.
 Complete small routing spaces are separately enumerated to validate the search
 implementation.
+
+## Theorem L: Certified AutoIndex Portfolio Minimum
+
+Fix the ordered portfolio
+`(array, Fenwick, segment tree, point-proxy CertiRange, range-aware CertiRange)`
+and a training trace. For each candidate, the compiler deterministically
+reconstructs its topology, declared resources, feasibility, and per-operation
+primitive-visit vector. Its score is therefore a deterministic function of the
+trace and constraints.
+Optional positive per-backend coefficients convert raw visits into calibrated
+work units and are part of the independently regenerated constraints.
+
+The compiler retains every candidate, including infeasible candidates and
+their rejection reasons. It chooses the lexicographic minimum of training
+score, memory slots, and published portfolio position among feasible rows.
+Consequently the selected candidate has minimum declared score over the
+complete five-candidate portfolio.
+
+The standalone verifier regenerates all five rows from the trace and
+constraints and compares the complete ordered candidate list before checking
+the winner and canonical digest. Removing a candidate or changing a score,
+feasibility decision, routing tree, holdout evaluation, or selected name is
+therefore rejected even if an attacker recomputes the outer digest.
+
+Holdout operations are scored only after candidate construction and do not
+enter the selection key. Thus they cannot affect the selected winner. This
+theorem is a portfolio-completeness guarantee in declared primitive visits,
+not global optimality over unlisted data structures and not a wall-clock
+latency guarantee. `QED`

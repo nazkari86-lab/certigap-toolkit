@@ -35,6 +35,11 @@ replayable lower bound after any declared expansion limit. We further extend
 the model into Dynamic CertiRange, a complete point/range/update index with
 depth caps, persistent snapshots, range-aware workload search, and replayable
 structural artifacts.
+Finally, Certified AutoIndex compiles a trace into an executable array,
+Fenwick tree, segment tree, or one of two CertiRange variants under aggregate,
+memory, depth, and snapshot constraints. Its omission-resistant artifact
+proves minimum declared training cost over the complete fixed portfolio while
+keeping chronological holdout evaluation outside the selection path.
 \end{abstract}
 
 \section{Problem}
@@ -161,6 +166,27 @@ solution classes \cite{angelopoulos2025,dinitz2024}. Learned indexes optimize
 model-size and last-mile-search tradeoffs but generally do not provide this
 split-budget exact program \cite{pgm2020,sosd2020}.
 
+\section{Certified AutoIndex}
+We evaluate a fixed ordered portfolio containing a contiguous array, Fenwick
+tree, iterative segment tree, point-proxy CertiRange, and range-aware
+CertiRange. For operation-cost vector $c$ and declared resource tuple
+$(S,H,U)$, selection minimizes
+\[
+(1-\lambda)\operatorname{mean}(c)+\lambda\max(c)
+  +\alpha S+\beta U
+\]
+over candidates satisfying aggregate, memory, depth, and persistent-snapshot
+constraints. Positive backend-specific coefficients may calibrate each raw
+visit type from target-system measurements. Ties are resolved by slots and
+published portfolio position.
+
+The artifact retains all five candidates, including rejected rows and reasons.
+An independent verifier regenerates every topology, cost vector, resource
+tuple, feasibility decision, and optional holdout score before checking the
+winner. Thus the result certifies a portfolio minimum in declared primitive
+visits. It neither proves global optimality over unlisted structures nor
+equates structural visits with wall-clock latency.
+
 \section{Evidence And Limits}
 The repository contains exact cross-validation, a standalone certificate
 checker, synthetic and public-frequency workloads, temporal holdout, pruning
@@ -187,6 +213,13 @@ than its included balanced candidate and strictly improves the former
 point/endpoint proxy in 18 groups. Python and contiguous-node C++ mixed
 benchmarks also show that Fenwick or iterative segment trees remain faster for
 raw range sums; no blanket speed superiority is claimed.
+The AutoIndex matrix contains 24 complete five-candidate portfolios (120
+candidate rows) across four key-universe sizes, six temporal/constraint
+scenarios, three aggregates/capability regimes, memory restrictions, and
+mandatory snapshots. All 24 artifacts replay successfully. The selected
+training candidate is always the portfolio minimum. Under explicit
+point-to-range temporal drift, holdout regret can be nonzero and reaches the
+reported matrix maximum; holdout is never used to revise the winner.
 External implementations, independent hardware reproduction, and a
 domain-owner pilot remain external validation requirements.
 

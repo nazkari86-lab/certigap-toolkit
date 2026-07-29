@@ -11,6 +11,8 @@
 - [Dynamic CertiRange](certigap/dynamic_range.py)
 - [Range-aware optimizer](certigap/range_optimizer.py)
 - [Range optimizer verifier](certigap/range_optimizer_verifier.py)
+- [Certified AutoIndex](certigap/autoindex.py)
+- [Independent AutoIndex verifier](certigap/autoindex_verifier.py)
 - [__init__.py](certigap/__init__.py)
 
 ## Generators
@@ -33,12 +35,14 @@
 - [generate_dynamic_range_benchmark.py](generate_dynamic_range_benchmark.py)
 - [generate_cpp_dynamic_range.py](generate_cpp_dynamic_range.py)
 - [generate_range_optimizer_validation.py](generate_range_optimizer_validation.py)
+- [generate_autoindex_validation.py](generate_autoindex_validation.py)
 - [verify_artifacts.py](verify_artifacts.py)
 - [generate_pruning_validation.py](generate_pruning_validation.py)
 - [generate_temporal_holdout.py](generate_temporal_holdout.py)
 - [benchmark_datasets.py](certigap/benchmark_datasets.py)
 - [build_all.py](build_all.py)
 - [AutoDRO catalog example](examples/autodro_catalog.py)
+- [Certified AutoIndex example](examples/certified_autoindex.py)
 
 ## Main Results
 
@@ -66,9 +70,12 @@
 - [Range optimizer validation](results/range_optimizer_validation.md)
 - [Dynamic range certificate](results/dynamic_range_certificate_example.json)
 - [Range optimizer artifact](results/range_optimizer_example.json)
+- [AutoIndex validation](results/autoindex_validation.md)
+- [Verified AutoIndex selection example](results/autoindex_selection_example.json)
 - [AutoDRO theorem and API](docs/AUTODRO.md)
 - [Anytime theorem and certificate contract](docs/ANYTIME_TV.md)
 - [Dynamic CertiRange theorem and API](docs/DYNAMIC_RANGE.md)
+- [Certified AutoIndex theorem and API](docs/AUTOINDEX.md)
 - [Generalized executable fallback theorem](docs/GENERALIZED_FALLBACK.md)
 - [LaTeX paper](paper/main.tex)
 - [pruning_validation.md](results/pruning_validation.md)

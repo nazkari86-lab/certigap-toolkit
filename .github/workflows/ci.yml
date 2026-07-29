@@ -47,6 +47,7 @@ jobs:
           python generate_direct_tv_validation.py
           python generate_uncertainty_validation.py
           python generate_online_adaptation.py
+          python generate_autoindex_validation.py
           python generate_figures.py
 
       - name: Verify committed scientific artifacts
@@ -62,6 +63,7 @@ jobs:
           python examples/static_hot_cold_catalog.py
           python examples/read_heavy_embedded_index.py
           python examples/autodro_catalog.py
+          python examples/certified_autoindex.py
 
       - name: Build installable wheel
         run: python -m pip wheel . --no-deps --wheel-dir /tmp/certigap-wheel

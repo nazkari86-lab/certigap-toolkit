@@ -59,6 +59,17 @@
 - complete small-space oracle validation
 - Python and contiguous-node C++ benchmarks against Fenwick and segment tree
 
+## Phase 8: Certified AutoIndex
+
+- executable array, Fenwick, segment-tree, and CertiRange portfolio
+- sum, minimum, and maximum capability filtering
+- memory, depth, and persistent-snapshot constraints
+- deterministic training-only selection and stable tie-breaking
+- chronological holdout without selection leakage
+- omission-resistant complete-portfolio artifacts
+- independent candidate regeneration and tamper tests
+- 120-row temporal and constraint validation matrix
+
 ## External Closure
 
 - independent proof review or machine-assisted formalization

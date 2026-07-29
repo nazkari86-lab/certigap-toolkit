@@ -12,6 +12,17 @@ from .autodro import (
     verify_autodro_selection_artifact,
     worst_case_tv_expectation,
 )
+from .autoindex import (
+    AutoIndexConstraints,
+    CompiledAutoIndex,
+    TraceOperation,
+    WorkloadTrace,
+    compile_autoindex,
+)
+from .autoindex_verifier import (
+    AutoIndexVerificationError,
+    verify_autoindex_artifact,
+)
 from .branch_and_bound import branch_and_bound_exact
 from .cpp_bindings import CppCertiGap
 from .direct_tv import enumerate_partial_trees, exact_tree_space_manifest
@@ -82,6 +93,8 @@ __all__ = [
     "AnytimeVerificationError",
     "AutoDROFitResult",
     "AutoDROVerificationError",
+    "AutoIndexConstraints",
+    "AutoIndexVerificationError",
     "baseline_learned_segment",
     "baseline_balanced",
     "baseline_weighted_median",
@@ -90,11 +103,13 @@ __all__ = [
     "benchmark_case",
     "brute_force_best",
     "CertiGapToolkit",
+    "CompiledAutoIndex",
     "CertiRangeWorkload",
     "CertiGapAutoDRO",
     "combined_lower_bound",
     "cost_cap_dp_best",
     "counterexample_search",
+    "compile_autoindex",
     "CppCertiGap",
     "certify_tree",
     "entropy_lower_bound",
@@ -133,6 +148,7 @@ __all__ = [
     "split_count",
     "expectation_shift_bound",
     "total_variation_distance",
+    "TraceOperation",
     "solve_with",
     "validate_problem",
     "UncertaintyModel",
@@ -142,7 +158,9 @@ __all__ = [
     "verify_branch_and_bound_certificate",
     "verify_autodro_selection_artifact",
     "verify_anytime_tv_certificate",
+    "verify_autoindex_artifact",
     "verify_tree",
     "verify_serialized_tree_exact",
     "worst_case_tv_expectation",
+    "WorkloadTrace",
 ]

@@ -47,3 +47,17 @@ most `O(B W B K)` generated candidates. A direct candidate replay costs
 `O(n + Qh)`, so a conservative bound is
 `O(B^2 W K (n + Qh))`. This is a bounded heuristic, not an exact large-instance
 algorithm.
+
+## Certified AutoIndex
+
+For `m` trace operations and fixed portfolio size five, array, Fenwick, and
+segment-tree scoring takes `O(m log n)` conservatively. Each CertiRange
+candidate first performs its existing bounded routing search and then replays
+the trace in `O(mh)`, where `h` is completed-tree height. Runtime construction
+is `O(n log n)` for the reference Fenwick build, `O(n)` for array, segment
+tree, and completed CertiRange state after routing is fixed.
+
+The verifier intentionally repeats candidate generation and scoring rather
+than trusting compiler summaries. It therefore has the same asymptotic cost
+as selection. Portfolio storage is `O(m+n)` because the certificate includes
+the complete training and optional holdout traces plus two routing trees.
