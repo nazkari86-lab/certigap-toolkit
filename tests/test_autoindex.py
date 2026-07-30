@@ -37,7 +37,7 @@ class AutoIndexTests(unittest.TestCase):
         self.assertEqual([op.left for op in train.operations], list(range(1, 7)))
         self.assertEqual([op.left for op in holdout.operations], [7, 8])
 
-    def test_sum_range_workload_selects_fenwick(self) -> None:
+    def test_static_sum_range_workload_selects_prefix_sum(self) -> None:
         trace = WorkloadTrace(32)
         for _ in range(100):
             trace.add_range(3, 30)
@@ -46,8 +46,32 @@ class AutoIndexTests(unittest.TestCase):
             trace,
             constraints=AutoIndexConstraints(aggregate="sum", budget=4),
         )
-        self.assertEqual(model.selected_name, "fenwick")
+        self.assertEqual(model.selected_name, "prefix_sum")
         self.assertEqual(model.range_query(3, 30), sum(range(2, 30)))
+
+    def test_calibration_can_select_fenwick(self) -> None:
+        trace = WorkloadTrace(32)
+        for _ in range(100):
+            trace.add_range(3, 30)
+        model = compile_autoindex(
+            range(32),
+            trace,
+            constraints=AutoIndexConstraints(
+                aggregate="sum",
+                budget=4,
+                prefix_unit_cost=10.0,
+            ),
+        )
+        self.assertEqual(model.selected_name, "fenwick")
+
+    def test_non_power_of_two_mixed_trace_selects_fenwick(self) -> None:
+        trace = WorkloadTrace(24)
+        for _ in range(10):
+            trace.add_range(2, 23)
+        for index in range(5):
+            trace.add_update(1 + (index * 7) % 24, float(index))
+        model = compile_autoindex(range(24), trace)
+        self.assertEqual(model.selected_name, "fenwick")
 
     def test_backend_calibration_can_change_selection(self) -> None:
         trace = WorkloadTrace(32)
@@ -59,10 +83,53 @@ class AutoIndexTests(unittest.TestCase):
             constraints=AutoIndexConstraints(
                 aggregate="sum",
                 budget=4,
-                segment_tree_unit_cost=0.5,
+                segment_tree_unit_cost=0.1,
             ),
         )
         self.assertEqual(model.selected_name, "segment_tree")
+
+    def test_sqrt_decomposition_is_executable(self) -> None:
+        trace = WorkloadTrace(36)
+        for _ in range(80):
+            trace.add_range(4, 31)
+        model = compile_autoindex(
+            range(36, 0, -1),
+            trace,
+            constraints=AutoIndexConstraints(
+                aggregate="min",
+                sqrt_unit_cost=0.1,
+                sparse_unit_cost=10.0,
+            ),
+        )
+        self.assertEqual(model.selected_name, "sqrt_decomposition")
+        self.assertEqual(model.range_query(4, 31), 6)
+        model.point_update(31, 100)
+        self.assertEqual(model.range_query(4, 31), 7)
+
+    def test_memory_budget_can_select_sqrt_decomposition(self) -> None:
+        trace = WorkloadTrace(36)
+        for _ in range(80):
+            trace.add_range(4, 31)
+        model = compile_autoindex(
+            range(36),
+            trace,
+            constraints=AutoIndexConstraints(memory_limit_slots=42),
+        )
+        self.assertEqual(model.selected_name, "sqrt_decomposition")
+
+    def test_sparse_table_wins_static_idempotent_ranges(self) -> None:
+        trace = WorkloadTrace(32)
+        for _ in range(100):
+            trace.add_range(3, 30)
+        model = compile_autoindex(
+            range(32, 0, -1),
+            trace,
+            constraints=AutoIndexConstraints(aggregate="min"),
+        )
+        self.assertEqual(model.selected_name, "sparse_table")
+        self.assertEqual(model.range_query(3, 30), 3)
+        model.point_update(30, 100)
+        self.assertEqual(model.range_query(3, 30), 4)
 
     def test_min_workload_rejects_fenwick_and_executes(self) -> None:
         trace = WorkloadTrace(16)

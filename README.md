@@ -273,12 +273,50 @@ print(index.range_query(3, 30))
 print(index.export_selection_artifact())
 ```
 
-The artifact retains all five candidates and their infeasibility reasons. An
+The artifact retains all eight candidates and their infeasibility reasons. An
 independent verifier regenerates the portfolio and proves that the selected
 candidate has minimum declared training score. Chronological holdout is
 evaluation-only. Default structural visits are not presented as nanoseconds;
 per-backend unit costs can be calibrated from target measurements. See
-[`docs/AUTOINDEX.md`](docs/AUTOINDEX.md).
+[`docs/AUTOINDEX.md`](docs/AUTOINDEX.md) and the objective
+[`portfolio expansion policy`](docs/PORTFOLIO_EXPANSION.md).
+
+## Safe AutoIndex
+
+Add a no-regression deployment gate with separate training, validation, and
+evaluation traces:
+
+```python
+from certigap import SafeSelectionPolicy, compile_safe_autoindex
+
+safe = compile_safe_autoindex(
+    values,
+    train_trace,
+    validation_trace,
+    test_trace=test_trace,
+    policy=SafeSelectionPolicy(
+        confidence_alpha=0.05,
+        horizon_operations=1_000_000,
+        migration_cost_units=500.0,
+    ),
+)
+print(safe.summary())
+```
+
+Specialization is deployed only when a one-sided bounded-sample confidence
+limit remains better than the declared conventional baseline after amortized
+build and migration cost. Otherwise selection fails closed to that baseline.
+The guarantee is conditional on independent IID validation operations and the
+declared structural model, not portable latency or arbitrary drift. See
+[`docs/SAFE_AUTOINDEX.md`](docs/SAFE_AUTOINDEX.md).
+
+For C++ deployment:
+
+```bash
+certigap safe-compile safe_trace.json \
+  --artifact build/safe-selection.json \
+  --header build/safe-index.hpp
+```
 
 ## C++ Compiler Integration
 

@@ -561,7 +561,8 @@ implementation.
 ## Theorem L: Certified AutoIndex Portfolio Minimum
 
 Fix the ordered portfolio
-`(array, Fenwick, segment tree, point-proxy CertiRange, range-aware CertiRange)`
+`(array, prefix sum, Fenwick, square-root decomposition, segment tree, sparse
+table, point-proxy CertiRange, range-aware CertiRange)`
 and a training trace. For each candidate, the compiler deterministically
 reconstructs its topology, declared resources, feasibility, and per-operation
 primitive-visit vector. Its score is therefore a deterministic function of the
@@ -573,9 +574,9 @@ The compiler retains every candidate, including infeasible candidates and
 their rejection reasons. It chooses the lexicographic minimum of training
 score, memory slots, and published portfolio position among feasible rows.
 Consequently the selected candidate has minimum declared score over the
-complete five-candidate portfolio.
+complete eight-candidate portfolio.
 
-The standalone verifier regenerates all five rows from the trace and
+The standalone verifier regenerates all eight rows from the trace and
 constraints and compares the complete ordered candidate list before checking
 the winner and canonical digest. Removing a candidate or changing a score,
 feasibility decision, routing tree, holdout evaluation, or selected name is
@@ -587,6 +588,29 @@ theorem is a portfolio-completeness guarantee in declared primitive visits,
 not global optimality over unlisted data structures and not a wall-clock
 latency guarantee. `QED`
 
+## Corollary L.1: Conditional Safe-Deployment Bound
+
+Let `D_i = C_candidate(i) - C_baseline(i)` for `m` independent IID validation
+operations. Suppose `D_i` lies in an interval of width at most `B`, as
+recomputed from the declared backend bounds. Hoeffding's inequality gives
+
+`Pr(E[D] > mean(D) + B sqrt(log(1/alpha)/(2m))) <= alpha`.
+
+Adding deterministic amortized build and migration cost `A` preserves the
+inequality. Therefore, when Safe AutoIndex deploys specialization only if
+
+`mean(D) + B sqrt(log(1/alpha)/(2m)) + A < -minimum_improvement`,
+
+the probability that its declared expected improvement fails to exceed the
+minimum is at most `alpha`, conditional on the stated IID and bounded-cost
+assumptions. If the inequality does not hold, the declared safe baseline is
+retained. Test data is evaluated only after this decision and cannot alter it.
+
+The verifier independently recomputes the baseline, `B`, confidence radius,
+transition cost, deployment decision, and test scores. The result does not
+cover dependent temporal traces, inaccurate hardware calibration, or
+unmodeled wall-clock effects. `QED`
+
 ## Theorem M: Generated C++ Configuration Fidelity
 
 Let `A` be an AutoIndex artifact accepted by the independent verifier. The
@@ -595,12 +619,13 @@ key count, artifact digest, and, for CertiRange, the deterministically completed
 topology. Identical artifact and namespace inputs therefore emit identical
 header bytes.
 
-For array, Fenwick, and segment-tree backends, the generated configuration
-selects the corresponding executable recurrence directly. For CertiRange,
-the emitted topology is the same completion whose canonical hash was checked
-in `A`. Structural induction over that topology proves every internal state is
-the configured monoid aggregate of its interval. The same induction proves
-range queries and point updates agree with the array specification.
+For array, prefix sum, Fenwick, square-root decomposition, segment-tree, and
+sparse-table backends, the generated configuration selects the corresponding
+executable recurrence directly. For CertiRange, the emitted topology is the
+same completion whose canonical hash was checked in `A`. Structural induction
+over that topology proves every internal state is the configured monoid
+aggregate of its interval. The same induction proves range queries and point
+updates agree with the array specification.
 
 A C++ snapshot is an independent value-copy of all runtime state. Subsequent
 updates cannot mutate the copy, so snapshot observations preserve the
@@ -1483,13 +1508,16 @@ Fenwick or an iterative segment tree wins raw range-sum throughput in this matri
 into an executable index. It evaluates a fixed, deterministic portfolio:
 
 1. contiguous sorted array;
-2. Fenwick tree;
-3. iterative segment tree;
-4. point-proxy CertiRange;
-5. range-aware CertiRange.
+2. global prefix sums;
+3. Fenwick tree;
+4. square-root decomposition;
+5. iterative segment tree;
+6. sparse table for idempotent `min`/`max`;
+7. point-proxy CertiRange;
+8. range-aware CertiRange.
 
 Every candidate remains in the exported artifact, including infeasible ones
-and their rejection reasons. The independent verifier reconstructs all five
+and their rejection reasons. The independent verifier reconstructs all eight
 candidates, recomputes resources and scores, and rejects omitted candidates,
 changed winners, changed holdout results, or a modified digest.
 
@@ -1522,13 +1550,15 @@ winner.
 
 By default the unit is one declared structural primitive visit. It makes the
 selection replayable, but it is not a nanosecond model. Production selection
-can set `array_unit_cost`, `fenwick_unit_cost`,
-`segment_tree_unit_cost`, and `certirange_unit_cost` from target-system
-measurements. The verifier includes these coefficients in regeneration.
+can set `array_unit_cost`, `prefix_unit_cost`, `fenwick_unit_cost`,
+`sqrt_unit_cost`, `segment_tree_unit_cost`, `sparse_unit_cost`, and
+`certirange_unit_cost` from target-system measurements. The verifier includes
+these coefficients in regeneration.
 
 ## Constraints And Capabilities
 
-- `aggregate`: `sum`, `min`, or `max`; Fenwick is infeasible outside `sum`.
+- `aggregate`: `sum`, `min`, or `max`; Fenwick and prefix sums require `sum`,
+  while sparse tables require idempotent `min` or `max`.
 - `memory_limit_slots`: excludes structures exceeding the declared model.
 - `max_depth`: bounds candidate height.
 - `require_persistent_snapshots`: restricts selection to CertiRange.
@@ -1539,17 +1569,24 @@ The current universe is static and rank-addressed. Insert/delete, disk-page
 layouts, concurrency, and storage-engine latency remain outside the verified
 scope.
 
+Adding unrelated structures is intentionally avoided. Hash tables do not
+support range aggregates, while B-trees, learned indexes, and wavelet trees
+need different key, storage, or query semantics. They require a separate
+capability grammar rather than misleading rows in this portfolio.
+
 For deterministic JSON-to-C++ code generation and CMake wiring, see
 [`COMPILER_INTEGRATION.md`](COMPILER_INTEGRATION.md).
+The admission rules and capability-separated roadmap are in
+[`PORTFOLIO_EXPANSION.md`](PORTFOLIO_EXPANSION.md).
 
 # Certified AutoIndex validation
 
-- Rows: `120` (`24` complete portfolios).
-- Candidate count per portfolio: `5`.
+- Rows: `192` (`24` complete portfolios).
+- Candidate count per portfolio: `8`.
 - Independently replay-verified portfolios: `24/24`.
-- Selection distribution: `{'certirange_range': 5, 'fenwick': 4, 'segment_tree': 3, 'sorted_array': 12}`.
-- Mean chronological-holdout regret: `9.744583` primitive visits.
-- Maximum chronological-holdout regret: `118.320000` primitive visits.
+- Selection distribution: `{'certirange_range': 4, 'prefix_sum': 4, 'sorted_array': 12, 'sparse_table': 4}`.
+- Mean chronological-holdout regret: `9.724479` primitive visits.
+- Maximum chronological-holdout regret: `119.550000` primitive visits.
 
 Selection uses training operations only. Holdout measures temporal generalization and is never consulted by the compiler. Scores are declared structural primitive visits, not wall-clock latency.
 
@@ -1557,7 +1594,7 @@ Selection uses training operations only. Holdout measures temporal generalizatio
 
 CertiGap uses a profile-guided build step. It is not a GCC or Clang plugin:
 the compiler consumes an operation trace before the C++ build, verifies all
-five portfolio candidates, and emits a normal C++17 configuration header.
+eight portfolio candidates, and emits a normal C++17 configuration header.
 
 ## Install
 
@@ -1705,8 +1742,8 @@ costs should be calibrated on the target system when latency matters.
 
 - Deterministic generated headers: `24/24`.
 - Independently verified source artifacts: `24/24`.
-- Candidate count per artifact: `5`.
-- Selected backend distribution: `{'certirange_range': 5, 'fenwick': 4, 'segment_tree': 3, 'sorted_array': 12}`.
+- Candidate count per artifact: `8`.
+- Selected backend distribution: `{'certirange_range': 4, 'prefix_sum': 4, 'sorted_array': 12, 'sparse_table': 4}`.
 - Cross-language executable coverage is enforced by `tests/test_compiler_integration.py`.
 - The CMake example compiles a generated CertiRange topology and checks snapshot isolation.
 

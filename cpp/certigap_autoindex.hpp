@@ -14,8 +14,11 @@ namespace certigap {
 
 enum class Backend {
     SortedArray,
+    PrefixSum,
     Fenwick,
+    SqrtDecomposition,
     SegmentTree,
+    SparseTable,
     CertiRangePoint,
     CertiRangeRange,
 };
@@ -48,7 +51,13 @@ public:
                 throw std::invalid_argument("values must be finite");
             }
         }
-        if constexpr (Config::kBackend == Backend::Fenwick) {
+        if constexpr (Config::kBackend == Backend::PrefixSum) {
+            static_assert(
+                Config::kAggregate == Aggregate::Sum,
+                "prefix-sum generated backend supports sum only"
+            );
+            rebuild_prefix();
+        } else if constexpr (Config::kBackend == Backend::Fenwick) {
             static_assert(
                 Config::kAggregate == Aggregate::Sum,
                 "Fenwick generated backend supports sum only"
@@ -56,6 +65,18 @@ public:
             fenwick_.assign(values_.size() + 1, 0.0);
             for (int key = 1; key <= static_cast<int>(values_.size()); ++key) {
                 fenwick_add(key, values_[key - 1]);
+            }
+        } else if constexpr (
+            Config::kBackend == Backend::SqrtDecomposition
+        ) {
+            block_size_ = std::max(
+                1, static_cast<int>(std::ceil(std::sqrt(values_.size())))
+            );
+            blocks_.assign(
+                (values_.size() + block_size_ - 1) / block_size_, identity()
+            );
+            for (int block = 0; block < static_cast<int>(blocks_.size()); ++block) {
+                rebuild_block(block);
             }
         } else if constexpr (Config::kBackend == Backend::SegmentTree) {
             segment_size_ = 1;
@@ -72,6 +93,12 @@ public:
                     segment_[2 * index], segment_[2 * index + 1]
                 );
             }
+        } else if constexpr (Config::kBackend == Backend::SparseTable) {
+            static_assert(
+                Config::kAggregate != Aggregate::Sum,
+                "sparse-table backend supports idempotent min/max only"
+            );
+            rebuild_sparse();
         } else if constexpr (
             Config::kBackend == Backend::CertiRangePoint
             || Config::kBackend == Backend::CertiRangeRange
@@ -114,8 +141,26 @@ public:
                 result = combine(result, values_[key - 1]);
             }
             return result;
+        } else if constexpr (Config::kBackend == Backend::PrefixSum) {
+            return prefix_[right] - prefix_[left - 1];
         } else if constexpr (Config::kBackend == Backend::Fenwick) {
             return fenwick_prefix(right) - fenwick_prefix(left - 1);
+        } else if constexpr (
+            Config::kBackend == Backend::SqrtDecomposition
+        ) {
+            int index = left - 1;
+            double result = identity();
+            while (index < right && index % block_size_ != 0) {
+                result = combine(result, values_[index++]);
+            }
+            while (index + block_size_ <= right) {
+                result = combine(result, blocks_[index / block_size_]);
+                index += block_size_;
+            }
+            while (index < right) {
+                result = combine(result, values_[index++]);
+            }
+            return result;
         } else if constexpr (Config::kBackend == Backend::SegmentTree) {
             int lower = segment_size_ + left - 1;
             int upper = segment_size_ + right;
@@ -132,6 +177,13 @@ public:
                 upper >>= 1;
             }
             return combine(left_result, right_result);
+        } else if constexpr (Config::kBackend == Backend::SparseTable) {
+            int level = sparse_logs_[right - left + 1];
+            int width = 1 << level;
+            return combine(
+                sparse_[level][left - 1],
+                sparse_[level][right - width]
+            );
         } else {
             return certi_range(0, left, right);
         }
@@ -142,10 +194,21 @@ public:
         if (!std::isfinite(value)) {
             throw std::invalid_argument("value must be finite");
         }
-        if constexpr (Config::kBackend == Backend::Fenwick) {
+        if constexpr (Config::kBackend == Backend::PrefixSum) {
+            double delta = value - values_[key - 1];
+            values_[key - 1] = value;
+            for (int index = key; index < static_cast<int>(prefix_.size()); ++index) {
+                prefix_[index] += delta;
+            }
+        } else if constexpr (Config::kBackend == Backend::Fenwick) {
             double delta = value - values_[key - 1];
             values_[key - 1] = value;
             fenwick_add(key, delta);
+        } else if constexpr (
+            Config::kBackend == Backend::SqrtDecomposition
+        ) {
+            values_[key - 1] = value;
+            rebuild_block((key - 1) / block_size_);
         } else if constexpr (Config::kBackend == Backend::SegmentTree) {
             values_[key - 1] = value;
             int index = segment_size_ + key - 1;
@@ -155,6 +218,9 @@ public:
                     segment_[2 * index], segment_[2 * index + 1]
                 );
             }
+        } else if constexpr (Config::kBackend == Backend::SparseTable) {
+            values_[key - 1] = value;
+            rebuild_sparse();
         } else if constexpr (
             Config::kBackend == Backend::CertiRangePoint
             || Config::kBackend == Backend::CertiRangeRange
@@ -176,9 +242,14 @@ public:
 
 private:
     std::vector<double> values_;
+    std::vector<double> prefix_;
     std::vector<double> fenwick_;
+    std::vector<double> blocks_;
     std::vector<double> segment_;
+    std::vector<std::vector<double>> sparse_;
+    std::vector<int> sparse_logs_;
     std::vector<double> certi_aggregate_;
+    int block_size_ = 0;
     int segment_size_ = 0;
 
     static constexpr double identity() {
@@ -230,6 +301,46 @@ private:
             key -= key & -key;
         }
         return result;
+    }
+
+    void rebuild_prefix() {
+        prefix_.assign(values_.size() + 1, 0.0);
+        for (std::size_t index = 0; index < values_.size(); ++index) {
+            prefix_[index + 1] = prefix_[index] + values_[index];
+        }
+    }
+
+    void rebuild_block(int block) {
+        int left = block * block_size_;
+        int right = std::min(
+            static_cast<int>(values_.size()), left + block_size_
+        );
+        double result = identity();
+        for (int index = left; index < right; ++index) {
+            result = combine(result, values_[index]);
+        }
+        blocks_[block] = result;
+    }
+
+    void rebuild_sparse() {
+        int n = static_cast<int>(values_.size());
+        sparse_logs_.assign(n + 1, 0);
+        for (int length = 2; length <= n; ++length) {
+            sparse_logs_[length] = sparse_logs_[length / 2] + 1;
+        }
+        sparse_.clear();
+        sparse_.push_back(values_);
+        for (int level = 1; (1 << level) <= n; ++level) {
+            int width = 1 << level;
+            int half = width >> 1;
+            sparse_.push_back(std::vector<double>(n - width + 1));
+            for (int left = 0; left + width <= n; ++left) {
+                sparse_[level][left] = combine(
+                    sparse_[level - 1][left],
+                    sparse_[level - 1][left + half]
+                );
+            }
+        }
     }
 
     void validate_topology(int index, int expected_left, int expected_right) {

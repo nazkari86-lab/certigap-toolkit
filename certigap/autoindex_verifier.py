@@ -120,6 +120,23 @@ def _segment_range_steps(left: int, right: int, size: int) -> int:
     return max(1, steps)
 
 
+def _sqrt_range_steps(left: int, right: int, block_size: int) -> int:
+    index = left - 1
+    stop = right
+    steps = 0
+    while index < stop and index % block_size:
+        steps += 1
+        index += 1
+    while index + block_size <= stop:
+        steps += 1
+        index += block_size
+    return steps + stop - index
+
+
+def _sparse_table_entries(n: int) -> int:
+    return sum(n - (1 << level) + 1 for level in range(n.bit_length()))
+
+
 def _costs(
     name: str,
     trace: WorkloadTrace,
@@ -131,8 +148,11 @@ def _costs(
     depths = _depths(topology) if topology is not None else []
     unit_cost = {
         "sorted_array": constraints.array_unit_cost,
+        "prefix_sum": constraints.prefix_unit_cost,
         "fenwick": constraints.fenwick_unit_cost,
+        "sqrt_decomposition": constraints.sqrt_unit_cost,
         "segment_tree": constraints.segment_tree_unit_cost,
+        "sparse_table": constraints.sparse_unit_cost,
         "certirange_point": constraints.certirange_unit_cost,
         "certirange_range": constraints.certirange_unit_cost,
     }[name]
@@ -144,6 +164,13 @@ def _costs(
                 if operation.kind in {"get", "update"}
                 else operation.right - operation.left + 1
             )
+        elif name == "prefix_sum":
+            if operation.kind == "get":
+                cost = 1
+            elif operation.kind == "update":
+                cost = n - operation.left + 2
+            else:
+                cost = 1 if operation.left == 1 else 2
         elif name == "fenwick":
             if operation.kind == "get":
                 cost = 1
@@ -155,6 +182,17 @@ def _costs(
                     _fenwick_prefix_steps(operation.right)
                     + _fenwick_prefix_steps(operation.left - 1),
                 )
+        elif name == "sqrt_decomposition":
+            block_size = max(1, math.ceil(math.sqrt(n)))
+            if operation.kind == "get":
+                cost = 1
+            elif operation.kind == "update":
+                block_start = ((operation.left - 1) // block_size) * block_size
+                cost = min(block_size, n - block_start) + 1
+            else:
+                cost = _sqrt_range_steps(
+                    operation.left, operation.right, block_size
+                )
         elif name == "segment_tree":
             if operation.kind == "get":
                 cost = 1
@@ -164,6 +202,13 @@ def _costs(
                 cost = _segment_range_steps(
                     operation.left, operation.right, size
                 )
+        elif name == "sparse_table":
+            if operation.kind == "get":
+                cost = 1
+            elif operation.kind == "update":
+                cost = _sparse_table_entries(n) + 1
+            else:
+                cost = 2
         else:
             if topology is None:
                 raise AutoIndexVerificationError(
@@ -183,11 +228,20 @@ def _resources(name: str, n: int, topology: dict | None) -> tuple[int, int, int]
     size = 1 << math.ceil(math.log2(n)) if n > 1 else 1
     if name == "sorted_array":
         return n, 0, n
+    if name == "prefix_sum":
+        return 2 * n + 1, 1, n
     if name == "fenwick":
         height = int(math.log2(size))
         return 2 * n + 1, height, n * (height + 1)
+    if name == "sqrt_decomposition":
+        block_size = max(1, math.ceil(math.sqrt(n)))
+        blocks = math.ceil(n / block_size)
+        return n + blocks, 1, n + blocks
     if name == "segment_tree":
         return 2 * size, int(math.log2(size)), 2 * size
+    if name == "sparse_table":
+        entries = _sparse_table_entries(n)
+        return n + entries, 1, entries
     if topology is None:
         raise AutoIndexVerificationError(
             "CertiRange candidate has no topology"
@@ -232,8 +286,10 @@ def _feasibility(
 ) -> tuple[bool, str]:
     memory_slots, height, _ = resources
     reasons: list[str] = []
-    if name == "fenwick" and constraints.aggregate != "sum":
-        reasons.append("Fenwick supports sum only")
+    if name in {"fenwick", "prefix_sum"} and constraints.aggregate != "sum":
+        reasons.append(f"{name} supports sum only")
+    if name == "sparse_table" and constraints.aggregate == "sum":
+        reasons.append("sparse_table supports idempotent min/max only")
     if constraints.require_persistent_snapshots and not name.startswith(
         "certirange"
     ):
@@ -294,8 +350,12 @@ def _expected_candidates(
                 "capabilities": {
                     "aggregates": (
                         ["sum"]
-                        if name == "fenwick"
-                        else ["sum", "min", "max"]
+                        if name in {"fenwick", "prefix_sum"}
+                        else (
+                            ["min", "max"]
+                            if name == "sparse_table"
+                            else ["sum", "min", "max"]
+                        )
                     ),
                     "persistent_snapshots": name.startswith("certirange"),
                 },
@@ -330,7 +390,7 @@ def _expected_candidates(
 
 
 def verify_autoindex_artifact(artifact: dict) -> dict:
-    if not isinstance(artifact, dict) or artifact.get("schema") != "certigap-autoindex-v1":
+    if not isinstance(artifact, dict) or artifact.get("schema") != "certigap-autoindex-v2":
         raise AutoIndexVerificationError("unsupported artifact schema")
     supplied_digest = artifact.get("sha256")
     unsigned = dict(artifact)
@@ -388,7 +448,7 @@ def verify_autoindex_artifact(artifact: dict) -> dict:
         )
     expected_scope = (
         "minimum declared analytical score over the complete deterministic "
-        "five-candidate portfolio; holdout is evaluation-only"
+        "eight-candidate portfolio; holdout is evaluation-only"
     )
     if artifact.get("scope") != expected_scope:
         raise AutoIndexVerificationError("selection scope is invalid")

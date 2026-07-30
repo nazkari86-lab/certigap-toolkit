@@ -2,7 +2,7 @@
 
 CertiGap uses a profile-guided build step. It is not a GCC or Clang plugin:
 the compiler consumes an operation trace before the C++ build, verifies all
-five portfolio candidates, and emits a normal C++17 configuration header.
+eight portfolio candidates, and emits a normal C++17 configuration header.
 
 ## Install
 

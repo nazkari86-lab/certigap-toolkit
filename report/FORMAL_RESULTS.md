@@ -352,7 +352,8 @@ implementation.
 ## Theorem L: Certified AutoIndex Portfolio Minimum
 
 Fix the ordered portfolio
-`(array, Fenwick, segment tree, point-proxy CertiRange, range-aware CertiRange)`
+`(array, prefix sum, Fenwick, square-root decomposition, segment tree, sparse
+table, point-proxy CertiRange, range-aware CertiRange)`
 and a training trace. For each candidate, the compiler deterministically
 reconstructs its topology, declared resources, feasibility, and per-operation
 primitive-visit vector. Its score is therefore a deterministic function of the
@@ -364,9 +365,9 @@ The compiler retains every candidate, including infeasible candidates and
 their rejection reasons. It chooses the lexicographic minimum of training
 score, memory slots, and published portfolio position among feasible rows.
 Consequently the selected candidate has minimum declared score over the
-complete five-candidate portfolio.
+complete eight-candidate portfolio.
 
-The standalone verifier regenerates all five rows from the trace and
+The standalone verifier regenerates all eight rows from the trace and
 constraints and compares the complete ordered candidate list before checking
 the winner and canonical digest. Removing a candidate or changing a score,
 feasibility decision, routing tree, holdout evaluation, or selected name is
@@ -378,6 +379,29 @@ theorem is a portfolio-completeness guarantee in declared primitive visits,
 not global optimality over unlisted data structures and not a wall-clock
 latency guarantee. `QED`
 
+## Corollary L.1: Conditional Safe-Deployment Bound
+
+Let `D_i = C_candidate(i) - C_baseline(i)` for `m` independent IID validation
+operations. Suppose `D_i` lies in an interval of width at most `B`, as
+recomputed from the declared backend bounds. Hoeffding's inequality gives
+
+`Pr(E[D] > mean(D) + B sqrt(log(1/alpha)/(2m))) <= alpha`.
+
+Adding deterministic amortized build and migration cost `A` preserves the
+inequality. Therefore, when Safe AutoIndex deploys specialization only if
+
+`mean(D) + B sqrt(log(1/alpha)/(2m)) + A < -minimum_improvement`,
+
+the probability that its declared expected improvement fails to exceed the
+minimum is at most `alpha`, conditional on the stated IID and bounded-cost
+assumptions. If the inequality does not hold, the declared safe baseline is
+retained. Test data is evaluated only after this decision and cannot alter it.
+
+The verifier independently recomputes the baseline, `B`, confidence radius,
+transition cost, deployment decision, and test scores. The result does not
+cover dependent temporal traces, inaccurate hardware calibration, or
+unmodeled wall-clock effects. `QED`
+
 ## Theorem M: Generated C++ Configuration Fidelity
 
 Let `A` be an AutoIndex artifact accepted by the independent verifier. The
@@ -386,12 +410,13 @@ key count, artifact digest, and, for CertiRange, the deterministically completed
 topology. Identical artifact and namespace inputs therefore emit identical
 header bytes.
 
-For array, Fenwick, and segment-tree backends, the generated configuration
-selects the corresponding executable recurrence directly. For CertiRange,
-the emitted topology is the same completion whose canonical hash was checked
-in `A`. Structural induction over that topology proves every internal state is
-the configured monoid aggregate of its interval. The same induction proves
-range queries and point updates agree with the array specification.
+For array, prefix sum, Fenwick, square-root decomposition, segment-tree, and
+sparse-table backends, the generated configuration selects the corresponding
+executable recurrence directly. For CertiRange, the emitted topology is the
+same completion whose canonical hash was checked in `A`. Structural induction
+over that topology proves every internal state is the configured monoid
+aggregate of its interval. The same induction proves range queries and point
+updates agree with the array specification.
 
 A C++ snapshot is an independent value-copy of all runtime state. Subsequent
 updates cannot mutate the copy, so snapshot observations preserve the

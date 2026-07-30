@@ -52,7 +52,7 @@ class UnifiedCliTests(unittest.TestCase):
             self.assertEqual(verified.returncode, 0, verified.stderr)
             payload = json.loads(verified.stdout)
             self.assertEqual(
-                payload["artifact_type"], "certigap-autoindex-v1"
+                payload["artifact_type"], "certigap-autoindex-v2"
             )
             explained = self.run_cli("explain", str(artifact_path))
             self.assertEqual(explained.returncode, 0, explained.stderr)

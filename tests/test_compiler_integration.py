@@ -204,7 +204,20 @@ class CompilerIntegrationTests(unittest.TestCase):
                 constraints={"memory_limit_slots": 8},
                 operations=[{"kind": "range", "left": 1, "right": 8}] * 20,
             ),
-            "fenwick_sum": spec(),
+            "fenwick_sum": spec(
+                constraints={"prefix_unit_cost": 10.0},
+            ),
+            "prefix_sum": spec(
+                operations=[{"kind": "range", "left": 2, "right": 7}] * 20,
+            ),
+            "sqrt_min": spec(
+                aggregate="min",
+                constraints={
+                    "sqrt_unit_cost": 0.1,
+                    "sparse_unit_cost": 10.0,
+                },
+            ),
+            "sparse_min": spec(aggregate="min"),
             "segment_sum": spec(
                 constraints={"segment_tree_unit_cost": 0.1},
             ),
@@ -223,6 +236,9 @@ class CompilerIntegrationTests(unittest.TestCase):
         expected = {
             "array_sum": "sorted_array",
             "fenwick_sum": "fenwick",
+            "prefix_sum": "prefix_sum",
+            "sqrt_min": "sqrt_decomposition",
+            "sparse_min": "sparse_table",
             "segment_sum": "segment_tree",
             "segment_min": "segment_tree",
             "segment_max": "segment_tree",
@@ -248,6 +264,9 @@ class CompilerIntegrationTests(unittest.TestCase):
 #include <vector>
 #include "array_sum.hpp"
 #include "fenwick_sum.hpp"
+#include "prefix_sum.hpp"
+#include "sqrt_min.hpp"
+#include "sparse_min.hpp"
 #include "segment_sum.hpp"
 #include "certirange_sum.hpp"
 #include "segment_min.hpp"
@@ -266,16 +285,25 @@ bool check_sum() {
 int main() {
     if (!check_sum<generated_array_sum::Index>()) return 2;
     if (!check_sum<generated_fenwick_sum::Index>()) return 3;
-    if (!check_sum<generated_segment_sum::Index>()) return 4;
-    if (!check_sum<generated_certirange_sum::Index>()) return 5;
+    if (!check_sum<generated_prefix_sum::Index>()) return 4;
+    if (!check_sum<generated_segment_sum::Index>()) return 5;
+    if (!check_sum<generated_certirange_sum::Index>()) return 6;
+    generated_sqrt_min::Index sqrt_minimum({7, 6, 5, 4, 3, 2, 1, 0});
+    generated_sparse_min::Index sparse_minimum({7, 6, 5, 4, 3, 2, 1, 0});
     generated_segment_min::Index minimum({7, 6, 5, 4, 3, 2, 1, 0});
     generated_segment_max::Index maximum({0, 1, 2, 3, 4, 5, 6, 7});
-    if (minimum.range_query(2, 7) != 1.0) return 6;
-    if (maximum.range_query(2, 7) != 6.0) return 7;
+    if (sqrt_minimum.range_query(2, 7) != 1.0) return 7;
+    if (sparse_minimum.range_query(2, 7) != 1.0) return 8;
+    if (minimum.range_query(2, 7) != 1.0) return 9;
+    if (maximum.range_query(2, 7) != 6.0) return 10;
+    sqrt_minimum.point_update(7, 9.0);
+    sparse_minimum.point_update(7, 9.0);
     minimum.point_update(7, 9.0);
     maximum.point_update(7, -9.0);
-    if (minimum.range_query(2, 7) != 2.0) return 8;
-    if (maximum.range_query(2, 7) != 5.0) return 9;
+    if (sqrt_minimum.range_query(2, 7) != 2.0) return 11;
+    if (sparse_minimum.range_query(2, 7) != 2.0) return 12;
+    if (minimum.range_query(2, 7) != 2.0) return 13;
+    if (maximum.range_query(2, 7) != 5.0) return 14;
     return 0;
 }
 """,

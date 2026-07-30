@@ -3,6 +3,20 @@
 All notable changes are documented here. Scientific claim changes are also
 recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
 
+## Unreleased
+
+- Expand Certified AutoIndex from five to eight executable candidates with
+  prefix sums, square-root decomposition, and sparse tables.
+- Add Python and generated C++17 runtimes, calibrated cost fields, capability
+  filtering, complete-portfolio replay verification, and cross-language tests
+  for the new backends.
+- Upgrade selection artifacts to `certigap-autoindex-v2` and regenerate the
+  24-scenario validation matrix with 192 candidate rows.
+- Add Safe AutoIndex with train/validation/test isolation, a one-sided
+  Hoeffding no-regression gate, build/migration amortization, conventional
+  fallback, independently replayed certificates, and a 16-case validation
+  matrix.
+
 ## 1.10.1 - 2026-07-30
 
 - Make installed `certigap reproduce` discover a source checkout from the

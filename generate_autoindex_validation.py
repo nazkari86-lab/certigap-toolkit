@@ -14,6 +14,7 @@ from certigap import (
 
 
 ROOT = Path(__file__).resolve().parent
+PORTFOLIO_SIZE = 8
 CSV_PATH = ROOT / "results" / "autoindex_validation.csv"
 MD_PATH = ROOT / "results" / "autoindex_validation.md"
 EXAMPLE_PATH = ROOT / "results" / "autoindex_selection_example.json"
@@ -153,8 +154,8 @@ def main() -> None:
             [
                 "# Certified AutoIndex validation",
                 "",
-                f"- Rows: `{len(rows)}` (`{len(rows) // 5}` complete portfolios).",
-                "- Candidate count per portfolio: `5`.",
+                f"- Rows: `{len(rows)}` (`{len(rows) // PORTFOLIO_SIZE}` complete portfolios).",
+                f"- Candidate count per portfolio: `{PORTFOLIO_SIZE}`.",
                 "- Independently replay-verified portfolios: `24/24`.",
                 f"- Selection distribution: `{dict(sorted(selected_counts.items()))}`.",
                 f"- Mean chronological-holdout regret: `{sum(regrets) / len(regrets):.6f}` primitive visits.",
@@ -168,7 +169,10 @@ def main() -> None:
         + "\n",
         encoding="utf-8",
     )
-    print(f"Wrote {len(rows)} rows across {len(rows) // 5} portfolios")
+    print(
+        f"Wrote {len(rows)} rows across "
+        f"{len(rows) // PORTFOLIO_SIZE} portfolios"
+    )
 
 
 if __name__ == "__main__":

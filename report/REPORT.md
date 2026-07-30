@@ -933,13 +933,16 @@ A production speed claim requires the same benchmark in the C++ core on independ
 into an executable index. It evaluates a fixed, deterministic portfolio:
 
 1. contiguous sorted array;
-2. Fenwick tree;
-3. iterative segment tree;
-4. point-proxy CertiRange;
-5. range-aware CertiRange.
+2. global prefix sums;
+3. Fenwick tree;
+4. square-root decomposition;
+5. iterative segment tree;
+6. sparse table for idempotent `min`/`max`;
+7. point-proxy CertiRange;
+8. range-aware CertiRange.
 
 Every candidate remains in the exported artifact, including infeasible ones
-and their rejection reasons. The independent verifier reconstructs all five
+and their rejection reasons. The independent verifier reconstructs all eight
 candidates, recomputes resources and scores, and rejects omitted candidates,
 changed winners, changed holdout results, or a modified digest.
 
@@ -972,13 +975,15 @@ winner.
 
 By default the unit is one declared structural primitive visit. It makes the
 selection replayable, but it is not a nanosecond model. Production selection
-can set `array_unit_cost`, `fenwick_unit_cost`,
-`segment_tree_unit_cost`, and `certirange_unit_cost` from target-system
-measurements. The verifier includes these coefficients in regeneration.
+can set `array_unit_cost`, `prefix_unit_cost`, `fenwick_unit_cost`,
+`sqrt_unit_cost`, `segment_tree_unit_cost`, `sparse_unit_cost`, and
+`certirange_unit_cost` from target-system measurements. The verifier includes
+these coefficients in regeneration.
 
 ## Constraints And Capabilities
 
-- `aggregate`: `sum`, `min`, or `max`; Fenwick is infeasible outside `sum`.
+- `aggregate`: `sum`, `min`, or `max`; Fenwick and prefix sums require `sum`,
+  while sparse tables require idempotent `min` or `max`.
 - `memory_limit_slots`: excludes structures exceeding the declared model.
 - `max_depth`: bounds candidate height.
 - `require_persistent_snapshots`: restricts selection to CertiRange.
@@ -989,17 +994,24 @@ The current universe is static and rank-addressed. Insert/delete, disk-page
 layouts, concurrency, and storage-engine latency remain outside the verified
 scope.
 
+Adding unrelated structures is intentionally avoided. Hash tables do not
+support range aggregates, while B-trees, learned indexes, and wavelet trees
+need different key, storage, or query semantics. They require a separate
+capability grammar rather than misleading rows in this portfolio.
+
 For deterministic JSON-to-C++ code generation and CMake wiring, see
 [`COMPILER_INTEGRATION.md`](COMPILER_INTEGRATION.md).
+The admission rules and capability-separated roadmap are in
+[`PORTFOLIO_EXPANSION.md`](PORTFOLIO_EXPANSION.md).
 
 # Certified AutoIndex validation
 
-- Rows: `120` (`24` complete portfolios).
-- Candidate count per portfolio: `5`.
+- Rows: `192` (`24` complete portfolios).
+- Candidate count per portfolio: `8`.
 - Independently replay-verified portfolios: `24/24`.
-- Selection distribution: `{'certirange_range': 5, 'fenwick': 4, 'segment_tree': 3, 'sorted_array': 12}`.
-- Mean chronological-holdout regret: `9.744583` primitive visits.
-- Maximum chronological-holdout regret: `118.320000` primitive visits.
+- Selection distribution: `{'certirange_range': 4, 'prefix_sum': 4, 'sorted_array': 12, 'sparse_table': 4}`.
+- Mean chronological-holdout regret: `9.724479` primitive visits.
+- Maximum chronological-holdout regret: `119.550000` primitive visits.
 
 Selection uses training operations only. Holdout measures temporal generalization and is never consulted by the compiler. Scores are declared structural primitive visits, not wall-clock latency.
 
@@ -1007,7 +1019,7 @@ Selection uses training operations only. Holdout measures temporal generalizatio
 
 CertiGap uses a profile-guided build step. It is not a GCC or Clang plugin:
 the compiler consumes an operation trace before the C++ build, verifies all
-five portfolio candidates, and emits a normal C++17 configuration header.
+eight portfolio candidates, and emits a normal C++17 configuration header.
 
 ## Install
 
@@ -1155,8 +1167,8 @@ costs should be calibrated on the target system when latency matters.
 
 - Deterministic generated headers: `24/24`.
 - Independently verified source artifacts: `24/24`.
-- Candidate count per artifact: `5`.
-- Selected backend distribution: `{'certirange_range': 5, 'fenwick': 4, 'segment_tree': 3, 'sorted_array': 12}`.
+- Candidate count per artifact: `8`.
+- Selected backend distribution: `{'certirange_range': 4, 'prefix_sum': 4, 'sorted_array': 12, 'sparse_table': 4}`.
 - Cross-language executable coverage is enforced by `tests/test_compiler_integration.py`.
 - The CMake example compiles a generated CertiRange topology and checks snapshot isolation.
 

@@ -19,16 +19,22 @@ from .workload import CertiRangeWorkload
 OperationName = Literal["get", "range", "update"]
 CandidateName = Literal[
     "sorted_array",
+    "prefix_sum",
     "fenwick",
+    "sqrt_decomposition",
     "segment_tree",
+    "sparse_table",
     "certirange_point",
     "certirange_range",
 ]
 
 PORTFOLIO_ORDER: tuple[CandidateName, ...] = (
     "sorted_array",
+    "prefix_sum",
     "fenwick",
+    "sqrt_decomposition",
     "segment_tree",
+    "sparse_table",
     "certirange_point",
     "certirange_range",
 )
@@ -137,8 +143,11 @@ class AutoIndexConstraints:
     memory_weight: float = 0.0
     build_weight: float = 0.0
     array_unit_cost: float = 1.0
+    prefix_unit_cost: float = 1.0
     fenwick_unit_cost: float = 1.0
+    sqrt_unit_cost: float = 1.0
     segment_tree_unit_cost: float = 1.0
+    sparse_unit_cost: float = 1.0
     certirange_unit_cost: float = 1.0
     range_beam_width: int = 8
     range_candidate_limit: int = 12
@@ -171,8 +180,11 @@ class AutoIndexConstraints:
             not math.isfinite(value) or value <= 0
             for value in (
                 self.array_unit_cost,
+                self.prefix_unit_cost,
                 self.fenwick_unit_cost,
+                self.sqrt_unit_cost,
                 self.segment_tree_unit_cost,
+                self.sparse_unit_cost,
                 self.certirange_unit_cost,
             )
         ):
@@ -243,6 +255,132 @@ class _FenwickIndex:
         delta = numeric - self.values[key - 1]
         self.values[key - 1] = numeric
         self._add(key, delta)
+
+
+class _PrefixSumIndex:
+    supports_snapshots = False
+
+    def __init__(self, values: Sequence[float]) -> None:
+        self.values = list(values)
+        self.prefix = [0.0]
+        for value in self.values:
+            self.prefix.append(self.prefix[-1] + value)
+
+    def get(self, key: int) -> float:
+        return self.values[key - 1]
+
+    def range_query(self, left: int, right: int) -> float:
+        return self.prefix[right] - self.prefix[left - 1]
+
+    def point_update(self, key: int, value: float) -> None:
+        numeric = float(value)
+        delta = numeric - self.values[key - 1]
+        self.values[key - 1] = numeric
+        for index in range(key, len(self.prefix)):
+            self.prefix[index] += delta
+
+
+class _SqrtIndex:
+    supports_snapshots = False
+
+    def __init__(self, values: Sequence[float], aggregate: AggregateName) -> None:
+        self.values = list(values)
+        self.aggregate = aggregate
+        self.block_size = max(1, math.ceil(math.sqrt(len(values))))
+        self.blocks = [self._identity()] * math.ceil(
+            len(values) / self.block_size
+        )
+        for block in range(len(self.blocks)):
+            self._rebuild_block(block)
+
+    def _identity(self) -> float:
+        if self.aggregate == "sum":
+            return 0.0
+        if self.aggregate == "min":
+            return float("inf")
+        return float("-inf")
+
+    def _rebuild_block(self, block: int) -> None:
+        left = block * self.block_size
+        right = min(len(self.values), left + self.block_size)
+        result = self._identity()
+        for value in self.values[left:right]:
+            result = _combine(result, value, self.aggregate)
+        self.blocks[block] = result
+
+    def get(self, key: int) -> float:
+        return self.values[key - 1]
+
+    def range_query(self, left: int, right: int) -> float:
+        index = left - 1
+        stop = right
+        result = self._identity()
+        while index < stop and index % self.block_size:
+            result = _combine(result, self.values[index], self.aggregate)
+            index += 1
+        while index + self.block_size <= stop:
+            result = _combine(
+                result, self.blocks[index // self.block_size], self.aggregate
+            )
+            index += self.block_size
+        while index < stop:
+            result = _combine(result, self.values[index], self.aggregate)
+            index += 1
+        return result
+
+    def point_update(self, key: int, value: float) -> None:
+        self.values[key - 1] = float(value)
+        self._rebuild_block((key - 1) // self.block_size)
+
+
+class _SparseTableIndex:
+    supports_snapshots = False
+
+    def __init__(self, values: Sequence[float], aggregate: AggregateName) -> None:
+        self.values = list(values)
+        self.aggregate = aggregate
+        self.logs: list[int] = []
+        self.table: list[list[float]] = []
+        self._rebuild()
+
+    def _rebuild(self) -> None:
+        n = len(self.values)
+        self.logs = [0] * (n + 1)
+        for length in range(2, n + 1):
+            self.logs[length] = self.logs[length // 2] + 1
+        self.table = [self.values.copy()]
+        level = 1
+        while 1 << level <= n:
+            width = 1 << level
+            half = width >> 1
+            previous = self.table[-1]
+            self.table.append(
+                [
+                    _combine(
+                        previous[left],
+                        previous[left + half],
+                        self.aggregate,
+                    )
+                    for left in range(n - width + 1)
+                ]
+            )
+            level += 1
+
+    def get(self, key: int) -> float:
+        return self.values[key - 1]
+
+    def range_query(self, left: int, right: int) -> float:
+        level = self.logs[right - left + 1]
+        width = 1 << level
+        return _combine(
+            self.table[level][left - 1],
+            self.table[level][right - width],
+            self.aggregate,
+        )
+
+    def point_update(self, key: int, value: float) -> None:
+        self.values[key - 1] = float(value)
+        self._rebuild()
 
 
 class _SegmentIndex:
@@ -357,6 +495,23 @@ def _segment_range_steps(left: int, right: int, size: int) -> int:
     return max(1, steps)
 
 
+def _sqrt_range_steps(left: int, right: int, block_size: int) -> int:
+    index = left - 1
+    stop = right
+    steps = 0
+    while index < stop and index % block_size:
+        steps += 1
+        index += 1
+    while index + block_size <= stop:
+        steps += 1
+        index += block_size
+    return steps + stop - index
+
+
+def _sparse_table_entries(n: int) -> int:
+    return sum(n - (1 << level) + 1 for level in range(n.bit_length()))
+
+
 def _analytical_costs(
     name: CandidateName,
     trace: WorkloadTrace,
@@ -368,8 +523,11 @@ def _analytical_costs(
     depths = _topology_depths(topology) if topology is not None else []
     unit_cost = {
         "sorted_array": constraints.array_unit_cost,
+        "prefix_sum": constraints.prefix_unit_cost,
         "fenwick": constraints.fenwick_unit_cost,
+        "sqrt_decomposition": constraints.sqrt_unit_cost,
         "segment_tree": constraints.segment_tree_unit_cost,
+        "sparse_table": constraints.sparse_unit_cost,
         "certirange_point": constraints.certirange_unit_cost,
         "certirange_range": constraints.certirange_unit_cost,
     }[name]
@@ -381,6 +539,13 @@ def _analytical_costs(
                 if operation.kind in {"get", "update"}
                 else operation.right - operation.left + 1
             )
+        elif name == "prefix_sum":
+            if operation.kind == "get":
+                cost = 1
+            elif operation.kind == "update":
+                cost = n - operation.left + 2
+            else:
+                cost = 1 if operation.left == 1 else 2
         elif name == "fenwick":
             if operation.kind == "get":
                 cost = 1
@@ -391,6 +556,17 @@ def _analytical_costs(
                     operation.right
                 ) + _fenwick_prefix_steps(operation.left - 1)
                 cost = max(1, cost)
+        elif name == "sqrt_decomposition":
+            block_size = max(1, math.ceil(math.sqrt(n)))
+            if operation.kind == "get":
+                cost = 1
+            elif operation.kind == "update":
+                block_start = ((operation.left - 1) // block_size) * block_size
+                cost = min(block_size, n - block_start) + 1
+            else:
+                cost = _sqrt_range_steps(
+                    operation.left, operation.right, block_size
+                )
         elif name == "segment_tree":
             if operation.kind == "get":
                 cost = 1
@@ -400,6 +576,13 @@ def _analytical_costs(
                 cost = _segment_range_steps(
                     operation.left, operation.right, size
                 )
+        elif name == "sparse_table":
+            if operation.kind == "get":
+                cost = 1
+            elif operation.kind == "update":
+                cost = _sparse_table_entries(n) + 1
+            else:
+                cost = 2
         else:
             if topology is None:
                 raise RuntimeError("CertiRange candidate has no topology")
@@ -419,10 +602,19 @@ def _candidate_resources(
     size = 1 << math.ceil(math.log2(n)) if n > 1 else 1
     if name == "sorted_array":
         return n, 0, n
+    if name == "prefix_sum":
+        return 2 * n + 1, 1, n
     if name == "fenwick":
         return 2 * n + 1, int(math.log2(size)), n * int(math.log2(size) + 1)
+    if name == "sqrt_decomposition":
+        block_size = max(1, math.ceil(math.sqrt(n)))
+        blocks = math.ceil(n / block_size)
+        return n + blocks, 1, n + blocks
     if name == "segment_tree":
         return 2 * size, int(math.log2(size)), 2 * size
+    if name == "sparse_table":
+        entries = _sparse_table_entries(n)
+        return n + entries, 1, entries
     if topology is None:
         raise RuntimeError("CertiRange candidate has no topology")
     depth = max(_topology_depths(topology))
@@ -503,8 +695,10 @@ def _candidate_feasibility(
 ) -> tuple[bool, str]:
     memory_slots, height, _ = resources
     reasons: list[str] = []
-    if name == "fenwick" and constraints.aggregate != "sum":
-        reasons.append("Fenwick supports sum only")
+    if name in {"fenwick", "prefix_sum"} and constraints.aggregate != "sum":
+        reasons.append(f"{name} supports sum only")
+    if name == "sparse_table" and constraints.aggregate == "sum":
+        reasons.append("sparse_table supports idempotent min/max only")
     if constraints.require_persistent_snapshots and not name.startswith(
         "certirange"
     ):
@@ -585,6 +779,74 @@ class CompiledAutoIndex:
         return json.loads(json.dumps(self.artifact))
 
 
+def _runtime_for_candidate(
+    values: Sequence[float],
+    name: CandidateName,
+    artifact: dict,
+) -> object:
+    constraints = AutoIndexConstraints(**artifact["constraints"])
+    if name == "sorted_array":
+        return _ArrayIndex(values, constraints.aggregate)
+    if name == "prefix_sum":
+        return _PrefixSumIndex(values)
+    if name == "fenwick":
+        return _FenwickIndex(values)
+    if name == "sqrt_decomposition":
+        return _SqrtIndex(values, constraints.aggregate)
+    if name == "segment_tree":
+        return _SegmentIndex(values, constraints.aggregate)
+    if name == "sparse_table":
+        return _SparseTableIndex(values, constraints.aggregate)
+
+    selected = next(
+        row for row in artifact["candidates"] if row["name"] == name
+    )
+    minimum = 0 if artifact["n"] <= 1 else math.ceil(math.log2(artifact["n"]))
+    max_depth = constraints.max_depth or (2 * minimum + 1)
+    trace = WorkloadTrace(
+        artifact["n"],
+        (
+            TraceOperation(**operation)
+            for operation in artifact["train_trace"]["operations"]
+        ),
+    )
+    workload = trace.aggregate()
+    return DynamicCertiRange().fit(
+        values,
+        weights=workload.routing_weights(),
+        budget=constraints.budget,
+        eta=constraints.tail_weight,
+        aggregate=constraints.aggregate,
+        max_depth=max_depth,
+        routing_tree=selected["routing_tree"],
+        routing_label=name,
+    )
+
+
+def materialize_autoindex_candidate(
+    values: Iterable[float],
+    artifact: dict,
+    name: CandidateName,
+) -> object:
+    """Build one feasible candidate from a verified AutoIndex artifact."""
+    from .autoindex_verifier import verify_autoindex_artifact
+
+    verify_autoindex_artifact(artifact)
+    if name not in PORTFOLIO_ORDER:
+        raise ValueError("candidate is outside the verified portfolio")
+    candidate = next(
+        row for row in artifact["candidates"] if row["name"] == name
+    )
+    if not candidate["feasible"]:
+        raise ValueError(f"candidate is infeasible: {candidate['reason']}")
+    value_list = [float(value) for value in values]
+    if len(value_list) != artifact["n"] or any(
+        not math.isfinite(value) for value in value_list
+    ):
+        raise ValueError("finite values must match the artifact key universe")
+    return _runtime_for_candidate(value_list, name, artifact)
+
+
 def compile_autoindex(
     values: Iterable[float],
     train_trace: WorkloadTrace,
@@ -656,8 +918,12 @@ def compile_autoindex(
                 "capabilities": {
                     "aggregates": (
                         ["sum"]
-                        if name == "fenwick"
-                        else ["sum", "min", "max"]
+                        if name in {"fenwick", "prefix_sum"}
+                        else (
+                            ["min", "max"]
+                            if name == "sparse_table"
+                            else ["sum", "min", "max"]
+                        )
                     ),
                     "persistent_snapshots": name.startswith("certirange"),
                 },
@@ -688,10 +954,10 @@ def compile_autoindex(
         ),
     )
     manifest = {
-        "schema": "certigap-autoindex-v1",
+        "schema": "certigap-autoindex-v2",
         "scope": (
             "minimum declared analytical score over the complete deterministic "
-            "five-candidate portfolio; holdout is evaluation-only"
+            "eight-candidate portfolio; holdout is evaluation-only"
         ),
         "metric": {
             "unit": "declared_weighted_primitive_work",
@@ -712,24 +978,7 @@ def compile_autoindex(
     }
     manifest["sha256"] = _canonical_sha256(manifest)
 
-    workload = train_trace.aggregate()
-    if selected["name"] == "sorted_array":
-        runtime: object = _ArrayIndex(value_list, constraints.aggregate)
-    elif selected["name"] == "fenwick":
-        runtime = _FenwickIndex(value_list)
-    elif selected["name"] == "segment_tree":
-        runtime = _SegmentIndex(value_list, constraints.aggregate)
-    else:
-        runtime = DynamicCertiRange().fit(
-            value_list,
-            weights=workload.routing_weights(),
-            budget=constraints.budget,
-            eta=constraints.tail_weight,
-            aggregate=constraints.aggregate,
-            max_depth=max_depth,
-            routing_tree=routing_trees[selected["name"]],
-            routing_label=selected["name"],
-        )
+    runtime = _runtime_for_candidate(value_list, selected["name"], manifest)
 
     from .autoindex_verifier import verify_autoindex_artifact
 

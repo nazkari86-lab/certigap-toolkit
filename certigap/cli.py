@@ -26,16 +26,19 @@ from .hardware import calibrate_hardware
 from .hybrid_verifier import verify_hybrid_certificate
 from .pruned_verifier import verify_pruned_beam_certificate
 from .range_optimizer_verifier import verify_range_optimizer_artifact
+from .safe_autoindex_verifier import verify_safe_autoindex_certificate
+from .safe_compiler import compile_safe_spec, generate_safe_cpp_header
 from .synthesis_verifier import verify_synthesis_certificate
 
 
 Verifier = Callable[[dict], dict]
 
 _SCHEMA_VERIFIERS: dict[str, Verifier] = {
-    "certigap-autoindex-v1": verify_autoindex_artifact,
+    "certigap-autoindex-v2": verify_autoindex_artifact,
     "certigap-dynamic-range-v1": verify_dynamic_range_certificate,
     "certigap-hybrid-v1": verify_hybrid_certificate,
     "certigap-range-optimizer-v1": verify_range_optimizer_artifact,
+    "certigap-safe-autoindex-v1": verify_safe_autoindex_certificate,
     "certigap-synthesis-v1": verify_synthesis_certificate,
 }
 
@@ -94,7 +97,7 @@ def explain_artifact(kind: str, artifact: dict, verification: dict) -> dict:
             "wall-clock latency or global optimality outside that space."
         ),
     }
-    if kind == "certigap-autoindex-v1":
+    if kind == "certigap-autoindex-v2":
         selected = artifact["selected"]
         row = next(
             candidate
@@ -128,6 +131,22 @@ def explain_artifact(kind: str, artifact: dict, verification: dict) -> dict:
                         ),
                     )
                 ],
+            }
+        )
+    elif kind == "certigap-safe-autoindex-v1":
+        decision = artifact["decision"]
+        explanation.update(
+            {
+                "selected": decision["deployed"],
+                "train_candidate": decision["train_candidate"],
+                "safe_baseline": decision["safe_baseline"],
+                "candidate_approved": decision["candidate_approved"],
+                "selection_reason": decision["reason"],
+                "validation_upper_difference": decision["validation"][
+                    "upper_difference"
+                ],
+                "confidence_alpha": artifact["policy"]["confidence_alpha"],
+                "scope": artifact["scope"],
             }
         )
     elif kind in {"certigap-hybrid-v1", "certigap-synthesis-v1"}:
@@ -275,6 +294,37 @@ def _compile(args: argparse.Namespace) -> int:
     return 0
 
 
+def _safe_compile(args: argparse.Namespace) -> int:
+    source = Path(args.input).resolve()
+    artifact_path = Path(args.artifact).resolve()
+    header_path = Path(args.header).resolve()
+    if len({source, artifact_path, header_path}) != 3:
+        raise CompileInputError(
+            "input, artifact, and header paths must be distinct"
+        )
+    certificate = compile_safe_spec(_read_json(source))
+    header = generate_safe_cpp_header(
+        certificate, namespace=args.namespace
+    )
+    _write_json(artifact_path, certificate)
+    _write_text(header_path, header)
+    verification = verify_safe_autoindex_certificate(certificate)
+    print(
+        json.dumps(
+            {
+                "artifact_type": certificate["schema"],
+                "selected": verification["selected"],
+                "candidate_approved": verification["candidate_approved"],
+                "artifact": str(artifact_path),
+                "header": str(header_path),
+                "sha256": certificate["sha256"],
+            },
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
 def _verify(args: argparse.Namespace) -> int:
     artifact = _read_json(Path(args.artifact).resolve())
     kind, verification = verify_artifact(artifact)
@@ -387,6 +437,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--namespace", default="certigap_generated"
     )
     compile_parser.set_defaults(handler=_compile)
+
+    safe_compile_parser = commands.add_parser(
+        "safe-compile",
+        help="compile train/validation/test traces with a no-regression gate",
+    )
+    safe_compile_parser.add_argument("input")
+    safe_compile_parser.add_argument("--artifact", required=True)
+    safe_compile_parser.add_argument("--header", required=True)
+    safe_compile_parser.add_argument(
+        "--namespace", default="certigap_generated"
+    )
+    safe_compile_parser.set_defaults(handler=_safe_compile)
 
     verify_parser = commands.add_parser(
         "verify", help="auto-detect and independently replay an artifact"

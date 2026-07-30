@@ -66,6 +66,20 @@ from .range_optimizer_verifier import (
     make_range_optimizer_artifact,
     verify_range_optimizer_artifact,
 )
+from .safe_autoindex import (
+    SafeCompiledAutoIndex,
+    SafeSelectionPolicy,
+    compile_safe_autoindex,
+)
+from .safe_autoindex_verifier import (
+    SafeAutoIndexVerificationError,
+    verify_safe_autoindex_certificate,
+)
+from .safe_compiler import (
+    compile_safe_spec,
+    generate_safe_cpp_header,
+    load_safe_compile_spec,
+)
 from .synthesis import (
     HardwareProfile,
     SynthesisConstraints,
@@ -139,6 +153,8 @@ __all__ = [
     "cost_cap_dp_best",
     "counterexample_search",
     "compile_autoindex",
+    "compile_safe_autoindex",
+    "compile_safe_spec",
     "CppCertiGap",
     "certify_tree",
     "calibrate_hardware",
@@ -182,6 +198,9 @@ __all__ = [
     "RangeOptimizerVerificationError",
     "range_aware_beam_search",
     "score_range_workload",
+    "SafeAutoIndexVerificationError",
+    "SafeCompiledAutoIndex",
+    "SafeSelectionPolicy",
     "make_range_optimizer_artifact",
     "split_count",
     "SynthesisConstraints",
@@ -201,6 +220,7 @@ __all__ = [
     "verify_autodro_selection_artifact",
     "verify_anytime_tv_certificate",
     "verify_autoindex_artifact",
+    "verify_safe_autoindex_certificate",
     "verify_tree",
     "verify_synthesis_certificate",
     "verify_hybrid_certificate",
@@ -212,4 +232,6 @@ __all__ = [
     "compile_synthesized_index",
     "compile_hybrid_index",
     "synthesize_hybrid_partitions",
+    "generate_safe_cpp_header",
+    "load_safe_compile_spec",
 ]

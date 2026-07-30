@@ -16,6 +16,7 @@ from certigap import (
     verify_hybrid_certificate,
     verify_pruned_beam_certificate,
     verify_range_optimizer_artifact,
+    verify_safe_autoindex_certificate,
 )
 
 
@@ -65,6 +66,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "cpp_dynamic_range.csv": 36,
         "range_optimizer_validation.csv": 114,
         "autoindex_validation.csv": 120,
+        "safe_autoindex_validation.csv": 16,
         "compiler_integration_validation.csv": 24,
         "adaptive_header_validation.csv": 24,
         "synthesis_validation.csv": 24,
@@ -266,7 +268,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
     autoindex_verified = verify_autoindex_artifact(autoindex_artifact)
     if (
         not autoindex_verified["completeness_verified"]
-        or autoindex_verified["candidate_count"] != 5
+        or autoindex_verified["candidate_count"] != 8
     ):
         raise ValueError("AutoIndex example does not prove portfolio completeness")
     autoindex_rows = csv_records("autoindex_validation.csv")
@@ -275,8 +277,11 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         autoindex_groups.setdefault(row["group_id"], []).append(row)
     expected_candidates = {
         "sorted_array",
+        "prefix_sum",
         "fenwick",
+        "sqrt_decomposition",
         "segment_tree",
+        "sparse_table",
         "certirange_point",
         "certirange_range",
     }
@@ -301,11 +306,31 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         if not math.isfinite(regret) or regret < -1e-9:
             raise ValueError("AutoIndex holdout regret is invalid")
 
+    safe_artifact = json.loads(
+        (RESULTS / "safe_autoindex_example.json").read_text(encoding="utf-8")
+    )
+    if not verify_safe_autoindex_certificate(safe_artifact)["verified"]:
+        raise ValueError("Safe AutoIndex example did not replay")
+    safe_rows = csv_records("safe_autoindex_validation.csv")
+    if (
+        len(safe_rows) != 16
+        or len({row["group_id"] for row in safe_rows}) != 16
+        or any(row["certificate_verified"] != "True" for row in safe_rows)
+        or sum(row["candidate_approved"] == "True" for row in safe_rows) != 4
+    ):
+        raise ValueError("Safe AutoIndex validation matrix is incomplete")
+    for row in safe_rows:
+        approved = row["candidate_approved"] == "True"
+        if approved != (float(row["upper_difference"]) < 0.0):
+            raise ValueError("Safe AutoIndex decision contradicts its bound")
+        if not approved and row["deployed"] != row["safe_baseline"]:
+            raise ValueError("Safe AutoIndex failed to retain its baseline")
+
     compiler_rows = csv_records("compiler_integration_validation.csv")
     if (
         len({row["group_id"] for row in compiler_rows}) != 24
         or any(
-            row["candidate_count"] != "5"
+            row["candidate_count"] != "8"
             or row["artifact_verified"] != "True"
             or row["constraints_canonical"] != "True"
             or len(row["artifact_sha256"]) != 64

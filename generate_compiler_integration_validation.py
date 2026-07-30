@@ -92,7 +92,7 @@ def main() -> None:
                 "",
                 f"- Deterministic generated headers: `{len(rows)}/{len(rows)}`.",
                 f"- Independently verified source artifacts: `{len(rows)}/{len(rows)}`.",
-                "- Candidate count per artifact: `5`.",
+                "- Candidate count per artifact: `8`.",
                 f"- Selected backend distribution: `{dict(sorted(selected_counts.items()))}`.",
                 "- Cross-language executable coverage is enforced by `tests/test_compiler_integration.py`.",
                 "- The CMake example compiles a generated CertiRange topology and checks snapshot isolation.",

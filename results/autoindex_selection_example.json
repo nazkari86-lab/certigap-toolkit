@@ -49,6 +49,44 @@
       },
       "feasible": false,
       "holdout": {
+        "build_units": 32,
+        "height": 1,
+        "max_primitive_visits": 2.0,
+        "mean_primitive_visits": 2.0,
+        "memory_slots": 65,
+        "operation_count": 120,
+        "score": 2.0,
+        "structural_score": 2.0
+      },
+      "name": "prefix_sum",
+      "reason": "persistent snapshots required",
+      "resources": {
+        "build_units": 32,
+        "height": 1,
+        "memory_slots": 65
+      },
+      "routing_tree": null,
+      "topology_sha256": null,
+      "train": {
+        "build_units": 32,
+        "height": 1,
+        "max_primitive_visits": 33.0,
+        "mean_primitive_visits": 9.65,
+        "memory_slots": 65,
+        "operation_count": 240,
+        "score": 11.985000000000001,
+        "structural_score": 11.985000000000001
+      }
+    },
+    {
+      "capabilities": {
+        "aggregates": [
+          "sum"
+        ],
+        "persistent_snapshots": false
+      },
+      "feasible": false,
+      "holdout": {
         "build_units": 192,
         "height": 5,
         "max_primitive_visits": 3.0,
@@ -89,6 +127,46 @@
       },
       "feasible": false,
       "holdout": {
+        "build_units": 38,
+        "height": 1,
+        "max_primitive_visits": 8.0,
+        "mean_primitive_visits": 8.0,
+        "memory_slots": 38,
+        "operation_count": 120,
+        "score": 8.0,
+        "structural_score": 8.0
+      },
+      "name": "sqrt_decomposition",
+      "reason": "persistent snapshots required",
+      "resources": {
+        "build_units": 38,
+        "height": 1,
+        "memory_slots": 38
+      },
+      "routing_tree": null,
+      "topology_sha256": null,
+      "train": {
+        "build_units": 38,
+        "height": 1,
+        "max_primitive_visits": 7.0,
+        "mean_primitive_visits": 5.9,
+        "memory_slots": 38,
+        "operation_count": 240,
+        "score": 6.010000000000001,
+        "structural_score": 6.010000000000001
+      }
+    },
+    {
+      "capabilities": {
+        "aggregates": [
+          "sum",
+          "min",
+          "max"
+        ],
+        "persistent_snapshots": false
+      },
+      "feasible": false,
+      "holdout": {
         "build_units": 64,
         "height": 5,
         "max_primitive_visits": 4.0,
@@ -116,6 +194,45 @@
         "operation_count": 240,
         "score": 4.2,
         "structural_score": 4.2
+      }
+    },
+    {
+      "capabilities": {
+        "aggregates": [
+          "min",
+          "max"
+        ],
+        "persistent_snapshots": false
+      },
+      "feasible": false,
+      "holdout": {
+        "build_units": 135,
+        "height": 1,
+        "max_primitive_visits": 2.0,
+        "mean_primitive_visits": 2.0,
+        "memory_slots": 167,
+        "operation_count": 120,
+        "score": 2.0,
+        "structural_score": 2.0
+      },
+      "name": "sparse_table",
+      "reason": "sparse_table supports idempotent min/max only; persistent snapshots required",
+      "resources": {
+        "build_units": 135,
+        "height": 1,
+        "memory_slots": 167
+      },
+      "routing_tree": null,
+      "topology_sha256": null,
+      "train": {
+        "build_units": 135,
+        "height": 1,
+        "max_primitive_visits": 136.0,
+        "mean_primitive_visits": 69.0,
+        "memory_slots": 167,
+        "operation_count": 240,
+        "score": 75.7,
+        "structural_score": 75.7
       }
     },
     {
@@ -341,10 +458,13 @@
     "max_depth": null,
     "memory_limit_slots": null,
     "memory_weight": 0.0,
+    "prefix_unit_cost": 1.0,
     "range_beam_width": 8,
     "range_candidate_limit": 12,
     "require_persistent_snapshots": true,
     "segment_tree_unit_cost": 1.0,
+    "sparse_unit_cost": 1.0,
+    "sqrt_unit_cost": 1.0,
     "tail_weight": 0.1
   },
   "holdout_trace": {
@@ -1079,15 +1199,18 @@
   "n": 32,
   "portfolio_order": [
     "sorted_array",
+    "prefix_sum",
     "fenwick",
+    "sqrt_decomposition",
     "segment_tree",
+    "sparse_table",
     "certirange_point",
     "certirange_range"
   ],
-  "schema": "certigap-autoindex-v1",
-  "scope": "minimum declared analytical score over the complete deterministic five-candidate portfolio; holdout is evaluation-only",
+  "schema": "certigap-autoindex-v2",
+  "scope": "minimum declared analytical score over the complete deterministic eight-candidate portfolio; holdout is evaluation-only",
   "selected": "certirange_range",
-  "sha256": "762c4d9e4fc54323afa62ffc20d414ae212ae9c17aad4ba69784283a33dd3c82",
+  "sha256": "a7b286d3e67c7293bfcb9f3dee43037b375e5b456c7deabd0cbb7c2c0ba14e0e",
   "train_trace": {
     "n": 32,
     "operations": [

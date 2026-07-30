@@ -1,0 +1,17 @@
+group_id,n,scenario,train_candidate,safe_baseline,deployed,candidate_approved,validation_operations,mean_difference,confidence_radius,amortized_transition_cost,upper_difference,test_deployed_score,certificate_verified
+stable_large-n16,16,stable_large,prefix_sum,fenwick,prefix_sum,True,100000,-3.000000000000,0.379282300900,0.000000000000,-2.620717699100,2.000000000000,True
+insufficient_sample-n16,16,insufficient_sample,prefix_sum,fenwick,fenwick,False,4,-3.000000000000,59.969797351680,0.000000000000,56.969797351680,5.000000000000,True
+migration_dominated-n16,16,migration_dominated,prefix_sum,fenwick,fenwick,False,100000,-3.000000000000,0.379282300900,1000.000000000000,997.379282300900,5.000000000000,True
+validation_shift-n16,16,validation_shift,prefix_sum,fenwick,fenwick,False,5000,6.505600000000,1.696202014950,0.000000000000,8.201802014950,5.000000000000,True
+stable_large-n32,32,stable_large,prefix_sum,fenwick,prefix_sum,True,100000,-4.000000000000,0.874671428606,0.000000000000,-3.125328571394,2.000000000000,True
+insufficient_sample-n32,32,insufficient_sample,prefix_sum,fenwick,fenwick,False,4,-4.000000000000,138.297695933466,0.000000000000,134.297695933466,6.000000000000,True
+migration_dominated-n32,32,migration_dominated,prefix_sum,fenwick,fenwick,False,100000,-4.000000000000,0.874671428606,1000.000000000000,996.874671428606,6.000000000000,True
+validation_shift-n32,32,validation_shift,prefix_sum,fenwick,fenwick,False,5000,14.017600000000,3.911649544681,0.000000000000,17.929249544681,6.000000000000,True
+stable_large-n64,64,stable_large,prefix_sum,fenwick,prefix_sum,True,100000,-5.000000000000,1.989296965945,0.000000000000,-3.010703034055,2.000000000000,True
+insufficient_sample-n64,64,insufficient_sample,prefix_sum,fenwick,fenwick,False,4,-5.000000000000,314.535467742485,0.000000000000,309.535467742485,7.000000000000,True
+migration_dominated-n64,64,migration_dominated,prefix_sum,fenwick,fenwick,False,100000,-5.000000000000,1.989296965945,1000.000000000000,996.989296965945,7.000000000000,True
+validation_shift-n64,64,validation_shift,prefix_sum,fenwick,fenwick,False,5000,29.542400000000,8.896406486576,0.000000000000,38.438806486576,7.000000000000,True
+stable_large-n128,128,stable_large,prefix_sum,fenwick,prefix_sum,True,100000,-6.000000000000,4.466242604477,0.000000000000,-1.533757395523,2.000000000000,True
+insufficient_sample-n128,128,insufficient_sample,prefix_sum,fenwick,fenwick,False,4,-6.000000000000,706.174960651416,0.000000000000,700.174960651416,8.000000000000,True
+migration_dominated-n128,128,migration_dominated,prefix_sum,fenwick,fenwick,False,100000,-6.000000000000,4.466242604477,1000.000000000000,998.466242604477,8.000000000000,True
+validation_shift-n128,128,validation_shift,prefix_sum,fenwick,fenwick,False,5000,61.092800000000,19.973644135230,0.000000000000,81.066444135230,8.000000000000,True

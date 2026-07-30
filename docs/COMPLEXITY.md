@@ -53,21 +53,23 @@ algorithm.
 
 ## Certified AutoIndex
 
-For `m` trace operations and fixed portfolio size five, array, Fenwick, and
-segment-tree scoring takes `O(m log n)` conservatively. Each CertiRange
-candidate first performs its existing bounded routing search and then replays
-the trace in `O(mh)`, where `h` is completed-tree height. Runtime construction
-is `O(n log n)` for the reference Fenwick build, `O(n)` for array, segment
-tree, and completed CertiRange state after routing is fixed.
+For `m` trace operations and fixed portfolio size eight, direct array, prefix
+sum, Fenwick, square-root decomposition, segment-tree, and sparse-table scoring
+takes `O(m + n)` after constant-time formula setup. Each CertiRange candidate
+first performs its existing bounded routing search and then replays the trace
+in `O(mh)`, where `h` is completed-tree height. Runtime construction is
+`O(n log n)` for the reference Fenwick and sparse-table builds and `O(n)` for
+array, prefix sum, square-root decomposition, segment tree, and completed
+CertiRange state after routing is fixed.
 
 The verifier intentionally repeats candidate generation and scoring rather
 than trusting compiler summaries. It therefore has the same asymptotic cost
 as selection. Portfolio storage is `O(m+n)` because the certificate includes
 the complete training and optional holdout traces plus two routing trees.
 
-Generated array, Fenwick, and segment-tree headers have `O(1)` configuration
-size. A generated CertiRange header contains its complete `2n-1` topology and
-therefore has `O(n)` source size. Runtime bounds match the selected backend.
+Generated non-CertiRange headers have `O(1)` configuration size. A generated
+CertiRange header contains its complete `2n-1` topology and therefore has
+`O(n)` source size. Runtime bounds match the selected backend.
 The generated C++ snapshot operation copies runtime vectors and takes `O(n)`
 time and space; it is semantic snapshot isolation, not path-copy persistence.
 

@@ -186,9 +186,10 @@ inside declared executable grammars, with native measurements reported
 separately.
 
 \section{Certified AutoIndex}
-We evaluate a fixed ordered portfolio containing a contiguous array, Fenwick
-tree, iterative segment tree, point-proxy CertiRange, and range-aware
-CertiRange. For operation-cost vector $c$ and declared resource tuple
+We evaluate a fixed ordered portfolio containing a contiguous array, prefix
+sums, Fenwick tree, square-root decomposition, iterative segment tree, sparse
+table, point-proxy CertiRange, and range-aware CertiRange. For operation-cost
+vector $c$ and declared resource tuple
 $(S,H,U)$, selection minimizes
 \[
 (1-\lambda)\operatorname{mean}(c)+\lambda\max(c)
@@ -199,12 +200,20 @@ constraints. Positive backend-specific coefficients may calibrate each raw
 visit type from target-system measurements. Ties are resolved by slots and
 published portfolio position.
 
-The artifact retains all five candidates, including rejected rows and reasons.
+The artifact retains all eight candidates, including rejected rows and reasons.
 An independent verifier regenerates every topology, cost vector, resource
 tuple, feasibility decision, and optional holdout score before checking the
 winner. Thus the result certifies a portfolio minimum in declared primitive
 visits. It neither proves global optimality over unlisted structures nor
 equates structural visits with wall-clock latency.
+
+Safe AutoIndex adds a separate validation gate. For candidate-minus-baseline
+cost differences bounded in an interval of width $B$, it deploys specialization
+only when the one-sided Hoeffding upper bound
+$\bar D+B\sqrt{\log(1/\alpha)/(2m)}$, plus amortized build and migration cost,
+is below the required improvement. Otherwise it retains a declared
+conventional baseline. This statement is conditional on independent IID
+bounded validation operations; the test trace is evaluation-only.
 
 For deployment, a strict versioned JSON compiler verifies the artifact before
 emitting a deterministic C++17 header. Backend, aggregate, universe size, and
@@ -253,13 +262,17 @@ than its included balanced candidate and strictly improves the former
 point/endpoint proxy in 18 groups. Python and contiguous-node C++ mixed
 benchmarks also show that Fenwick or iterative segment trees remain faster for
 raw range sums; no blanket speed superiority is claimed.
-The AutoIndex matrix contains 24 complete five-candidate portfolios (120
+The AutoIndex matrix contains 24 complete eight-candidate portfolios (192
 candidate rows) across four key-universe sizes, six temporal/constraint
 scenarios, three aggregates/capability regimes, memory restrictions, and
 mandatory snapshots. All 24 artifacts replay successfully. The selected
 training candidate is always the portfolio minimum. Under explicit
 point-to-range temporal drift, holdout regret can be nonzero and reaches the
 reported matrix maximum; holdout is never used to revise the winner.
+The Safe AutoIndex matrix contains 16 replay-verified train/validation/test
+cases. All four large stable validation cases approve specialization, while
+all twelve small-sample, shifted-validation, or migration-dominated cases
+retain the safe baseline.
 Across 24 compiler-integration cases, repeated generation produces
 byte-identical headers and every source artifact independently verifies.
 Cross-language executable tests cover all backend families, all three

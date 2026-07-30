@@ -46,8 +46,11 @@ struct CandidateReport {
 inline constexpr std::string_view backend_name(Backend backend) {
     switch (backend) {
         case Backend::SortedArray: return "sorted_array";
+        case Backend::PrefixSum: return "prefix_sum";
         case Backend::Fenwick: return "fenwick";
+        case Backend::SqrtDecomposition: return "sqrt_decomposition";
         case Backend::SegmentTree: return "segment_tree";
+        case Backend::SparseTable: return "sparse_table";
         case Backend::CertiRangePoint: return "certirange_point";
         case Backend::CertiRangeRange: return "certirange_range";
     }

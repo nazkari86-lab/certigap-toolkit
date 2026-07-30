@@ -26,7 +26,8 @@ latency is measured separately and is never certified by a structural score.
 | Anytime TV search returns a valid interval | Mathematical and replay-verified | Theorem H and `results/anytime_validation.csv` | Declared lower bound, processed prefix, and remaining frontier |
 | Candidate-pruned C++ beam returns a valid interval | Replay-certified | `certigap-pruned-beam-v1` and scaling artifacts | Feasible heuristic upper bound plus entropy/max-cost lower bound; no approximation ratio |
 | Online mean-cost regret is at most `g + 2 delta R` | Mathematical | Theorem I and `online_regret_certificate` tests | Mean modeled execution cost; excludes unmodeled DB and migration latency |
-| AutoIndex selects the minimum-score feasible candidate | Replay-certified | `results/autoindex_validation.csv` | The complete declared five-candidate portfolio, not all data structures |
+| AutoIndex selects the minimum-score feasible candidate | Replay-certified | `results/autoindex_validation.csv` | The complete declared eight-candidate portfolio, not all data structures |
+| Safe AutoIndex deploys specialization only below its validation upper bound | Statistical and replay-certified | `results/safe_autoindex_validation.csv` | One-sided Hoeffding bound conditional on independent IID bounded validation operations and declared structural costs |
 | CertiGap-X selects an exact contiguous partition | Replay-certified | `results/synthesis_validation.csv` | Declared aggregate, constraints, cost profile, and block grammar |
 | CertiGap-H selects an exact representation-aware partition | Replay-certified | `results/hybrid_validation.csv` | Declared two-level-prefix representation and additive structural model |
 | CertiGap-H DP tie-breaking is platform-stable | Arithmetic and differential | Integer `1e-12` score units in solver and separately implemented verifier | Decimalized declared hardware profile; native timings remain floating-point |
