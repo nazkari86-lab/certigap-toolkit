@@ -21,6 +21,11 @@ compiler optimizes range-boundary separation and update suffix work; the
 independent verifier reconstructs the full legal frontier. See
 [`docs/HYBRID.md`](docs/HYBRID.md).
 
+Sequential SafeAutoIndex supports continuous validation inspection without
+invalid repeated use of a fixed-time interval. It records and replays the first
+alpha-spending Hoeffding crossing; see
+[`docs/SEQUENTIAL_SAFE_AUTOINDEX.md`](docs/SEQUENTIAL_SAFE_AUTOINDEX.md).
+
 The easiest C++ mode is one header:
 
 ```cpp
@@ -82,6 +87,8 @@ It ships with:
 - contiguous-node C++ range benchmarks against Fenwick and segment trees.
 - Certified AutoIndex selection across array, Fenwick, segment tree, and two
   workload-adaptive CertiRange variants.
+- Optional-stopping-safe sequential deployment over the complete eight-backend
+  portfolio, with fail-closed conventional fallback.
 - CertiGap-H `O(1)` range sums with exact representation-aware partition
   synthesis and a train-only native backend tuner.
 

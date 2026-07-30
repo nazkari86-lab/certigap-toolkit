@@ -847,6 +847,38 @@ def materialize_autoindex_candidate(
     return _runtime_for_candidate(value_list, name, artifact)
 
 
+def analytical_candidate_costs(
+    artifact: dict,
+    name: CandidateName,
+    trace: WorkloadTrace,
+) -> tuple[float, ...]:
+    """Replay per-operation structural costs for one verified candidate."""
+    from .autoindex_verifier import verify_autoindex_artifact
+
+    verify_autoindex_artifact(artifact)
+    if not isinstance(trace, WorkloadTrace):
+        raise TypeError("trace must be WorkloadTrace")
+    if trace.n != artifact["n"] or not trace.operations:
+        raise ValueError("trace must be non-empty and match the key universe")
+    if name not in PORTFOLIO_ORDER:
+        raise ValueError("candidate is outside the verified portfolio")
+    row = next(
+        candidate for candidate in artifact["candidates"]
+        if candidate["name"] == name
+    )
+    if not row["feasible"]:
+        raise ValueError(f"candidate is infeasible: {row['reason']}")
+    constraints = AutoIndexConstraints(**artifact["constraints"])
+    topology = None
+    if name.startswith("certirange"):
+        minimum = 0 if trace.n <= 1 else math.ceil(math.log2(trace.n))
+        max_depth = constraints.max_depth or (2 * minimum + 1)
+        topology = _complete_topology(
+            row["routing_tree"], 1, trace.n, max_depth
+        )
+    return tuple(_analytical_costs(name, trace, topology, constraints))
+
+
 def compile_autoindex(
     values: Iterable[float],
     train_trace: WorkloadTrace,

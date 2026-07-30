@@ -1015,6 +1015,217 @@ The admission rules and capability-separated roadmap are in
 
 Selection uses training operations only. Holdout measures temporal generalization and is never consulted by the compiler. Scores are declared structural primitive visits, not wall-clock latency.
 
+# Safe AutoIndex
+
+`compile_safe_autoindex` adds a fail-closed deployment gate to the complete
+AutoIndex portfolio. It separates data chronologically or experimentally into:
+
+- `train`: constructs candidates and selects the minimum modeled score;
+- `validation`: decides whether specialization has enough evidence;
+- `test`: reports final behavior and never changes deployment.
+
+The safe baseline is chosen on training data from a declared ordered set whose
+default is array, Fenwick, and segment tree. If no baseline satisfies the
+constraints, compilation fails instead of silently weakening the policy.
+
+```python
+from certigap import (
+    SafeSelectionPolicy,
+    WorkloadTrace,
+    compile_safe_autoindex,
+)
+
+train = WorkloadTrace(32)
+validation = WorkloadTrace(32)
+test = WorkloadTrace(32)
+for _ in range(200):
+    train.add_range(3, 30)
+for _ in range(50_000):
+    validation.add_range(3, 30)
+for _ in range(1_000):
+    test.add_range(4, 29)
+
+index = compile_safe_autoindex(
+    range(32),
+    train,
+    validation,
+    test_trace=test,
+    policy=SafeSelectionPolicy(
+        confidence_alpha=0.05,
+        horizon_operations=1_000_000,
+        migration_cost_units=500.0,
+    ),
+)
+print(index.summary())
+print(index.export_certificate())
+```
+
+The same workflow can emit a deployment-specific C++17 header without a
+Python runtime:
+
+```bash
+certigap safe-compile safe_trace.json \
+  --artifact build/safe-selection.json \
+  --header build/safe-index.hpp
+
+certigap verify build/safe-selection.json
+certigap explain build/safe-selection.json
+```
+
+The strict input schema is
+[`certigap_safe_compile_input_v1.schema.json`](../schemas/certigap_safe_compile_input_v1.schema.json).
+The emitted backend is the validation-approved candidate or the actual safe
+fallback, not necessarily the raw training winner. Its C++ configuration
+embeds the outer safe-certificate digest.
+
+## Decision Rule
+
+For paired candidate-minus-baseline validation cost with sample mean
+`mean_difference`, declared range width `B`, validation size `m`, and
+one-sided error probability `alpha`, the certificate computes
+
+`radius = B * sqrt(log(1/alpha) / (2m))`.
+
+It deploys the candidate only when
+
+`mean_difference + radius + (build + migration) / horizon < -minimum_improvement`.
+
+Otherwise the conventional baseline remains deployed. The range bound is
+deliberately conservative and covers every supported operation in the current
+eight-backend grammar. The verifier independently recomputes the baseline,
+bound, confidence radius, transition amortization, decision, test evaluation,
+and both artifact digests.
+
+## Claim Boundary
+
+This is a Hoeffding guarantee conditional on independent IID bounded validation
+operations and the declared structural-cost model. It does not prove:
+
+- generalization under arbitrary temporal drift;
+- portable wall-clock latency;
+- correctness of manually supplied hardware coefficients;
+- optimality outside the declared eight-candidate portfolio.
+
+Temporal dependence needs a block-bootstrap, martingale, or mixing-process
+certificate in a future schema. Until then, the IID condition must remain
+visible in every scientific claim.
+
+# Safe AutoIndex validation
+
+- Cases: `16`.
+- Candidate approvals: `4`.
+- Safe fallbacks: `12`.
+- Replay-verified certificates: `16/16`.
+- Stable large validation approves specialization.
+- Small samples, workload shift, and migration-dominated horizons retain the declared safe baseline.
+
+The Hoeffding statement is conditional on independent IID bounded validation operations. Structural work is not portable wall-clock latency.
+
+# Sequential Safe AutoIndex
+
+`compile_sequential_safe_autoindex` permits inspection after every validation
+operation without reusing a fixed-time confidence interval. It selects from
+the complete eight-candidate AutoIndex portfolio, chooses a conventional safe
+baseline from training data, and evaluates paired candidate-minus-baseline
+structural costs in chronological order.
+
+```python
+from certigap import (
+    SequentialSafeSelectionPolicy,
+    WorkloadTrace,
+    compile_sequential_safe_autoindex,
+)
+
+train = WorkloadTrace(8)
+validation = WorkloadTrace(8)
+for _ in range(100):
+    train.add_range(2, 7)
+for _ in range(2_000):
+    validation.add_range(2, 7)
+
+index = compile_sequential_safe_autoindex(
+    range(8),
+    train,
+    validation,
+    policy=SequentialSafeSelectionPolicy(
+        confidence_alpha=0.05,
+        minimum_observations=100,
+        horizon_operations=1_000_000,
+    ),
+)
+print(index.summary())
+```
+
+The deployment compiler is:
+
+```bash
+certigap sequential-safe-compile input.json \
+  --artifact build/sequential-selection.json \
+  --header build/sequential-index.hpp
+
+certigap verify build/sequential-selection.json
+certigap explain build/sequential-selection.json
+```
+
+The input is validated against
+[`certigap_sequential_safe_compile_input_v1.schema.json`](../schemas/certigap_sequential_safe_compile_input_v1.schema.json).
+The generated C++17 header embeds the outer sequential-certificate digest and
+materializes the actually deployed candidate.
+
+## Confidence Sequence
+
+For operation `t`, let `X_t` be candidate work minus baseline work and let all
+differences lie in an interval of width `B`. The compiler allocates
+
+`alpha_t = alpha / (t(t+1))`.
+
+At every eligible prefix it computes
+
+`U_t = mean(X_1,...,X_t) + B sqrt(log(1/alpha_t)/(2t)) + transition/horizon`.
+
+The candidate is deployed at the first prefix for which
+
+`U_t < -minimum_improvement`.
+
+Because `sum_t alpha_t = alpha`, fixed-time Hoeffding bounds and a union bound
+give simultaneous coverage for every finite prefix. Therefore inspecting the
+sequence continuously or stopping at its first crossing does not increase the
+declared type-I error above `alpha`.
+
+The certificate records the first eligible crossing, alpha allocated at that
+operation, cumulative alpha spent, the final full-stream audit, and the number
+of post-stop operations. The verifier reconstructs the complete first-crossing
+decision. Editing only the stopping operation and recomputing the outer digest
+is rejected.
+
+## Exact Boundary
+
+The theorem assumes independent identically distributed bounded validation
+operations and a fixed candidate selected only from training data. It certifies
+optional stopping during validation. It does not certify:
+
+- arbitrary future workload drift;
+- dependent or adversarial validation operations;
+- measured nanosecond latency from structural work;
+- correctness of manually calibrated unit costs;
+- global optimality beyond the declared candidate portfolio.
+
+The post-stop reversal experiment is intentionally an audit witness: it shows
+that later observations cannot retroactively alter the recorded decision. It
+does not claim that an old deployment remains safe after distribution shift.
+
+# Sequential Safe AutoIndex validation
+
+- Deployment scenarios: `4`.
+- Candidate approvals: `2`.
+- Replay-verified certificates: `4/4`.
+- Stable evidence approves at the first valid prefix.
+- Small samples and migration-dominated horizons fail closed.
+- Post-stop reversal does not retroactively change deployment; `6512` operations remain evaluation-only.
+- Mean-zero Monte Carlo false approvals: `0/5000` for alpha spending versus `576/5000` for invalid repeated fixed-time checks.
+
+The confidence-sequence theorem is conditional on independent IID bounded validation operations. The Monte Carlo row is a diagnostic, not a proof and not evidence for arbitrary drift.
+
 # Compiler And CMake Integration
 
 CertiGap uses a profile-guided build step. It is not a GCC or Clang plugin:

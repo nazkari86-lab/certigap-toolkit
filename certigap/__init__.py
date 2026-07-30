@@ -80,6 +80,20 @@ from .safe_compiler import (
     generate_safe_cpp_header,
     load_safe_compile_spec,
 )
+from .sequential_safe_autoindex import (
+    SequentialSafeCompiledAutoIndex,
+    SequentialSafeSelectionPolicy,
+    compile_sequential_safe_autoindex,
+)
+from .sequential_safe_autoindex_verifier import (
+    SequentialSafeAutoIndexVerificationError,
+    verify_sequential_safe_autoindex_certificate,
+)
+from .sequential_safe_compiler import (
+    compile_sequential_safe_spec,
+    generate_sequential_safe_cpp_header,
+    load_sequential_safe_compile_spec,
+)
 from .synthesis import (
     HardwareProfile,
     SynthesisConstraints,
@@ -155,6 +169,8 @@ __all__ = [
     "compile_autoindex",
     "compile_safe_autoindex",
     "compile_safe_spec",
+    "compile_sequential_safe_autoindex",
+    "compile_sequential_safe_spec",
     "CppCertiGap",
     "certify_tree",
     "calibrate_hardware",
@@ -201,6 +217,9 @@ __all__ = [
     "SafeAutoIndexVerificationError",
     "SafeCompiledAutoIndex",
     "SafeSelectionPolicy",
+    "SequentialSafeAutoIndexVerificationError",
+    "SequentialSafeCompiledAutoIndex",
+    "SequentialSafeSelectionPolicy",
     "make_range_optimizer_artifact",
     "split_count",
     "SynthesisConstraints",
@@ -221,6 +240,7 @@ __all__ = [
     "verify_anytime_tv_certificate",
     "verify_autoindex_artifact",
     "verify_safe_autoindex_certificate",
+    "verify_sequential_safe_autoindex_certificate",
     "verify_tree",
     "verify_synthesis_certificate",
     "verify_hybrid_certificate",
@@ -233,5 +253,7 @@ __all__ = [
     "compile_hybrid_index",
     "synthesize_hybrid_partitions",
     "generate_safe_cpp_header",
+    "generate_sequential_safe_cpp_header",
     "load_safe_compile_spec",
+    "load_sequential_safe_compile_spec",
 ]

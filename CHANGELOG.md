@@ -16,6 +16,9 @@ recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
   Hoeffding no-regression gate, build/migration amortization, conventional
   fallback, independently replayed certificates, and a 16-case validation
   matrix.
+- Add Sequential SafeAutoIndex with alpha-spending Hoeffding confidence
+  sequences, first-crossing replay verification, optional-stopping diagnostics,
+  strict JSON compilation, and deployment-specific C++17 output.
 
 ## 1.10.1 - 2026-07-30
 

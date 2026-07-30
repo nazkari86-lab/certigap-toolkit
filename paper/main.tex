@@ -215,6 +215,14 @@ is below the required improvement. Otherwise it retains a declared
 conventional baseline. This statement is conditional on independent IID
 bounded validation operations; the test trace is evaluation-only.
 
+Sequential Safe AutoIndex permits continuous inspection by allocating
+$\alpha_t=\alpha/(t(t+1))$ at validation prefix $t$. Hoeffding's inequality
+at each fixed prefix and $\sum_t\alpha_t=\alpha$ give simultaneous coverage by
+a union bound, so deployment at the first successful prefix is valid under
+optional stopping. The certificate records that first crossing, cumulative
+risk spent, and a post-stop audit. The IID condition remains necessary; this
+is not a guarantee under future workload drift.
+
 For deployment, a strict versioned JSON compiler verifies the artifact before
 emitting a deterministic C++17 header. Backend, aggregate, universe size, and
 artifact digest are compile-time constants; a selected CertiRange additionally
@@ -273,6 +281,13 @@ The Safe AutoIndex matrix contains 16 replay-verified train/validation/test
 cases. All four large stable validation cases approve specialization, while
 all twelve small-sample, shifted-validation, or migration-dominated cases
 retain the safe baseline.
+The sequential matrix adds four replay-verified deployment scenarios. Stable
+evidence is accepted at its first certified prefix, small and
+migration-dominated streams fail closed, and a post-stop reversal remains an
+evaluation-only audit. In 5,000 deterministic mean-zero Monte Carlo trials,
+alpha spending produced zero false approvals, whereas invalid repeated use of
+the fixed-time interval produced 576; this simulation is diagnostic rather
+than the source of the theorem.
 Across 24 compiler-integration cases, repeated generation produces
 byte-identical headers and every source artifact independently verifies.
 Cross-language executable tests cover all backend families, all three

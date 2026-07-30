@@ -1,0 +1,5 @@
+scenario,validation_operations,candidate,baseline,deployed,candidate_approved,stopping_operation,selection_upper_difference,final_upper_difference,post_stop_operations,certificate_verified
+stable_stream,2000,prefix_sum,segment_tree,prefix_sum,True,1488,-0.000152590446,-0.246298695776,512,True
+insufficient_stream,50,prefix_sum,segment_tree,segment_tree,False,,,6.560114891935,0,True
+migration_dominated,2000,prefix_sum,segment_tree,segment_tree,False,,,99.753701304224,0,True
+post_stop_reversal,8000,prefix_sum,segment_tree,prefix_sum,True,1488,-0.000152590446,1.566272065252,6512,True

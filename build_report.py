@@ -212,6 +212,10 @@ def main() -> None:
         for path in (
             DOCS_DIR / "AUTOINDEX.md",
             RESULTS_DIR / "autoindex_validation.md",
+            DOCS_DIR / "SAFE_AUTOINDEX.md",
+            RESULTS_DIR / "safe_autoindex_validation.md",
+            DOCS_DIR / "SEQUENTIAL_SAFE_AUTOINDEX.md",
+            RESULTS_DIR / "sequential_safe_validation.md",
             DOCS_DIR / "COMPILER_INTEGRATION.md",
             RESULTS_DIR / "compiler_integration_validation.md",
             DOCS_DIR / "ADAPTIVE_CPP.md",
@@ -256,6 +260,10 @@ def main() -> None:
             + dynamic_range_theory_text
             + "\n\n"
             + read_text(DOCS_DIR / "AUTOINDEX.md")
+            + "\n\n"
+            + read_text(DOCS_DIR / "SAFE_AUTOINDEX.md")
+            + "\n\n"
+            + read_text(DOCS_DIR / "SEQUENTIAL_SAFE_AUTOINDEX.md")
             + "\n\n"
             + read_text(DOCS_DIR / "COMPILER_INTEGRATION.md")
             + "\n\n"

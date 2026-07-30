@@ -28,6 +28,7 @@ latency is measured separately and is never certified by a structural score.
 | Online mean-cost regret is at most `g + 2 delta R` | Mathematical | Theorem I and `online_regret_certificate` tests | Mean modeled execution cost; excludes unmodeled DB and migration latency |
 | AutoIndex selects the minimum-score feasible candidate | Replay-certified | `results/autoindex_validation.csv` | The complete declared eight-candidate portfolio, not all data structures |
 | Safe AutoIndex deploys specialization only below its validation upper bound | Statistical and replay-certified | `results/safe_autoindex_validation.csv` | One-sided Hoeffding bound conditional on independent IID bounded validation operations and declared structural costs |
+| Sequential Safe AutoIndex permits optional stopping during validation | Mathematical, statistical, and replay-certified | Corollary L.2, `results/sequential_safe_validation.csv`, and `results/optional_stopping_monte_carlo.csv` | Alpha-spending Hoeffding sequence conditional on independent IID bounded validation operations; not a future-drift guarantee |
 | CertiGap-X selects an exact contiguous partition | Replay-certified | `results/synthesis_validation.csv` | Declared aggregate, constraints, cost profile, and block grammar |
 | CertiGap-H selects an exact representation-aware partition | Replay-certified | `results/hybrid_validation.csv` | Declared two-level-prefix representation and additive structural model |
 | CertiGap-H DP tie-breaking is platform-stable | Arithmetic and differential | Integer `1e-12` score units in solver and separately implemented verifier | Decimalized declared hardware profile; native timings remain floating-point |
@@ -72,6 +73,8 @@ The following statements must not appear as project conclusions:
    and failure metrics.
 7. Train/validation/test separation for grammar and hyperparameter decisions,
    repeated native measurements, confidence intervals, and ablations.
+8. A dependence-aware martingale, mixing-process, or block-bootstrap extension
+   for temporally correlated operations and post-deployment drift.
 
 ## Language Rules
 

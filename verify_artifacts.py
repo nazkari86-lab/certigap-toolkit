@@ -17,6 +17,7 @@ from certigap import (
     verify_pruned_beam_certificate,
     verify_range_optimizer_artifact,
     verify_safe_autoindex_certificate,
+    verify_sequential_safe_autoindex_certificate,
 )
 
 
@@ -67,6 +68,8 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "range_optimizer_validation.csv": 114,
         "autoindex_validation.csv": 120,
         "safe_autoindex_validation.csv": 16,
+        "sequential_safe_validation.csv": 4,
+        "optional_stopping_monte_carlo.csv": 1,
         "compiler_integration_validation.csv": 24,
         "adaptive_header_validation.csv": 24,
         "synthesis_validation.csv": 24,
@@ -325,6 +328,61 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
             raise ValueError("Safe AutoIndex decision contradicts its bound")
         if not approved and row["deployed"] != row["safe_baseline"]:
             raise ValueError("Safe AutoIndex failed to retain its baseline")
+
+    sequential_artifact = json.loads(
+        (RESULTS / "sequential_safe_example.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if not verify_sequential_safe_autoindex_certificate(
+        sequential_artifact
+    )["verified"]:
+        raise ValueError("Sequential Safe AutoIndex example did not replay")
+    sequential_rows = csv_records("sequential_safe_validation.csv")
+    by_scenario = {row["scenario"]: row for row in sequential_rows}
+    if (
+        set(by_scenario)
+        != {
+            "stable_stream",
+            "insufficient_stream",
+            "migration_dominated",
+            "post_stop_reversal",
+        }
+        or any(
+            row["certificate_verified"] != "True"
+            for row in sequential_rows
+        )
+        or sum(
+            row["candidate_approved"] == "True"
+            for row in sequential_rows
+        )
+        != 2
+    ):
+        raise ValueError(
+            "Sequential Safe AutoIndex validation matrix is incomplete"
+        )
+    stable = by_scenario["stable_stream"]
+    reversal = by_scenario["post_stop_reversal"]
+    if (
+        not stable["stopping_operation"]
+        or not reversal["stopping_operation"]
+        or float(reversal["final_upper_difference"]) <= 0.0
+        or int(reversal["post_stop_operations"]) <= 0
+    ):
+        raise ValueError(
+            "Sequential stopping or post-stop reversal witness is missing"
+        )
+    monte_carlo = csv_records("optional_stopping_monte_carlo.csv")
+    if (
+        len(monte_carlo) != 1
+        or int(monte_carlo[0]["anytime_false_approvals"])
+        > int(float(monte_carlo[0]["alpha"]) * int(monte_carlo[0]["trials"]))
+        or float(
+            monte_carlo[0]["repeated_fixed_false_approval_rate"]
+        )
+        <= float(monte_carlo[0]["alpha"])
+    ):
+        raise ValueError("optional-stopping Monte Carlo witness is invalid")
 
     compiler_rows = csv_records("compiler_integration_validation.csv")
     if (

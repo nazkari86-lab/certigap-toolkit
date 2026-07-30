@@ -70,6 +70,9 @@ CertiGap не строит полное поисковое дерево на в�
 - на proof-sized случаях branch-and-bound trace независимо подтверждает оптимальность.
 - anytime solver совпадает с complete-tree-space oracle в 12 из 12 случаев;
 - 36 scalable trajectories имеют независимо проверенные монотонные интервалы.
+- sequential no-regression gate прошёл 4 из 4 replay-сценариев; в
+  mean-zero диагностике корректная граница дала 0 из 5000 ложных одобрений,
+  тогда как повторное использование fixed-time интервала дало 576 из 5000.
 
 ## 8. Примеры сертификатов
 
@@ -610,6 +613,37 @@ The verifier independently recomputes the baseline, `B`, confidence radius,
 transition cost, deployment decision, and test scores. The result does not
 cover dependent temporal traces, inaccurate hardware calibration, or
 unmodeled wall-clock effects. `QED`
+
+## Corollary L.2: Optional-Stopping-Safe Validation
+
+Let `X_1, X_2, ...` be independent identically distributed
+candidate-minus-baseline costs with mean `mu`, contained in an interval of
+width `B`. Fix `alpha` in `(0,1)` and allocate
+
+`alpha_t = alpha / (t(t+1))`.
+
+Define
+
+`U_t = mean(X_1,...,X_t) + B sqrt(log(1/alpha_t)/(2t))`.
+
+Then
+
+`Pr(exists t >= 1 such that mu > U_t) <= alpha`.
+
+For each fixed `t`, the one-sided Hoeffding inequality bounds the corresponding
+failure probability by `alpha_t`. The telescoping identity
+
+`sum_{t=1}^infinity 1/(t(t+1)) = 1`
+
+gives `sum_t alpha_t = alpha`; a union bound therefore proves simultaneous
+coverage over every finite prefix. Consequently `U_tau` remains valid at any
+data-dependent stopping time `tau`, including the first prefix crossing a
+deployment threshold.
+
+Adding deterministic amortized transition cost and a non-negative required
+improvement preserves the comparison. This result does not establish
+generalization after distribution change and does not cover dependent
+validation operations. `QED`
 
 ## Theorem M: Generated C++ Configuration Fidelity
 

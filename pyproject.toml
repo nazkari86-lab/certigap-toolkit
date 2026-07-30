@@ -40,6 +40,7 @@ include = ["certigap*"]
 "share/certigap/schemas" = [
   "schemas/certigap_compile_input_v1.schema.json",
   "schemas/certigap_safe_compile_input_v1.schema.json",
+  "schemas/certigap_sequential_safe_compile_input_v1.schema.json",
 ]
 "share/certigap/tools" = ["cpp/hardware_calibration.cpp"]
 

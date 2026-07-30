@@ -18,6 +18,8 @@
    проверяющий перенос структурной модели в реальную задержку.
 10. CertiGap-H с `O(1)` range-sum, representation-aware exact DP и
     независимо воспроизводимым сертификатом полного пространства разбиений.
+11. Sequential SafeAutoIndex с alpha-spending confidence sequence и
+    проверяемой первой точкой optional stopping.
 
 Текущее состояние прототипа подтверждается следующими результатами:
 
