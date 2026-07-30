@@ -487,7 +487,7 @@ five portfolio candidates, and emits a normal C++17 configuration header.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install certigap_toolkit-1.8.0-py3-none-any.whl
+pip install certigap_toolkit-1.9.0-py3-none-any.whl
 
 certigap-compile include-dir
 ```
@@ -754,7 +754,7 @@ include(FetchContent)
 FetchContent_Declare(
     certigap
     GIT_REPOSITORY https://github.com/nazkari86-lab/certigap-toolkit.git
-    GIT_TAG v1.8.0
+    GIT_TAG v1.9.0
 )
 FetchContent_MakeAvailable(certigap)
 
@@ -852,7 +852,7 @@ strictly exceed rebuild cost plus an explicit confidence margin. This is an
 amortization rule, not a workload forecast or statistical confidence
 estimator.
 
-## Native Holdout Result
+## Native Holdout Result And Successor
 
 The structural theorem does not imply wall-clock speed. The matched native
 benchmark selects partitions from `800` train operations and measures five C++
@@ -860,19 +860,15 @@ implementations on `6000` separately seeded holdout operations. It covers four
 stationary synthetic cases, one temporal shift, and three public
 frequency-derived cases.
 
-On the committed Apple M4/Apple clang run, CertiGap-X beats the
-model-selected uniform partition in `1/8` scenarios, but Fenwick is fastest in
-all eight. CertiGap-X ranges from `1.48x` to `2.95x` the fastest median latency
-in this run. Therefore the defensible contribution is exact, verifiable
-structure synthesis under a declared grammar, not universal range-sum
-acceleration.
+The original committed audit found that CertiGap-X did not beat Fenwick. That
+negative result motivated CertiGap-H, which replaces the covered-block loop
+with local and top-level prefix arrays and changes the exact objective to
+model range-boundary separation and update suffix writes.
 
-The practical policy is fail-safe: include the synthesized index as an
-AutoIndex candidate, calibrate on the target workload and hardware, and deploy
-it only when a holdout or confidence-aware migration gate beats the classical
-candidate. See
+The practical policy remains fail-safe: AutoIndex chooses between global
+prefix, Fenwick, and the synthesized hybrid from train measurements. See
 [`results/synthesis_native_latency.md`](../results/synthesis_native_latency.md)
-and its machine-readable provenance JSON.
+and [`HYBRID.md`](HYBRID.md).
 
 ## Claim Boundary
 
@@ -1004,6 +1000,20 @@ concurrency, and independently reproduced wall-clock gains remain external.
 
 Completed in `v1.8.0`. Independent machines, production traces, concurrency,
 storage integration, and a pre-registered domain-owner pilot remain external.
+
+## Phase 13: Representation-Aware Hybrid Synthesis
+
+- two-level prefix runtime with `O(1)` range sums;
+- exact DP over every legal variable-width partition;
+- independent statistics, frontier, tie-break, and winner regeneration;
+- global-prefix and high-update crossover baselines;
+- 24-case exact matrix and 11-scenario native holdout matrix;
+- train-only native selection across global prefix, Fenwick, and CertiGap-H;
+- explicit temporal-shift failure and fail-safe migration boundary.
+
+Completed in `v1.9.0`. The remaining work requires external evidence or a
+larger grammar: independent hardware reproduction, production traces,
+concurrency, persistence, inserts/deletes, and storage-engine integration.
 
 ## External Closure
 

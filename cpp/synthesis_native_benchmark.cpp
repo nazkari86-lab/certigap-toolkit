@@ -65,6 +65,32 @@ private:
     }
 };
 
+class GlobalPrefixIndex {
+public:
+    explicit GlobalPrefixIndex(const std::vector<double>& values)
+        : values_(values), prefix_(values.size(), 0.0) {
+        std::partial_sum(values.begin(), values.end(), prefix_.begin());
+    }
+    double get(int key) const { return values_[key - 1]; }
+    double range_query(int left, int right) const {
+        return prefix_[right - 1] - (left == 1 ? 0.0 : prefix_[left - 2]);
+    }
+    void point_update(int key, double value) {
+        const double delta = value - values_[key - 1];
+        values_[key - 1] = value;
+        for (
+            int index = key - 1;
+            index < static_cast<int>(prefix_.size());
+            ++index
+        ) {
+            prefix_[index] += delta;
+        }
+    }
+private:
+    std::vector<double> values_;
+    std::vector<double> prefix_;
+};
+
 class SegmentIndex {
 public:
     explicit SegmentIndex(const std::vector<double>& values)
@@ -132,6 +158,45 @@ struct Measurement {
 };
 
 template <class Factory>
+double training_median(
+    Factory factory,
+    const synthesis_cases::Case& scenario,
+    double expected
+) {
+    std::vector<double> samples;
+    samples.reserve(31);
+    auto warmup = factory();
+    if (std::abs(
+            execute(
+                warmup,
+                scenario.train_operations,
+                scenario.train_operation_count
+            ) - expected
+        ) > 1e-8) {
+        throw std::runtime_error("training warmup checksum mismatch");
+    }
+    for (int repeat = 0; repeat < 31; ++repeat) {
+        auto index = factory();
+        const auto start = std::chrono::steady_clock::now();
+        const double checksum = execute(
+            index,
+            scenario.train_operations,
+            scenario.train_operation_count
+        );
+        const auto stop = std::chrono::steady_clock::now();
+        if (std::abs(checksum - expected) > 1e-8) {
+            throw std::runtime_error("training checksum mismatch");
+        }
+        samples.push_back(
+            std::chrono::duration<double, std::nano>(stop - start).count()
+            / static_cast<double>(scenario.train_operation_count)
+        );
+    }
+    std::sort(samples.begin(), samples.end());
+    return samples[15];
+}
+
+template <class Factory>
 Measurement measure(
     Factory factory,
     const synthesis_cases::Case& scenario,
@@ -175,14 +240,18 @@ void emit(
     const std::string& method,
     const Measurement& result,
     std::size_t memory_slots,
-    std::size_t blocks
+    std::size_t blocks,
+    const std::string& selected_backend = "",
+    double train_selection_ns = 0.0
 ) {
     std::cout << scenario.name << ',' << scenario.n << ',' << method << ','
               << scenario.operation_count << ",9,"
               << std::fixed << std::setprecision(6)
               << result.median << ',' << result.p95 << ',' << result.mad << ','
               << result.checksum << ",true,"
-              << memory_slots << ',' << blocks << '\n';
+              << memory_slots << ',' << blocks << ','
+              << (selected_backend.empty() ? method : selected_backend)
+              << ',' << train_selection_ns << '\n';
 }
 
 }  // namespace
@@ -191,7 +260,8 @@ int main() {
     std::cout
         << "scenario,n,method,operations,repeats,median_ns_per_operation,"
            "p95_batch_ns_per_operation,mad_ns_per_operation,checksum,correct,"
-           "memory_slots,blocks\n";
+           "memory_slots,blocks,selected_backend,"
+           "train_selection_ns_per_operation\n";
     for (std::size_t index = 0; index < synthesis_cases::case_count; ++index) {
         const auto& scenario = synthesis_cases::cases[index];
         std::vector<double> values(scenario.n);
@@ -202,10 +272,26 @@ int main() {
         const double expected = execute(
             oracle, scenario.operations, scenario.operation_count
         );
+        ArrayIndex train_oracle(values);
+        const double expected_train = execute(
+            train_oracle,
+            scenario.train_operations,
+            scenario.train_operation_count
+        );
         const auto array = measure(
             [&]() { return ArrayIndex(values); }, scenario, expected
         );
         emit(scenario, "array", array, values.size(), 0);
+        const auto global_prefix = measure(
+            [&]() { return GlobalPrefixIndex(values); }, scenario, expected
+        );
+        emit(
+            scenario,
+            "global_prefix",
+            global_prefix,
+            2 * values.size(),
+            1
+        );
         const auto fenwick = measure(
             [&]() { return FenwickIndex(values); }, scenario, expected
         );
@@ -256,5 +342,100 @@ int main() {
             2 * values.size() + 2 * synthesized.size(),
             synthesized.size()
         );
+        const auto uniform_prefix_result = measure(
+            [&]() {
+                return certigap::PrefixBlockIndex(values, uniform);
+            },
+            scenario,
+            expected
+        );
+        emit(
+            scenario,
+            "uniform_prefix",
+            uniform_prefix_result,
+            3 * values.size() + 2 * uniform.size(),
+            uniform.size()
+        );
+        const auto synthesized_prefix_result = measure(
+            [&]() {
+                return certigap::PrefixBlockIndex(values, synthesized);
+            },
+            scenario,
+            expected
+        );
+        emit(
+            scenario,
+            "certigap_x_prefix",
+            synthesized_prefix_result,
+            3 * values.size() + 2 * synthesized.size(),
+            synthesized.size()
+        );
+        const std::vector<int> hybrid(
+            scenario.hybrid_boundaries,
+            scenario.hybrid_boundaries + scenario.hybrid_count
+        );
+        const auto hybrid_result = measure(
+            [&]() {
+                return certigap::PrefixBlockIndex(values, hybrid);
+            },
+            scenario,
+            expected
+        );
+        emit(
+            scenario,
+            "certigap_hybrid",
+            hybrid_result,
+            3 * values.size() + 2 * hybrid.size(),
+            hybrid.size()
+        );
+        const double train_global = training_median(
+            [&]() { return GlobalPrefixIndex(values); },
+            scenario,
+            expected_train
+        );
+        const double train_fenwick = training_median(
+            [&]() { return FenwickIndex(values); },
+            scenario,
+            expected_train
+        );
+        const double train_hybrid = training_median(
+            [&]() { return certigap::PrefixBlockIndex(values, hybrid); },
+            scenario,
+            expected_train
+        );
+        const double selected_train = std::min(
+            {train_global, train_fenwick, train_hybrid}
+        );
+        if (selected_train == train_global) {
+            emit(
+                scenario,
+                "certigap_auto",
+                global_prefix,
+                2 * values.size(),
+                1,
+                "global_prefix",
+                train_global
+            );
+        } else if (selected_train == train_fenwick) {
+            emit(
+                scenario,
+                "certigap_auto",
+                fenwick,
+                2 * values.size() + 1,
+                0,
+                "fenwick",
+                train_fenwick
+            );
+        } else {
+            emit(
+                scenario,
+                "certigap_auto",
+                hybrid_result,
+                3 * values.size() + 2 * hybrid.size(),
+                hybrid.size(),
+                "certigap_hybrid",
+                train_hybrid
+            );
+        }
     }
 }

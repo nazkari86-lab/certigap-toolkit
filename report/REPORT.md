@@ -1002,7 +1002,7 @@ five portfolio candidates, and emits a normal C++17 configuration header.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install certigap_toolkit-1.8.0-py3-none-any.whl
+pip install certigap_toolkit-1.9.0-py3-none-any.whl
 
 certigap-compile include-dir
 ```
@@ -1280,7 +1280,7 @@ include(FetchContent)
 FetchContent_Declare(
     certigap
     GIT_REPOSITORY https://github.com/nazkari86-lab/certigap-toolkit.git
-    GIT_TAG v1.8.0
+    GIT_TAG v1.9.0
 )
 FetchContent_MakeAvailable(certigap)
 
@@ -1389,7 +1389,7 @@ strictly exceed rebuild cost plus an explicit confidence margin. This is an
 amortization rule, not a workload forecast or statistical confidence
 estimator.
 
-## Native Holdout Result
+## Native Holdout Result And Successor
 
 The structural theorem does not imply wall-clock speed. The matched native
 benchmark selects partitions from `800` train operations and measures five C++
@@ -1397,19 +1397,15 @@ implementations on `6000` separately seeded holdout operations. It covers four
 stationary synthetic cases, one temporal shift, and three public
 frequency-derived cases.
 
-On the committed Apple M4/Apple clang run, CertiGap-X beats the
-model-selected uniform partition in `1/8` scenarios, but Fenwick is fastest in
-all eight. CertiGap-X ranges from `1.48x` to `2.95x` the fastest median latency
-in this run. Therefore the defensible contribution is exact, verifiable
-structure synthesis under a declared grammar, not universal range-sum
-acceleration.
+The original committed audit found that CertiGap-X did not beat Fenwick. That
+negative result motivated CertiGap-H, which replaces the covered-block loop
+with local and top-level prefix arrays and changes the exact objective to
+model range-boundary separation and update suffix writes.
 
-The practical policy is fail-safe: include the synthesized index as an
-AutoIndex candidate, calibrate on the target workload and hardware, and deploy
-it only when a holdout or confidence-aware migration gate beats the classical
-candidate. See
+The practical policy remains fail-safe: AutoIndex chooses between global
+prefix, Fenwick, and the synthesized hybrid from train measurements. See
 [`results/synthesis_native_latency.md`](../results/synthesis_native_latency.md)
-and its machine-readable provenance JSON.
+and [`HYBRID.md`](HYBRID.md).
 
 ## Claim Boundary
 
@@ -1429,21 +1425,158 @@ unit primitive costs; target-specific nanoseconds must be measured locally.
 
 The committed matrix uses unit primitive costs for deterministic reproduction. Machine-specific nanosecond profiles are conditional inputs produced by `calibrate_hardware.py`, not portable facts.
 
-# CertiGap-X native holdout benchmark
+# CertiGap-H: Certified Hybrid Prefix Index
 
-| Scenario | Fastest | CertiGap-X ns/op | Uniform ns/op | X vs uniform | X / fastest |
+CertiGap-H is the representation-aware successor to the original
+variable-block aggregate index. It stores:
+
+- the original values;
+- one local prefix array restarted at every synthesized block;
+- one prefix array over complete block sums;
+- a key-to-block map and block boundaries.
+
+A range sum uses at most two local-prefix differences and one block-prefix
+difference. It does not loop over covered blocks.
+
+## Complexity
+
+For `n` values, `b` blocks, and the updated key's remaining block suffix `w`:
+
+| Operation | Time |
+|---|---:|
+| `get` | `O(1)` |
+| `range_query` | `O(1)` |
+| `point_update` | `O(w + b)` |
+| build | `O(n + b)` |
+| memory | `3n + 2b` scalar slots |
+
+This deliberately targets read-heavy mixed workloads. A global prefix array
+is simpler and usually faster when updates are absent. Fenwick becomes safer
+as update frequency increases.
+
+## Exact Representation-Aware Synthesis
+
+For a candidate block `[l,r]` at position `j` in a `b`-block partition, the
+partition-dependent work model charges:
+
+- a range only when its endpoints are separated by the boundary after this
+  block;
+- an update at key `k` for `r-k+1` local-prefix writes and `b-j+1`
+  block-prefix writes;
+- declared primitive costs and memory penalties.
+
+Every range-separation charge belongs to exactly the block containing its left
+endpoint. Every update belongs to exactly one block. Mean work is therefore
+additive. The sum of per-block maxima remains a conservative upper bound on
+the whole-operation maximum.
+
+For every legal block count, dynamic programming evaluates all contiguous
+partitions respecting `max_block_width`. The independent verifier separately
+reconstructs statistics, the complete frontier, tie-breaking, and the winner.
+
+```python
+from certigap import (
+    HybridConstraints,
+    WorkloadTrace,
+    compile_hybrid_index,
+    verify_hybrid_certificate,
+)
+
+trace = WorkloadTrace(256)
+for _ in range(900):
+    trace.add_range(1, 80)
+for key in range(1, 101):
+    trace.add_update(key, float(key))
+
+index = compile_hybrid_index(
+    range(256),
+    trace,
+    constraints=HybridConstraints(
+        max_blocks=16,
+        max_block_width=64,
+    ),
+)
+print(index.selected_boundaries)
+print(verify_hybrid_certificate(index.export_certificate()))
+```
+
+`render_cpp_header()` emits a C++17 `certigap::PrefixBlockIndex`
+configuration.
+
+## Verified Evidence
+
+The deterministic exact matrix contains `24` workloads across four sizes and
+six operation families:
+
+- `24/24` independently replayed complete frontiers;
+- `24/24` runtime oracle passes;
+- `10/24` selected nonuniform designs;
+- `6.73%` mean certified score gain over the best uniform-prefix partition;
+- `33.43%` maximum certified gain.
+
+The native Apple M4 holdout matrix has `11` scenarios and `110` method rows.
+Partitions and AutoIndex backend choices use only `800` train operations;
+`6000` independently seeded operations are used for post-build timing.
+
+In the committed run:
+
+- CertiGap-H beats Fenwick in `9/11` scenarios;
+- it beats uniform-prefix in `10/11`;
+- global prefix is generally best for read-heavy stationary workloads;
+- Fenwick wins the `30%` and `50%` update scenarios;
+- the nonuniform CertiGap-H layout is the fastest specialized backend on the
+  left-hot scenario;
+- the declared temporal shift exposes the need for online re-selection.
+
+The train-only three-backend selector has `1.02%` mean and `6.42%` maximum
+holdout regret on the ten stationary scenarios. The explicit temporal shift
+raises regret to `219.69%`; this is the documented trigger for drift detection
+and re-selection, not evidence of a portable guarantee.
+
+## Claim Boundary
+
+The certificate proves optimality only for the declared additive structural
+model and partition grammar. It does not prove nanosecond latency. The native
+results are single-machine evidence, not a portable speed guarantee.
+
+The current implementation supports sum, point updates, and rank-addressed
+in-memory arrays. It does not yet provide inserts/deletes, concurrency,
+durability, disk pages, lazy range updates, or an independent external
+reproduction.
+
+# CertiGap-H exact validation
+
+- Independently replayed frontiers: `24/24`.
+- Runtime oracle passes: `24/24`.
+- Nonuniform selected designs: `10/24`.
+- Mean certified gain over best uniform-prefix partition: `6.73%`.
+- Maximum certified gain: `33.43%`.
+- Minimum certified gain: `-0.00%`.
+
+Scores use deterministic unit primitive costs. Native latency is evaluated separately on train/holdout traces.
+
+# CertiGap-H native holdout benchmark
+
+| Scenario | Auto selected | Auto ns/op | Holdout oracle | Auto regret | Hybrid vs Fenwick |
 |---|---:|---:|---:|---:|---:|
-| left_hot | fenwick | 21.805 | 18.076 | -17.1% | 2.95x |
-| two_hot | fenwick | 24.722 | 18.347 | -25.8% | 2.38x |
-| uniform | fenwick | 35.438 | 35.792 | +1.0% | 2.00x |
-| adversarial_edges | fenwick | 33.097 | 23.917 | -27.7% | 2.58x |
-| temporal_shift | fenwick | 27.007 | 21.278 | -21.2% | 1.48x |
-| movielens_100k_frequency_derived | fenwick | 21.201 | 18.035 | -14.9% | 1.88x |
-| uci_online_retail_frequency_derived | fenwick | 26.625 | 19.555 | -26.6% | 2.35x |
-| wikimedia_pageviews_frequency_derived | fenwick | 24.042 | 23.243 | -3.3% | 2.10x |
+| left_hot | certigap_hybrid | 3.882 | certigap_hybrid | +0.0% | +35.1% |
+| two_hot | global_prefix | 3.354 | certigap_hybrid | +2.8% | +67.9% |
+| uniform | global_prefix | 3.347 | global_prefix | +0.0% | +40.8% |
+| adversarial_edges | global_prefix | 3.028 | global_prefix | +0.0% | +87.5% |
+| temporal_shift | fenwick | 7.326 | global_prefix | +219.7% | +111.0% |
+| read_only_skew | global_prefix | 1.458 | global_prefix | +0.0% | +73.0% |
+| update_30_uniform | fenwick | 6.194 | fenwick | +0.0% | -1.2% |
+| update_50_uniform | fenwick | 5.778 | fenwick | +0.0% | -24.8% |
+| movielens_100k_frequency_derived | certigap_hybrid | 4.257 | global_prefix | +6.4% | +49.4% |
+| uci_online_retail_frequency_derived | global_prefix | 3.500 | certigap_hybrid | +1.0% | +63.7% |
+| wikimedia_pageviews_frequency_derived | certigap_hybrid | 4.035 | certigap_hybrid | +0.0% | +36.8% |
 
-- CertiGap-X beats the model-selected uniform block baseline in `1/8` holdout scenarios.
-- CertiGap-X is the fastest tested implementation in `0/8` scenarios.
+- CertiGap-H beats Fenwick in `9/11` holdout scenarios.
+- CertiGap-H beats uniform-prefix in `10/11` holdout scenarios.
+- CertiGap-H is the fastest tested implementation in `4/11` scenarios.
+- Train-only AutoIndex matches the three-candidate holdout oracle in `7/11` scenarios.
+- Mean AutoIndex holdout regret is `20.90%`; maximum is `219.69%`.
+- Excluding the declared `temporal_shift` stress case, mean AutoIndex regret is `1.02%` and maximum is `6.42%`.
 - Timings are post-build medians of nine complete trace executions; p95 is the nearest-rank batch statistic and MAD reports robust spread. Each method receives a separate untimed warm-up trace.
 - Public datasets provide observed key-frequency distributions, not native range-query traces. Their range/get/update operations are deterministically generated and labelled `frequency_derived`.
 - These measurements describe this machine and compiler only. They are not a portable speed guarantee.

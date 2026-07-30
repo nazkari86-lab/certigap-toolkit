@@ -1,9 +1,19 @@
 {
-  "base_git_commit": "e7c05f3cd9ebd31e7d3ee8f5602f94bdc94ea12e",
-  "benchmark_source_sha256": "050de67dc2f89c7cd4e76f3b95c25f30d3caa50a6e96654c6a31e97170b81c0f",
+  "base_git_commit": "284ffa2862480a2efa7172ebd6adc811ec734d84",
+  "benchmark_source_sha256": "ad32130b732b2a91f0568238cf32988706d99405879972060253f62296971a17",
   "cases": [
     {
       "certificate_sha256": "afa3324117738544da4c8943cc9ec8de84bcc2691b21e9688888515e375845ce",
+      "hybrid_boundaries": [
+        51,
+        113,
+        130,
+        147,
+        167,
+        202,
+        256
+      ],
+      "hybrid_certificate_sha256": "3a098f2d1650cf43fb70ab5458a981f649f1360dad89c4510d522a36d0c49018",
       "name": "left_hot",
       "synthesized_boundaries": [
         16,
@@ -40,10 +50,23 @@
         224,
         240,
         256
-      ]
+      ],
+      "update_fraction": 0.1
     },
     {
       "certificate_sha256": "eb0cb0bece21c52b25cb8d44e204c00fb3360b182f866a87c6305292300d3def",
+      "hybrid_boundaries": [
+        14,
+        63,
+        104,
+        117,
+        132,
+        191,
+        201,
+        221,
+        256
+      ],
+      "hybrid_certificate_sha256": "b441bea4dc2695be12fabbdb8f153c63d99f6fa9f1b9175d7e052a46bf34fd32",
       "name": "two_hot",
       "synthesized_boundaries": [
         4,
@@ -80,10 +103,20 @@
         224,
         240,
         256
-      ]
+      ],
+      "update_fraction": 0.1
     },
     {
       "certificate_sha256": "53dea9cfb5824b98465ef07d0793195739b8c3a97d4e2fd9d510e30186fedcd0",
+      "hybrid_boundaries": [
+        58,
+        101,
+        137,
+        176,
+        225,
+        256
+      ],
+      "hybrid_certificate_sha256": "af6dd3e987215bdc5e485d17c65cf5d3251fc4ea41b73732126b8a9bcf9fe46d",
       "name": "uniform",
       "synthesized_boundaries": [
         11,
@@ -120,10 +153,22 @@
         224,
         240,
         256
-      ]
+      ],
+      "update_fraction": 0.1
     },
     {
       "certificate_sha256": "005e9d5dbbda83ffa971fe0a87448de164776b349f77a399da4949afd1593a18",
+      "hybrid_boundaries": [
+        10,
+        39,
+        65,
+        129,
+        147,
+        161,
+        206,
+        256
+      ],
+      "hybrid_certificate_sha256": "b917373ba21541ff92d440a6f3c4cdf98ed64b762ce65d80f9744fbe5c07f1af",
       "name": "adversarial_edges",
       "synthesized_boundaries": [
         17,
@@ -160,10 +205,21 @@
         224,
         240,
         256
-      ]
+      ],
+      "update_fraction": 0.1
     },
     {
       "certificate_sha256": "3c5418179ae265afb1a509a92a3ec8681a0048bdb536f2499d98aacd1a1ab52b",
+      "hybrid_boundaries": [
+        46,
+        75,
+        104,
+        162,
+        200,
+        240,
+        256
+      ],
+      "hybrid_certificate_sha256": "3bf00b32a4955857178e5e26540467753609d557c3d9b07fb19dccb28de0adfd",
       "name": "temporal_shift",
       "synthesized_boundaries": [
         16,
@@ -200,27 +256,35 @@
         224,
         240,
         256
-      ]
+      ],
+      "update_fraction": 0.1
     },
     {
-      "certificate_sha256": "8ca7e2716120030e8adbf19fdf0f6f5a76790100bedf16c2e9fd42af7887c7e4",
-      "name": "movielens_100k_frequency_derived",
+      "certificate_sha256": "d7544c77c6e195e44825b333f5378855659261fb153722198834b9ff8039f3c2",
+      "hybrid_boundaries": [
+        64,
+        128,
+        192,
+        256
+      ],
+      "hybrid_certificate_sha256": "ccc19dde34f53b4c406e16191780938a65a5abc86c75397516f64285febb5f5c",
+      "name": "read_only_skew",
       "synthesized_boundaries": [
+        8,
         16,
+        24,
         33,
-        65,
-        93,
+        39,
         97,
         160,
-        165,
-        171,
-        179,
-        186,
-        193,
-        195,
-        211,
-        226,
-        242,
+        167,
+        174,
+        180,
+        192,
+        201,
+        206,
+        225,
+        246,
         256
       ],
       "uniform_boundaries": [
@@ -240,27 +304,191 @@
         224,
         240,
         256
-      ]
+      ],
+      "update_fraction": 0.0
     },
     {
-      "certificate_sha256": "f1ec1f27c189495123d4aede327dbc10dfe06968c3974b0d88c7d8e2eaf456a7",
+      "certificate_sha256": "16a69b2232e23a697cb4e6f617dbddd9f50008d00f57d31276fe7f7d5d6f6788",
+      "hybrid_boundaries": [
+        26,
+        69,
+        117,
+        172,
+        219,
+        256
+      ],
+      "hybrid_certificate_sha256": "c184217b84b5a8d2c01f3ac45a964ebbef80b48de06da1c0dcb5fbc37cd5260d",
+      "name": "update_30_uniform",
+      "synthesized_boundaries": [
+        14,
+        30,
+        43,
+        60,
+        78,
+        95,
+        115,
+        128,
+        141,
+        157,
+        172,
+        190,
+        199,
+        218,
+        231,
+        256
+      ],
+      "uniform_boundaries": [
+        16,
+        32,
+        48,
+        64,
+        80,
+        96,
+        112,
+        128,
+        144,
+        160,
+        176,
+        192,
+        208,
+        224,
+        240,
+        256
+      ],
+      "update_fraction": 0.3
+    },
+    {
+      "certificate_sha256": "503329de1c01dc20956ffec378fe0f438cfbe5cfdc51b95240f8267eeffdbdac",
+      "hybrid_boundaries": [
+        41,
+        70,
+        110,
+        143,
+        179,
+        211,
+        256
+      ],
+      "hybrid_certificate_sha256": "0f28960c8e4ecbd0b875571d14cbd54637faeec86111deff9672d55bf3f96919",
+      "name": "update_50_uniform",
+      "synthesized_boundaries": [
+        4,
+        34,
+        50,
+        63,
+        89,
+        117,
+        130,
+        149,
+        163,
+        180,
+        193,
+        201,
+        221,
+        238,
+        252,
+        256
+      ],
+      "uniform_boundaries": [
+        16,
+        32,
+        48,
+        64,
+        80,
+        96,
+        112,
+        128,
+        144,
+        160,
+        176,
+        192,
+        208,
+        224,
+        240,
+        256
+      ],
+      "update_fraction": 0.5
+    },
+    {
+      "certificate_sha256": "7a150b5bc6a4a06024746d0de3ad265e46c2f4bf6e31acfee77b30d7ef88df1d",
+      "hybrid_boundaries": [
+        49,
+        101,
+        121,
+        172,
+        193,
+        215,
+        240,
+        256
+      ],
+      "hybrid_certificate_sha256": "df6503b5e5bcd76ceec0a542d10a6fc0f9cb0747b0ccc6a873e52a56db20ec2e",
+      "name": "movielens_100k_frequency_derived",
+      "synthesized_boundaries": [
+        16,
+        21,
+        32,
+        65,
+        84,
+        97,
+        161,
+        177,
+        181,
+        188,
+        193,
+        205,
+        214,
+        215,
+        225,
+        256
+      ],
+      "uniform_boundaries": [
+        16,
+        32,
+        48,
+        64,
+        80,
+        96,
+        112,
+        128,
+        144,
+        160,
+        176,
+        192,
+        208,
+        224,
+        240,
+        256
+      ],
+      "update_fraction": 0.1
+    },
+    {
+      "certificate_sha256": "c57c3e61c677094d4017f56d91e4682114164f48b08ac8d44943b59d5132d843",
+      "hybrid_boundaries": [
+        31,
+        85,
+        149,
+        174,
+        196,
+        228,
+        256
+      ],
+      "hybrid_certificate_sha256": "1157e3839af090825015875e232dfa530d6f5b1974ad56d2dbed773bd330e784",
       "name": "uci_online_retail_frequency_derived",
       "synthesized_boundaries": [
         6,
         16,
-        20,
-        31,
-        37,
-        56,
-        64,
-        97,
-        108,
-        118,
-        129,
-        192,
-        218,
+        22,
+        32,
+        42,
+        65,
+        89,
+        91,
+        154,
+        161,
         225,
-        236,
+        235,
+        242,
+        247,
+        255,
         256
       ],
       "uniform_boundaries": [
@@ -280,27 +508,39 @@
         224,
         240,
         256
-      ]
+      ],
+      "update_fraction": 0.1
     },
     {
-      "certificate_sha256": "abf1a4106e2e7267ab92af7abefb033f294b8f2e5fa7349cc71dac62e9c006b3",
+      "certificate_sha256": "ac6c18b55516c082b34681a42f11738b0f397eb98a9576e0b8c62240de7f0f70",
+      "hybrid_boundaries": [
+        28,
+        77,
+        130,
+        174,
+        188,
+        221,
+        235,
+        256
+      ],
+      "hybrid_certificate_sha256": "fa46bb3304479650fab67d1d2d38c142b798acc8529772ba28f1ef905e694f5f",
       "name": "wikimedia_pageviews_frequency_derived",
       "synthesized_boundaries": [
-        9,
-        15,
         17,
-        22,
         32,
-        34,
-        51,
+        38,
+        46,
         65,
-        97,
-        104,
+        95,
+        98,
         129,
-        131,
-        134,
-        137,
-        192,
+        158,
+        218,
+        224,
+        236,
+        241,
+        246,
+        252,
         256
       ],
       "uniform_boundaries": [
@@ -308,7 +548,8 @@
         128,
         192,
         256
-      ]
+      ],
+      "update_fraction": 0.1
     }
   ],
   "compile_command": [
@@ -342,6 +583,11 @@
       "sha256": "c9f6a2159fd3a3fde29ccf5222a1eadc01e9afaf8b2d1a9b4f6183a6cc00db8f",
       "value_read_ns": 1.0,
       "value_write_ns": 1.0
+    },
+    "hybrid_constraints": {
+      "max_block_width": 64,
+      "max_blocks": 16,
+      "tail_weight": 0.15
     },
     "public_workloads": {
       "movielens_100k_frequency_derived": {
@@ -382,27 +628,32 @@
       }
     }
   },
-  "generated_cases_sha256": "503285d784d7ba15635c2b88d6419877b412c5e5ea3482196be9d23ed65e9825",
+  "generated_cases_sha256": "1363f93875ffa07ed261f6fa1facb73b4210b9dd3b15ca1ad6b2916bb35247d4",
   "holdout_operations_per_scenario": 6000,
   "limitations": [
     "single-machine microbenchmark",
     "public datasets are frequency-derived synthetic range traces",
-    "structural-unit synthesis profile is not fitted to measured latency",
+    "unit synthesis profiles are not fitted to measured latency",
     "no concurrency, persistence, allocation, or cache-cold isolation"
   ],
   "machine": "arm64",
   "methods": [
     "array",
+    "global_prefix",
     "fenwick",
     "segment_tree",
     "uniform_block",
-    "certigap_x"
+    "certigap_x",
+    "uniform_prefix",
+    "certigap_x_prefix",
+    "certigap_hybrid",
+    "certigap_auto"
   ],
   "n": 256,
   "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
   "python": "3.14.5",
   "repeats": 9,
-  "results_sha256": "b56f39f1d75fd149972fabdb3a0fa4038d10dabf49cf1a4f2911e88dd1c2828f",
+  "results_sha256": "3398c94db159dd5bd564a0dff54db99996780ce734cacf3ed3c6c7a9bb345012",
   "schema": "certigap-native-benchmark-v1",
   "seed": 20260730,
   "selection_protocol": "partitions selected from train trace only; holdout operations are generated from an independent seed and used only after index build",

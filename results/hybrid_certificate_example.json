@@ -1,0 +1,1407 @@
+{
+  "candidates": [
+    {
+      "blocks": 2,
+      "boundaries": [
+        16,
+        32
+      ],
+      "feasible": true,
+      "memory_slots": 100,
+      "score": 9.92325
+    },
+    {
+      "blocks": 3,
+      "boundaries": [
+        11,
+        21,
+        32
+      ],
+      "feasible": true,
+      "memory_slots": 102,
+      "score": 10.14075
+    },
+    {
+      "blocks": 4,
+      "boundaries": [
+        6,
+        12,
+        21,
+        32
+      ],
+      "feasible": true,
+      "memory_slots": 104,
+      "score": 10.72925
+    },
+    {
+      "blocks": 5,
+      "boundaries": [
+        4,
+        9,
+        16,
+        23,
+        32
+      ],
+      "feasible": true,
+      "memory_slots": 106,
+      "score": 11.5825
+    },
+    {
+      "blocks": 6,
+      "boundaries": [
+        2,
+        6,
+        11,
+        16,
+        23,
+        32
+      ],
+      "feasible": true,
+      "memory_slots": 108,
+      "score": 12.59425
+    },
+    {
+      "blocks": 7,
+      "boundaries": [
+        1,
+        3,
+        6,
+        11,
+        16,
+        23,
+        32
+      ],
+      "feasible": true,
+      "memory_slots": 110,
+      "score": 13.79
+    },
+    {
+      "blocks": 8,
+      "boundaries": [
+        1,
+        2,
+        4,
+        6,
+        11,
+        16,
+        23,
+        32
+      ],
+      "feasible": true,
+      "memory_slots": 112,
+      "score": 15.14425
+    },
+    {
+      "blocks": 9,
+      "boundaries": [
+        1,
+        2,
+        4,
+        6,
+        11,
+        16,
+        21,
+        26,
+        32
+      ],
+      "feasible": true,
+      "memory_slots": 114,
+      "score": 16.6485
+    },
+    {
+      "blocks": 10,
+      "boundaries": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        11,
+        16,
+        21,
+        26,
+        32
+      ],
+      "feasible": true,
+      "memory_slots": 116,
+      "score": 18.31125
+    },
+    {
+      "blocks": 11,
+      "boundaries": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        11,
+        16,
+        21,
+        26,
+        32
+      ],
+      "feasible": true,
+      "memory_slots": 118,
+      "score": 20.1325
+    },
+    {
+      "blocks": 12,
+      "boundaries": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        8,
+        11,
+        16,
+        21,
+        26,
+        32
+      ],
+      "feasible": true,
+      "memory_slots": 120,
+      "score": 22.108
+    }
+  ],
+  "constraints": {
+    "max_block_width": 16,
+    "max_blocks": 12,
+    "memory_limit_slots": null,
+    "memory_weight_ns": 0.0,
+    "tail_weight": 0.15
+  },
+  "grammar": {
+    "layout": "two_level_prefix_sum",
+    "objective": "exact additive partition-dependent prefix work plus a certified sum-of-local-maxima tail upper bound; interval and DP scores use canonical 12-decimal rounding",
+    "partition_space": "all contiguous partitions within declared limits"
+  },
+  "hardware": {
+    "aggregate_read_ns": 1.0,
+    "aggregate_write_ns": 1.0,
+    "combine_ns": 1.0,
+    "name": "structural-unit-profile",
+    "sample_count": 1,
+    "sha256": "c9f6a2159fd3a3fde29ccf5222a1eadc01e9afaf8b2d1a9b4f6183a6cc00db8f",
+    "value_read_ns": 1.0,
+    "value_write_ns": 1.0
+  },
+  "n": 32,
+  "schema": "certigap-hybrid-v1",
+  "scope": "exact minimum certified prefix-layout score over every legal partition in the declared grammar; wall-clock latency is not proven",
+  "selected": {
+    "blocks": 2,
+    "boundaries": [
+      16,
+      32
+    ]
+  },
+  "sha256": "b5cbc5097e0170a5b06a5628ff30310c87841dc85a02de4131fa9eac524b2def",
+  "trace": {
+    "n": 32,
+    "operations": [
+      {
+        "kind": "update",
+        "left": 1,
+        "right": 1,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 2,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 3,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 4,
+        "right": 4,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 5,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 6,
+        "right": 6,
+        "value": 5.0
+      },
+      {
+        "kind": "get",
+        "left": 7,
+        "right": 7,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 8,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 1,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 10,
+        "right": 10,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 11,
+        "right": 11,
+        "value": 10.0
+      },
+      {
+        "kind": "range",
+        "left": 4,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 13,
+        "right": 13,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 6,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 7,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 16,
+        "right": 16,
+        "value": 15.0
+      },
+      {
+        "kind": "range",
+        "left": 1,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 2,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 19,
+        "right": 19,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 4,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 21,
+        "right": 21,
+        "value": 20.0
+      },
+      {
+        "kind": "get",
+        "left": 22,
+        "right": 22,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 7,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 8,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 25,
+        "right": 25,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 26,
+        "right": 26,
+        "value": 25.0
+      },
+      {
+        "kind": "range",
+        "left": 3,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 28,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 5,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 6,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 31,
+        "right": 31,
+        "value": 30.0
+      },
+      {
+        "kind": "range",
+        "left": 8,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 1,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 2,
+        "right": 2,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 3,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 4,
+        "right": 4,
+        "value": 35.0
+      },
+      {
+        "kind": "get",
+        "left": 5,
+        "right": 5,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 6,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 7,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 8,
+        "right": 8,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 9,
+        "right": 9,
+        "value": 40.0
+      },
+      {
+        "kind": "range",
+        "left": 2,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 11,
+        "right": 11,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 4,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 5,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 14,
+        "right": 14,
+        "value": 45.0
+      },
+      {
+        "kind": "range",
+        "left": 7,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 8,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 17,
+        "right": 17,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 2,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 19,
+        "right": 19,
+        "value": 50.0
+      },
+      {
+        "kind": "get",
+        "left": 20,
+        "right": 20,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 5,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 6,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 23,
+        "right": 23,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 24,
+        "right": 24,
+        "value": 55.0
+      },
+      {
+        "kind": "range",
+        "left": 1,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 26,
+        "right": 26,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 3,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 4,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 29,
+        "right": 29,
+        "value": 60.0
+      },
+      {
+        "kind": "range",
+        "left": 6,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 7,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 32,
+        "right": 32,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 1,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 2,
+        "right": 2,
+        "value": 65.0
+      },
+      {
+        "kind": "get",
+        "left": 3,
+        "right": 3,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 4,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 5,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 6,
+        "right": 6,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 7,
+        "right": 7,
+        "value": 70.0
+      },
+      {
+        "kind": "range",
+        "left": 8,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 9,
+        "right": 9,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 2,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 3,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 12,
+        "right": 12,
+        "value": 75.0
+      },
+      {
+        "kind": "range",
+        "left": 5,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 6,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 15,
+        "right": 15,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 8,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 17,
+        "right": 17,
+        "value": 80.0
+      },
+      {
+        "kind": "get",
+        "left": 18,
+        "right": 18,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 3,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 4,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 21,
+        "right": 21,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 22,
+        "right": 22,
+        "value": 85.0
+      },
+      {
+        "kind": "range",
+        "left": 7,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 24,
+        "right": 24,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 1,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 2,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 27,
+        "right": 27,
+        "value": 90.0
+      },
+      {
+        "kind": "range",
+        "left": 4,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 5,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 30,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 7,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 32,
+        "right": 32,
+        "value": 95.0
+      },
+      {
+        "kind": "get",
+        "left": 1,
+        "right": 1,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 2,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 3,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 4,
+        "right": 4,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 5,
+        "right": 5,
+        "value": 100.0
+      },
+      {
+        "kind": "range",
+        "left": 6,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 7,
+        "right": 7,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 8,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 1,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 10,
+        "right": 10,
+        "value": 105.0
+      },
+      {
+        "kind": "range",
+        "left": 3,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 4,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 13,
+        "right": 13,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 6,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 15,
+        "right": 15,
+        "value": 110.0
+      },
+      {
+        "kind": "get",
+        "left": 16,
+        "right": 16,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 1,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 2,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 19,
+        "right": 19,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 20,
+        "right": 20,
+        "value": 115.0
+      },
+      {
+        "kind": "range",
+        "left": 5,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 22,
+        "right": 22,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 7,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 8,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 25,
+        "right": 25,
+        "value": 120.0
+      },
+      {
+        "kind": "range",
+        "left": 2,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 3,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 28,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 5,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 30,
+        "right": 30,
+        "value": 125.0
+      },
+      {
+        "kind": "get",
+        "left": 31,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 8,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 1,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 2,
+        "right": 2,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 3,
+        "right": 3,
+        "value": 130.0
+      },
+      {
+        "kind": "range",
+        "left": 4,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 5,
+        "right": 5,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 6,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 7,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 8,
+        "right": 8,
+        "value": 135.0
+      },
+      {
+        "kind": "range",
+        "left": 1,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 2,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 11,
+        "right": 11,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 4,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 13,
+        "right": 13,
+        "value": 140.0
+      },
+      {
+        "kind": "get",
+        "left": 14,
+        "right": 14,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 7,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 8,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 17,
+        "right": 17,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 18,
+        "right": 18,
+        "value": 145.0
+      },
+      {
+        "kind": "range",
+        "left": 3,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 20,
+        "right": 20,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 5,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 6,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 23,
+        "right": 23,
+        "value": 150.0
+      },
+      {
+        "kind": "range",
+        "left": 8,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 1,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 26,
+        "right": 26,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 3,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 28,
+        "right": 28,
+        "value": 155.0
+      },
+      {
+        "kind": "get",
+        "left": 29,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 6,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 7,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 32,
+        "right": 32,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 1,
+        "right": 1,
+        "value": 160.0
+      },
+      {
+        "kind": "range",
+        "left": 2,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 3,
+        "right": 3,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 4,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 5,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 6,
+        "right": 6,
+        "value": 165.0
+      },
+      {
+        "kind": "range",
+        "left": 7,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 8,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 9,
+        "right": 9,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 2,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 11,
+        "right": 11,
+        "value": 170.0
+      },
+      {
+        "kind": "get",
+        "left": 12,
+        "right": 12,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 5,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 6,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 15,
+        "right": 15,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 16,
+        "right": 16,
+        "value": 175.0
+      },
+      {
+        "kind": "range",
+        "left": 1,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 18,
+        "right": 18,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 3,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 4,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 21,
+        "right": 21,
+        "value": 180.0
+      },
+      {
+        "kind": "range",
+        "left": 6,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 7,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 24,
+        "right": 24,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 1,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 26,
+        "right": 26,
+        "value": 185.0
+      },
+      {
+        "kind": "get",
+        "left": 27,
+        "right": 27,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 4,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 5,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 30,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 31,
+        "right": 31,
+        "value": 190.0
+      },
+      {
+        "kind": "range",
+        "left": 8,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 1,
+        "right": 1,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 2,
+        "right": 29,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 3,
+        "right": 28,
+        "value": 0.0
+      },
+      {
+        "kind": "update",
+        "left": 4,
+        "right": 4,
+        "value": 195.0
+      },
+      {
+        "kind": "range",
+        "left": 5,
+        "right": 31,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 6,
+        "right": 30,
+        "value": 0.0
+      },
+      {
+        "kind": "get",
+        "left": 7,
+        "right": 7,
+        "value": 0.0
+      },
+      {
+        "kind": "range",
+        "left": 8,
+        "right": 28,
+        "value": 0.0
+      }
+    ]
+  }
+}

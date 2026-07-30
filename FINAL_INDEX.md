@@ -124,6 +124,15 @@
 - [synthesis_native_latency_metadata.json](results/synthesis_native_latency_metadata.json)
 - [SYNTHESIS.md](docs/SYNTHESIS.md)
 
+## CertiGap-H Hybrid Prefix Synthesis
+
+- [hybrid.py](certigap/hybrid.py)
+- [hybrid_verifier.py](certigap/hybrid_verifier.py)
+- [generate_hybrid_validation.py](generate_hybrid_validation.py)
+- [hybrid_validation.csv](results/hybrid_validation.csv)
+- [hybrid_certificate_example.json](results/hybrid_certificate_example.json)
+- [HYBRID.md](docs/HYBRID.md)
+
 - [FORMAL_RESULTS.md](docs/FORMAL_RESULTS.md)
 - [PROOF_SKETCHES.md](docs/PROOF_SKETCHES.md)
 - [TECHNICAL_NOTE.md](docs/TECHNICAL_NOTE.md)

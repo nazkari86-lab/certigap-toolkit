@@ -48,16 +48,20 @@ def build_abstract_ru(summary_text: str) -> str:
 8. синтетические, публичные, temporal и matched-budget C++ эксперименты.
 9. точный синтез неравномерных блоков CertiGap-X и отдельный native holdout,
    проверяющий перенос структурной модели в реальную задержку.
+10. CertiGap-H с `O(1)` range-sum, representation-aware exact DP и
+    независимо воспроизводимым сертификатом полного пространства разбиений.
 
 Текущее состояние прототипа подтверждается следующими результатами:
 
 {metric_lines}
 
 Полученные результаты поддерживают основную гипотезу работы: оптимизация степени материализации порядка является нетривиальной алгоритмической задачей и даёт измеримое преимущество над простыми greedy и balanced baseline на скошенных распределениях запросов.
-При этом native range-sum benchmark не подтверждает универсальное ускорение:
-Fenwick быстрее CertiGap-X во всех восьми сценариях. Поэтому синтезированная
-структура допускается к применению только после target-specific проверки, а
-отрицательный результат включён в работу.
+Первоначальный native benchmark не подтвердил ускорение CertiGap-X и этот
+отрицательный результат сохранён. Разработанный после него CertiGap-H устранил
+последовательный обход блоков: в текущей 11-сценарной матрице он быстрее
+Fenwick в 9 случаях, но проигрывает при 30% и 50% обновлений. Поэтому
+train-only AutoIndex сохраняет global-prefix и Fenwick как обязательные
+кандидаты, а temporal shift остаётся явным failure case.
 """
 
 
@@ -250,6 +254,8 @@ def main() -> None:
             RESULTS_DIR / "adaptive_header_validation.md",
             DOCS_DIR / "SYNTHESIS.md",
             RESULTS_DIR / "synthesis_validation.md",
+            DOCS_DIR / "HYBRID.md",
+            RESULTS_DIR / "hybrid_validation.md",
             RESULTS_DIR / "synthesis_native_latency.md",
         )
     )

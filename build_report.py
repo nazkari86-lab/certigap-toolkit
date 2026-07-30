@@ -218,6 +218,8 @@ def main() -> None:
             RESULTS_DIR / "adaptive_header_validation.md",
             DOCS_DIR / "SYNTHESIS.md",
             RESULTS_DIR / "synthesis_validation.md",
+            DOCS_DIR / "HYBRID.md",
+            RESULTS_DIR / "hybrid_validation.md",
             RESULTS_DIR / "synthesis_native_latency.md",
         )
     )

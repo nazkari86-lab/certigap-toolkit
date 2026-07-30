@@ -256,14 +256,25 @@ robust upper objective whose global minimum over all declared partitions is
 computed by dynamic programming and independently regenerated. A 24-case
 matrix verifies every frontier and runtime oracle; 20 cases select genuinely
 nonuniform designs. Hardware coefficients are conditional measurements, not
-portable latency guarantees. A separate native C++ holdout study selects
-partitions from 800 train operations and measures 6000 independently seeded
-operations in each of eight synthetic, temporal-shift, and public
-frequency-derived scenarios. CertiGap-X beats its model-selected uniform-block
-ablation in one scenario but is not the fastest overall in any scenario;
-Fenwick is fastest in all eight on the reported Apple M4 run. Thus exact
-structural synthesis is the supported contribution, while native deployment
-requires target-specific validation and a fail-safe classical fallback.
+portable latency guarantees. The first native audit found that CertiGap-X did
+not beat Fenwick. This negative result motivated CertiGap-H: local prefix
+arrays and a prefix over complete blocks remove the covered-block loop,
+giving constant-time range sums and update time proportional to the affected
+local and block suffixes. A representation-aware exact DP charges
+range-boundary separation and update suffix writes; an independent
+implementation reconstructs its complete frontier. Across 24 deterministic
+cases, all certificates and runtime oracles replay, and the mean certified
+score gain over the best uniform-prefix partition is 6.73\%.
+
+The expanded native C++ holdout study selects partitions and backend choices
+from 800 train operations and measures 6000 independently seeded operations
+in each of eleven synthetic, update-crossover, temporal-shift, and public
+frequency-derived scenarios. CertiGap-H beats Fenwick in nine scenarios but
+loses the 30\% and 50\% update cases; global prefix is generally strongest for
+read-heavy stationary traces. The train-only portfolio retains all three
+backends. A declared temporal shift produces its largest holdout regret,
+showing that target-specific calibration and online re-selection remain
+necessary.
 
 \bibliographystyle{plain}
 \bibliography{references}

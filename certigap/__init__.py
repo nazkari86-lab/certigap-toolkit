@@ -39,6 +39,17 @@ from .generalized import (
     midpoint_binary_profile,
 )
 from .hardware import calibrate_hardware, calibration_source_path
+from .hybrid import (
+    HybridConstraints,
+    HybridIndex,
+    PrefixBlockIndex,
+    compile_hybrid_index,
+    synthesize_hybrid_partitions,
+)
+from .hybrid_verifier import (
+    HybridVerificationError,
+    verify_hybrid_certificate,
+)
 from .online import (
     OnlineRegretCertificate,
     expectation_shift_bound,
@@ -146,6 +157,9 @@ __all__ = [
     "heuristic_best",
     "hot_block_distribution",
     "HardwareProfile",
+    "HybridConstraints",
+    "HybridIndex",
+    "HybridVerificationError",
     "interval_cost",
     "lagrangian_lower_bound",
     "make_distribution",
@@ -157,6 +171,7 @@ __all__ = [
     "OnlineRegretCertificate",
     "online_regret_certificate",
     "power_of_two_greedy_family",
+    "PrefixBlockIndex",
     "RangeNode",
     "RangeSnapshot",
     "RangeOptimizerVerificationError",
@@ -183,9 +198,12 @@ __all__ = [
     "verify_autoindex_artifact",
     "verify_tree",
     "verify_synthesis_certificate",
+    "verify_hybrid_certificate",
     "verify_serialized_tree_exact",
     "worst_case_tv_expectation",
     "WorkloadTrace",
     "VariableBlockIndex",
     "compile_synthesized_index",
+    "compile_hybrid_index",
+    "synthesize_hybrid_partitions",
 ]

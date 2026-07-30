@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(CertiGap VERSION 1.8.0 LANGUAGES CXX)
+project(CertiGap VERSION 1.9.0 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)

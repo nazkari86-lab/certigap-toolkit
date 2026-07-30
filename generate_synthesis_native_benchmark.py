@@ -12,8 +12,10 @@ from typing import Sequence
 
 from certigap import (
     HardwareProfile,
+    HybridConstraints,
     SynthesisConstraints,
     WorkloadTrace,
+    compile_hybrid_index,
     compile_synthesized_index,
 )
 from certigap.benchmark_datasets import SOURCES, load_real_workload
@@ -37,10 +39,15 @@ REPEATS = 9
 SEED = 20260730
 METHODS = (
     "array",
+    "global_prefix",
     "fenwick",
     "segment_tree",
     "uniform_block",
     "certigap_x",
+    "uniform_prefix",
+    "certigap_x_prefix",
+    "certigap_hybrid",
+    "certigap_auto",
 )
 
 
@@ -100,6 +107,7 @@ def make_trace(
     *,
     seed: int,
     profile: str,
+    update_fraction: float = 0.10,
 ) -> WorkloadTrace:
     rng = random.Random(seed)
     cumulative: list[float] = []
@@ -115,7 +123,7 @@ def make_trace(
         selector = rng.random()
         if selector < 0.12:
             trace.add_get(center)
-        elif selector < 0.22:
+        elif selector < 0.12 + update_fraction:
             trace.add_update(center, float((position * 17 + center * 5) % 997))
         else:
             if profile == "uniform":
@@ -202,10 +210,14 @@ def write_header(cases: Sequence[dict]) -> None:
         "    int n;",
         "    const Operation* operations;",
         "    std::size_t operation_count;",
+        "    const Operation* train_operations;",
+        "    std::size_t train_operation_count;",
         "    const int* uniform_boundaries;",
         "    std::size_t uniform_count;",
         "    const int* synthesized_boundaries;",
         "    std::size_t synthesized_count;",
+        "    const int* hybrid_boundaries;",
+        "    std::size_t hybrid_count;",
         "};",
         "",
     ]
@@ -215,11 +227,23 @@ def write_header(cases: Sequence[dict]) -> None:
         lines.extend(
             [
                 "};",
+                f"inline constexpr Operation train_operations_{index}[] = {{",
+            ]
+        )
+        lines.extend(
+            cpp_operation(operation) for operation in case["train"].operations
+        )
+        lines.extend(
+            [
+                "};",
                 f"inline constexpr int uniform_{index}[] = {{"
                 + ", ".join(map(str, case["uniform"]))
                 + "};",
                 f"inline constexpr int synthesized_{index}[] = {{"
                 + ", ".join(map(str, case["synthesized"]))
+                + "};",
+                f"inline constexpr int hybrid_{index}[] = {{"
+                + ", ".join(map(str, case["hybrid"]))
                 + "};",
                 "",
             ]
@@ -229,9 +253,14 @@ def write_header(cases: Sequence[dict]) -> None:
         lines.append(
             f'    {{"{case["name"]}", {N}, operations_{index}, '
             f"sizeof(operations_{index}) / sizeof(operations_{index}[0]), "
+            f"train_operations_{index}, "
+            f"sizeof(train_operations_{index}) / "
+            f"sizeof(train_operations_{index}[0]), "
             f"uniform_{index}, sizeof(uniform_{index}) / sizeof(uniform_{index}[0]), "
             f"synthesized_{index}, "
-            f"sizeof(synthesized_{index}) / sizeof(synthesized_{index}[0])}},"
+            f"sizeof(synthesized_{index}) / sizeof(synthesized_{index}[0]), "
+            f"hybrid_{index}, "
+            f"sizeof(hybrid_{index}) / sizeof(hybrid_{index}[0])}},"
         )
     lines.extend(
         [
@@ -255,24 +284,52 @@ def compiler_identity() -> str:
 
 
 def build_cases() -> tuple[list[dict], dict]:
-    workload_specs: list[tuple[str, list[float], list[float], str]] = []
+    workload_specs: list[
+        tuple[str, list[float], list[float], str, float]
+    ] = []
     for name in ("left_hot", "two_hot", "uniform", "adversarial_edges"):
         weights = synthetic_weights(name, N)
-        workload_specs.append((name, weights, weights, name))
+        workload_specs.append((name, weights, weights, name, 0.10))
     workload_specs.append(
         (
             "temporal_shift",
             synthetic_weights("temporal_shift_train", N),
             synthetic_weights("temporal_shift_holdout", N),
             "default",
+            0.10,
         )
+    )
+    workload_specs.extend(
+        [
+            (
+                "read_only_skew",
+                synthetic_weights("left_hot", N),
+                synthetic_weights("left_hot", N),
+                "default",
+                0.0,
+            ),
+            (
+                "update_30_uniform",
+                synthetic_weights("uniform", N),
+                synthetic_weights("uniform", N),
+                "uniform",
+                0.30,
+            ),
+            (
+                "update_50_uniform",
+                synthetic_weights("uniform", N),
+                synthetic_weights("uniform", N),
+                "uniform",
+                0.50,
+            ),
+        ]
     )
     provenance: dict = {}
     for name in SOURCES:
         observed, info = load_real_workload(name)
         weights = resize(observed, N)
         scenario = f"{name}_frequency_derived"
-        workload_specs.append((scenario, weights, weights, "default"))
+        workload_specs.append((scenario, weights, weights, "default", 0.10))
         provenance[scenario] = {
             **info,
             "derivation": (
@@ -287,28 +344,45 @@ def build_cases() -> tuple[list[dict], dict]:
         max_block_width=64,
         tail_weight=0.15,
     )
+    hybrid_constraints = HybridConstraints(
+        max_blocks=16,
+        max_block_width=64,
+        tail_weight=0.15,
+    )
     hardware = HardwareProfile()
     values = [float((key * 13 + 7) % 101) for key in range(N)]
     cases = []
-    for index, (name, train_weights, holdout_weights, trace_profile) in enumerate(
-        workload_specs
-    ):
+    for index, (
+        name,
+        train_weights,
+        holdout_weights,
+        trace_profile,
+        update_fraction,
+    ) in enumerate(workload_specs):
         train = make_trace(
             train_weights,
             TRAIN_OPERATIONS,
             seed=SEED + index * 2,
             profile=trace_profile,
+            update_fraction=update_fraction,
         )
         holdout = make_trace(
             holdout_weights,
             HOLDOUT_OPERATIONS,
             seed=SEED + index * 2 + 1,
             profile=trace_profile,
+            update_fraction=update_fraction,
         )
         model = compile_synthesized_index(
             values,
             train,
             constraints=constraints,
+            hardware=hardware,
+        )
+        hybrid_model = compile_hybrid_index(
+            values,
+            train,
+            constraints=hybrid_constraints,
             hardware=hardware,
         )
         cases.append(
@@ -318,7 +392,12 @@ def build_cases() -> tuple[list[dict], dict]:
                 "holdout": holdout,
                 "uniform": best_uniform(train, constraints, hardware),
                 "synthesized": tuple(model.selected_boundaries),
+                "hybrid": tuple(hybrid_model.selected_boundaries),
                 "certificate_sha256": model.export_certificate()["sha256"],
+                "hybrid_certificate_sha256": (
+                    hybrid_model.export_certificate()["sha256"]
+                ),
+                "update_fraction": update_fraction,
             }
         )
     return cases, {
@@ -329,6 +408,11 @@ def build_cases() -> tuple[list[dict], dict]:
             "tail_weight": constraints.tail_weight,
         },
         "hardware_profile": hardware.manifest(),
+        "hybrid_constraints": {
+            "max_blocks": hybrid_constraints.max_blocks,
+            "max_block_width": hybrid_constraints.max_block_width,
+            "tail_weight": hybrid_constraints.tail_weight,
+        },
         "public_workloads": provenance,
     }
 
@@ -337,12 +421,15 @@ def write_summary(rows: Sequence[dict[str, str]]) -> None:
     by_scenario: dict[str, dict[str, dict[str, str]]] = {}
     for row in rows:
         by_scenario.setdefault(row["scenario"], {})[row["method"]] = row
-    x_uniform_wins = 0
-    x_overall_wins = 0
+    hybrid_fenwick_wins = 0
+    hybrid_uniform_wins = 0
+    hybrid_overall_wins = 0
+    auto_matches = 0
+    auto_regrets: list[float] = []
     table = [
-        "# CertiGap-X native holdout benchmark",
+        "# CertiGap-H native holdout benchmark",
         "",
-        "| Scenario | Fastest | CertiGap-X ns/op | Uniform ns/op | X vs uniform | X / fastest |",
+        "| Scenario | Auto selected | Auto ns/op | Holdout oracle | Auto regret | Hybrid vs Fenwick |",
         "|---|---:|---:|---:|---:|---:|",
     ]
     for scenario, methods in by_scenario.items():
@@ -350,22 +437,61 @@ def write_summary(rows: Sequence[dict[str, str]]) -> None:
             method: float(row["median_ns_per_operation"])
             for method, row in methods.items()
         }
-        fastest = min(timings, key=timings.get)
-        x_time = timings["certigap_x"]
-        uniform_time = timings["uniform_block"]
-        x_uniform_wins += int(x_time < uniform_time)
-        x_overall_wins += int(fastest == "certigap_x")
+        fastest = min(
+            (
+                method
+                for method in timings
+                if method != "certigap_auto"
+            ),
+            key=timings.get,
+        )
+        hybrid_time = timings["certigap_hybrid"]
+        uniform_time = timings["uniform_prefix"]
+        fenwick_time = timings["fenwick"]
+        hybrid_fenwick_wins += int(hybrid_time < fenwick_time)
+        hybrid_uniform_wins += int(hybrid_time < uniform_time)
+        hybrid_overall_wins += int(fastest == "certigap_hybrid")
+        auto_row = methods["certigap_auto"]
+        selected_backend = auto_row["selected_backend"]
+        selectable = {
+            method: timings[method]
+            for method in (
+                "global_prefix",
+                "fenwick",
+                "certigap_hybrid",
+            )
+        }
+        holdout_oracle = min(selectable, key=selectable.get)
+        auto_matches += int(selected_backend == holdout_oracle)
+        auto_regret = (
+            timings["certigap_auto"] / selectable[holdout_oracle] - 1.0
+        )
+        auto_regrets.append(auto_regret)
         table.append(
-            f"| {scenario} | {fastest} | {x_time:.3f} | {uniform_time:.3f} | "
-            f"{(uniform_time / x_time - 1.0):+.1%} | {x_time / timings[fastest]:.2f}x |"
+            f"| {scenario} | {selected_backend} | "
+            f"{timings['certigap_auto']:.3f} | {holdout_oracle} | "
+            f"{auto_regret:+.1%} | "
+            f"{(fenwick_time / hybrid_time - 1.0):+.1%} |"
         )
     table.extend(
         [
             "",
-            f"- CertiGap-X beats the model-selected uniform block baseline in "
-            f"`{x_uniform_wins}/{len(by_scenario)}` holdout scenarios.",
-            f"- CertiGap-X is the fastest tested implementation in "
-            f"`{x_overall_wins}/{len(by_scenario)}` scenarios.",
+            f"- CertiGap-H beats Fenwick in "
+            f"`{hybrid_fenwick_wins}/{len(by_scenario)}` holdout scenarios.",
+            f"- CertiGap-H beats uniform-prefix in "
+            f"`{hybrid_uniform_wins}/{len(by_scenario)}` holdout scenarios.",
+            f"- CertiGap-H is the fastest tested implementation in "
+            f"`{hybrid_overall_wins}/{len(by_scenario)}` scenarios.",
+            f"- Train-only AutoIndex matches the three-candidate holdout oracle in "
+            f"`{auto_matches}/{len(by_scenario)}` scenarios.",
+            f"- Mean AutoIndex holdout regret is "
+            f"`{sum(auto_regrets) / len(auto_regrets):.2%}`; maximum is "
+            f"`{max(auto_regrets):.2%}`.",
+            f"- Excluding the declared `temporal_shift` stress case, mean "
+            f"AutoIndex regret is "
+            f"`{sum(regret for scenario, regret in zip(by_scenario, auto_regrets) if scenario != 'temporal_shift') / (len(auto_regrets) - 1):.2%}` "
+            f"and maximum is "
+            f"`{max(regret for scenario, regret in zip(by_scenario, auto_regrets) if scenario != 'temporal_shift'):.2%}`.",
             "- Timings are post-build medians of nine complete trace executions; "
             "p95 is the nearest-rank batch statistic and MAD reports robust spread. "
             "Each method receives a separate untimed warm-up trace.",
@@ -467,14 +593,19 @@ def main() -> None:
                 "name": case["name"],
                 "uniform_boundaries": list(case["uniform"]),
                 "synthesized_boundaries": list(case["synthesized"]),
+                "hybrid_boundaries": list(case["hybrid"]),
                 "certificate_sha256": case["certificate_sha256"],
+                "hybrid_certificate_sha256": case[
+                    "hybrid_certificate_sha256"
+                ],
+                "update_fraction": case["update_fraction"],
             }
             for case in cases
         ],
         "limitations": [
             "single-machine microbenchmark",
             "public datasets are frequency-derived synthetic range traces",
-            "structural-unit synthesis profile is not fitted to measured latency",
+            "unit synthesis profiles are not fitted to measured latency",
             "no concurrency, persistence, allocation, or cache-cold isolation",
         ],
     }

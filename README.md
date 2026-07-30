@@ -9,9 +9,10 @@ CertiGap-X can synthesize a new variable-block aggregate index instead of
 selecting only a named backend. Its exact dynamic program and independent
 verifier cover every legal partition in the declared grammar; see
 [`docs/SYNTHESIS.md`](docs/SYNTHESIS.md).
-The native holdout benchmark is intentionally non-promotional: Fenwick wins
-all eight committed range-sum scenarios, so synthesized deployment is gated
-on target-specific evidence rather than assumed to be faster.
+CertiGap-H adds a representation-aware two-level prefix layout. Its exact
+compiler optimizes range-boundary separation and update suffix work; the
+independent verifier reconstructs the full legal frontier. See
+[`docs/HYBRID.md`](docs/HYBRID.md).
 
 The easiest C++ mode is one header:
 
@@ -26,6 +27,26 @@ auto answer = index.range_query(1, 10);
 
 It runs in any C++17 environment without Python. See
 [`docs/ADAPTIVE_CPP.md`](docs/ADAPTIVE_CPP.md).
+
+Representation-aware Python compilation:
+
+```python
+from certigap import HybridConstraints, WorkloadTrace, compile_hybrid_index
+
+trace = WorkloadTrace(256)
+for _ in range(900):
+    trace.add_range(1, 80)
+for key in range(1, 101):
+    trace.add_update(key, float(key))
+
+index = compile_hybrid_index(
+    range(256),
+    trace,
+    constraints=HybridConstraints(max_blocks=16, max_block_width=64),
+)
+print(index.selected_boundaries)
+print(index.range_query(1, 80))
+```
 
 Instead of fully refining the whole key space, CertiGap decides **how much order is worth materializing at all** when:
 
@@ -54,6 +75,8 @@ It ships with:
 - contiguous-node C++ range benchmarks against Fenwick and segment trees.
 - Certified AutoIndex selection across array, Fenwick, segment tree, and two
   workload-adaptive CertiRange variants.
+- CertiGap-H `O(1)` range sums with exact representation-aware partition
+  synthesis and a train-only native backend tuner.
 
 License:
 
@@ -68,6 +91,10 @@ Simple practitioner story:
 Here, "naive" means untuned or linearly scanned alternatives. It does not mean
 Fenwick or segment trees: the compiler keeps those classical candidates when
 they are faster.
+
+Native evidence is workload-specific: CertiGap-H beats Fenwick in `9/11`
+committed scenarios, while Fenwick wins the `30%` and `50%` update cases and a
+global prefix array is usually strongest when reads dominate.
 
 Good fits:
 
@@ -389,6 +416,8 @@ Generated artifacts live in [`results/`](results):
 - [`anytime_validation.md`](results/anytime_validation.md): exact-oracle and scalable certified-gap trajectories
 - [`synthesis_native_latency.md`](results/synthesis_native_latency.md): train-only structure selection and native C++ holdout latency
 - [`synthesis_native_latency_metadata.json`](results/synthesis_native_latency_metadata.json): compiler, source hashes, seeds, public-data derivation, and limitations
+- [`hybrid_validation.md`](results/hybrid_validation.md): exact representation-aware frontier and best-uniform ablation
+- [`hybrid_certificate_example.json`](results/hybrid_certificate_example.json): independently replayable CertiGap-H certificate
 
 Figures live in [`figures/`](figures):
 

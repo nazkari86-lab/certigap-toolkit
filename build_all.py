@@ -22,6 +22,7 @@ def main() -> None:
     run([python, "build_cpp_core.py"])
     run([python, "generate_adaptive_validation.py"])
     run([python, "generate_synthesis_validation.py"])
+    run([python, "generate_hybrid_validation.py"])
     run([python, "generate_cpp_scaling.py"])
     run([python, "generate_lookup_benchmark.py"])
     run([python, "generate_cpp_dynamic_range.py"])

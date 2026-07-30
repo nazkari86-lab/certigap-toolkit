@@ -32,17 +32,22 @@ class SynthesisNativeBenchmarkTests(unittest.TestCase):
         )
         output = subprocess.check_output([str(binary)], cwd=root, text=True)
         rows = list(csv.DictReader(output.splitlines()))
-        self.assertEqual(len(rows), 40)
+        self.assertEqual(len(rows), 110)
         self.assertTrue(all(row["correct"] == "true" for row in rows))
-        self.assertEqual(len({row["scenario"] for row in rows}), 8)
+        self.assertEqual(len({row["scenario"] for row in rows}), 11)
         self.assertEqual(
             {row["method"] for row in rows},
             {
                 "array",
+                "global_prefix",
                 "fenwick",
                 "segment_tree",
                 "uniform_block",
                 "certigap_x",
+                "uniform_prefix",
+                "certigap_x_prefix",
+                "certigap_hybrid",
+                "certigap_auto",
             },
         )
         for scenario in {row["scenario"] for row in rows}:

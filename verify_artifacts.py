@@ -13,6 +13,7 @@ from certigap import (
     verify_autoindex_artifact,
     verify_autodro_selection_artifact,
     verify_dynamic_range_certificate,
+    verify_hybrid_certificate,
     verify_range_optimizer_artifact,
 )
 
@@ -66,7 +67,8 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "compiler_integration_validation.csv": 24,
         "adaptive_header_validation.csv": 24,
         "synthesis_validation.csv": 24,
-        "synthesis_native_latency.csv": 40,
+        "hybrid_validation.csv": 24,
+        "synthesis_native_latency.csv": 110,
     }
     observed: dict[str, int] = {}
     for name, minimum in minimum_rows.items():
@@ -355,19 +357,47 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
     ):
         raise ValueError("CertiGap-X synthesis validation is incomplete")
 
+    hybrid_rows = csv_records("hybrid_validation.csv")
+    if (
+        len(hybrid_rows) != 24
+        or any(
+            row["certificate_verified"] != "true"
+            or row["runtime_correct"] != "true"
+            or int(row["candidate_count"]) <= 0
+            or int(row["selected_blocks"]) <= 0
+            or not math.isfinite(float(row["selected_score"]))
+            or float(row["relative_gain"]) < -1e-9
+            for row in hybrid_rows
+        )
+        or sum(row["nonuniform"] == "true" for row in hybrid_rows) < 8
+    ):
+        raise ValueError("CertiGap-H exact validation is incomplete")
+    hybrid_artifact = json.loads(
+        (RESULTS / "hybrid_certificate_example.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if not verify_hybrid_certificate(hybrid_artifact)["verified"]:
+        raise ValueError("CertiGap-H certificate did not replay")
+
     native_rows = csv_records("synthesis_native_latency.csv")
     native_methods = {
         "array",
+        "global_prefix",
         "fenwick",
         "segment_tree",
         "uniform_block",
         "certigap_x",
+        "uniform_prefix",
+        "certigap_x_prefix",
+        "certigap_hybrid",
+        "certigap_auto",
     }
     native_groups: dict[str, list[dict[str, str]]] = {}
     for row in native_rows:
         native_groups.setdefault(row["scenario"], []).append(row)
     if (
-        len(native_groups) != 8
+        len(native_groups) != 11
         or any(
             {row["method"] for row in group} != native_methods
             or len(group) != len(native_methods)
@@ -389,6 +419,32 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         )
     ):
         raise ValueError("CertiGap-X native holdout matrix is incomplete")
+    selectable_native = {"global_prefix", "fenwick", "certigap_hybrid"}
+    for group in native_groups.values():
+        automatic = next(
+            row for row in group if row["method"] == "certigap_auto"
+        )
+        selected = automatic["selected_backend"]
+        if (
+            selected not in selectable_native
+            or float(automatic["train_selection_ns_per_operation"]) <= 0.0
+        ):
+            raise ValueError("native AutoIndex selection record is invalid")
+        selected_row = next(row for row in group if row["method"] == selected)
+        if any(
+            automatic[field] != selected_row[field]
+            for field in (
+                "median_ns_per_operation",
+                "p95_batch_ns_per_operation",
+                "mad_ns_per_operation",
+                "checksum",
+                "memory_slots",
+                "blocks",
+            )
+        ):
+            raise ValueError(
+                "native AutoIndex holdout row does not reuse its selected backend"
+            )
     native_metadata = json.loads(
         (RESULTS / "synthesis_native_latency_metadata.json").read_text(
             encoding="utf-8"
@@ -402,7 +458,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         or set(native_metadata.get("methods", [])) != native_methods
         or "train trace only"
         not in native_metadata.get("selection_protocol", "")
-        or len(native_metadata.get("cases", [])) != 8
+        or len(native_metadata.get("cases", [])) != 11
         or len(native_metadata.get("limitations", [])) < 4
         or native_metadata.get("benchmark_source_sha256")
         != file_sha256(ROOT / "cpp" / "synthesis_native_benchmark.cpp")

@@ -120,6 +120,20 @@ concurrency, and independently reproduced wall-clock gains remain external.
 Completed in `v1.8.0`. Independent machines, production traces, concurrency,
 storage integration, and a pre-registered domain-owner pilot remain external.
 
+## Phase 13: Representation-Aware Hybrid Synthesis
+
+- two-level prefix runtime with `O(1)` range sums;
+- exact DP over every legal variable-width partition;
+- independent statistics, frontier, tie-break, and winner regeneration;
+- global-prefix and high-update crossover baselines;
+- 24-case exact matrix and 11-scenario native holdout matrix;
+- train-only native selection across global prefix, Fenwick, and CertiGap-H;
+- explicit temporal-shift failure and fail-safe migration boundary.
+
+Completed in `v1.9.0`. The remaining work requires external evidence or a
+larger grammar: independent hardware reproduction, production traces,
+concurrency, persistence, inserts/deletes, and storage-engine integration.
+
 ## External Closure
 
 - independent proof review or machine-assisted formalization
