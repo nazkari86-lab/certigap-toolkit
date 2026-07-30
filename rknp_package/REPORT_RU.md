@@ -1564,7 +1564,7 @@ five portfolio candidates, and emits a normal C++17 configuration header.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install certigap_toolkit-1.9.0-py3-none-any.whl
+pip install certigap_toolkit-1.10.0-py3-none-any.whl
 
 certigap-compile include-dir
 ```
@@ -1842,7 +1842,7 @@ include(FetchContent)
 FetchContent_Declare(
     certigap
     GIT_REPOSITORY https://github.com/nazkari86-lab/certigap-toolkit.git
-    GIT_TAG v1.9.0
+    GIT_TAG v1.10.0
 )
 FetchContent_MakeAvailable(certigap)
 
@@ -2035,6 +2035,9 @@ the whole-operation maximum.
 For every legal block count, dynamic programming evaluates all contiguous
 partitions respecting `max_block_width`. The independent verifier separately
 reconstructs statistics, the complete frontier, tie-breaking, and the winner.
+Proof-critical interval scores and DP comparisons use integer fixed-point units
+of `1e-12`; floating-point values are retained only at the public artifact and
+runtime boundary.
 
 ```python
 from certigap import (

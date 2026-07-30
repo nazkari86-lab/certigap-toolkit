@@ -56,6 +56,10 @@ from .online import (
     online_regret_certificate,
     total_variation_distance,
 )
+from .pruned_verifier import (
+    PrunedBeamVerificationError,
+    verify_pruned_beam_certificate,
+)
 from .range_optimizer import range_aware_beam_search, score_range_workload
 from .range_optimizer_verifier import (
     RangeOptimizerVerificationError,
@@ -172,6 +176,7 @@ __all__ = [
     "online_regret_certificate",
     "power_of_two_greedy_family",
     "PrefixBlockIndex",
+    "PrunedBeamVerificationError",
     "RangeNode",
     "RangeSnapshot",
     "RangeOptimizerVerificationError",
@@ -199,6 +204,7 @@ __all__ = [
     "verify_tree",
     "verify_synthesis_certificate",
     "verify_hybrid_certificate",
+    "verify_pruned_beam_certificate",
     "verify_serialized_tree_exact",
     "worst_case_tv_expectation",
     "WorkloadTrace",

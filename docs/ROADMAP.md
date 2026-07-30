@@ -134,9 +134,23 @@ Completed in `v1.9.0`. The remaining work requires external evidence or a
 larger grammar: independent hardware reproduction, production traces,
 concurrency, persistence, inserts/deletes, and storage-engine integration.
 
+## Phase 14: Independent Scalable Evidence
+
+- certified entropy/max-cost intervals for the candidate-pruned C++ path;
+- solver-independent Python replay and standalone Rust verification;
+- deterministic fixed-point CertiGap-H selection and tie-breaking;
+- a real SQLite application pilot with five YCSB-compatible mixes, checksums,
+  repeated measurements, and bootstrap median intervals;
+- a pinned Lean 4 proof kernel for safe fixed-point Pareto pruning;
+- unified CLI, source/wheel packaging, Docker reproduction, portable CI,
+  Windows compilation, and C++ sanitizer checks.
+
+Completed in `v1.10.0`. The SQLite pilot is intentionally reported as a
+negative result: CertiGap-H does not beat Fenwick in the five committed mixes.
+
 ## External Closure
 
-- independent proof review or machine-assisted formalization
+- independent proof review and broader recurrence/verifier formalization
 - matched external robust-BST and learned-index implementations
 - independent hardware reproduction
 - prospective domain-owner trace and production pilot

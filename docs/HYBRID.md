@@ -46,6 +46,9 @@ the whole-operation maximum.
 For every legal block count, dynamic programming evaluates all contiguous
 partitions respecting `max_block_width`. The independent verifier separately
 reconstructs statistics, the complete frontier, tie-breaking, and the winner.
+Proof-critical interval scores and DP comparisons use integer fixed-point units
+of `1e-12`; floating-point values are retained only at the public artifact and
+runtime boundary.
 
 ```python
 from certigap import (

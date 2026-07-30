@@ -3,10 +3,14 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+from decimal import Decimal, ROUND_HALF_EVEN
 
 from .autoindex import TraceOperation, WorkloadTrace
 from .hybrid import HybridConstraints
 from .synthesis import HardwareProfile
+
+
+_SCORE_SCALE = 1_000_000_000_000
 
 
 class HybridVerificationError(ValueError):
@@ -66,7 +70,7 @@ def _trace_statistics(trace: WorkloadTrace) -> dict:
     }
 
 
-def _score_interval(
+def _score_interval_units(
     trace: WorkloadTrace,
     left: int,
     right: int,
@@ -75,7 +79,10 @@ def _score_interval(
     constraints: HybridConstraints,
     hardware: HardwareProfile,
     statistics: dict,
-) -> float:
+) -> int:
+    def decimal(value: float) -> Decimal:
+        return Decimal(str(value))
+
     get_count = (
         statistics["get_prefix"][right]
         - statistics["get_prefix"][left - 1]
@@ -93,39 +100,47 @@ def _score_interval(
         - statistics["crossing_prefix"][right][left - 1]
     )
     top_suffix = total_blocks - block_index + 1
-    crossing_cost = (
-        4.0 * hardware.aggregate_read_ns + hardware.combine_ns
-    )
+    aggregate_read = decimal(hardware.aggregate_read_ns)
+    combine = decimal(hardware.combine_ns)
+    aggregate_write = decimal(hardware.aggregate_write_ns)
+    value_read = decimal(hardware.value_read_ns)
+    value_write = decimal(hardware.value_write_ns)
+    crossing_cost = Decimal(4) * aggregate_read + combine
     update_sum = (
-        update_count
+        Decimal(update_count)
         * (
-            hardware.value_write_ns
-            + (right + 1 + top_suffix) * hardware.aggregate_write_ns
+            value_write
+            + Decimal(right + 1 + top_suffix) * aggregate_write
         )
-        - weighted_updates * hardware.aggregate_write_ns
+        - Decimal(weighted_updates) * aggregate_write
     )
     mean = (
-        get_count * hardware.value_read_ns
+        Decimal(get_count) * value_read
         + update_sum
-        + crossing_count * crossing_cost
-    ) / len(trace.operations)
+        + Decimal(crossing_count) * crossing_cost
+    ) / Decimal(len(trace.operations))
     first_update = statistics["next_update"][left]
     maximum_update = (
-        hardware.value_write_ns
-        + (right - first_update + 1 + top_suffix)
-        * hardware.aggregate_write_ns
+        value_write
+        + Decimal(right - first_update + 1 + top_suffix) * aggregate_write
         if first_update <= right
-        else 0.0
+        else Decimal(0)
     )
     local_maximum = max(
-        hardware.value_read_ns if get_count else 0.0,
+        value_read if get_count else Decimal(0),
         maximum_update,
-        crossing_cost if crossing_count else 0.0,
+        crossing_cost if crossing_count else Decimal(0),
     )
-    return (
-        (1.0 - constraints.tail_weight) * mean
-        + constraints.tail_weight * local_maximum
-        + 2.0 * constraints.memory_weight_ns
+    tail_weight = decimal(constraints.tail_weight)
+    robust = (
+        (Decimal(1) - tail_weight) * mean
+        + tail_weight * local_maximum
+        + Decimal(2) * decimal(constraints.memory_weight_ns)
+    )
+    return int(
+        (robust * _SCORE_SCALE).to_integral_value(
+            rounding=ROUND_HALF_EVEN
+        )
     )
 
 
@@ -137,11 +152,13 @@ def _regenerate_candidate(
 ) -> dict | None:
     n = trace.n
     statistics = _trace_statistics(trace)
-    scores = [[math.inf] * (n + 1) for _ in range(total_blocks + 1)]
+    scores: list[list[int | None]] = [
+        [None] * (n + 1) for _ in range(total_blocks + 1)
+    ]
     paths: list[list[tuple[int, ...] | None]] = [
         [None] * (n + 1) for _ in range(total_blocks + 1)
     ]
-    scores[0][0] = 0.0
+    scores[0][0] = 0
     paths[0][0] = ()
     for block_index in range(1, total_blocks + 1):
         maximum_right = min(
@@ -159,28 +176,26 @@ def _regenerate_candidate(
                 previous_path = paths[block_index - 1][previous]
                 if previous_path is None:
                     continue
-                interval = round(
-                    _score_interval(
-                        trace,
-                        left,
-                        right,
-                        block_index,
-                        total_blocks,
-                        constraints,
-                        hardware,
-                        statistics,
-                    ),
-                    12,
+                previous_score = scores[block_index - 1][previous]
+                if previous_score is None:
+                    continue
+                interval = _score_interval_units(
+                    trace,
+                    left,
+                    right,
+                    block_index,
+                    total_blocks,
+                    constraints,
+                    hardware,
+                    statistics,
                 )
-                candidate = round(
-                    scores[block_index - 1][previous] + interval,
-                    12,
-                )
+                candidate = previous_score + interval
                 candidate_path = (*previous_path, right)
                 if (
-                    candidate < scores[block_index][right] - 1e-12
+                    scores[block_index][right] is None
+                    or candidate < scores[block_index][right]
                     or (
-                        abs(candidate - scores[block_index][right]) <= 1e-12
+                        candidate == scores[block_index][right]
                         and (
                             paths[block_index][right] is None
                             or candidate_path < paths[block_index][right]
@@ -196,7 +211,7 @@ def _regenerate_candidate(
     return {
         "blocks": total_blocks,
         "boundaries": list(path),
-        "score": round(scores[total_blocks][n], 12),
+        "score": scores[total_blocks][n] / _SCORE_SCALE,
         "memory_slots": memory_slots,
         "feasible": (
             constraints.memory_limit_slots is None

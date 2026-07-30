@@ -67,8 +67,10 @@ described as a real-data result.
 `generate_cpp_scaling.py` measures a separate candidate-pruned C++ beam path.
 It evaluates all thresholds on small leaves and deterministic endpoints,
 uniform positions, and mass quantiles on larger leaves. This is a scalable
-heuristic, not an exact or proof-carrying solver: it has no approximation
-guarantee and does not export a certificate.
+heuristic, not an exact solver: it has no approximation guarantee. It exports
+a feasible tree, an information-theoretic lower bound, and a replayable
+instance-specific gap. That certificate does not prove that candidate pruning
+is close to exact.
 
 ## Post-Build Lookup Latency
 

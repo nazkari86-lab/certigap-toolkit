@@ -1,0 +1,12 @@
+.git
+.github
+.pytest_cache
+__pycache__
+*.py[cod]
+*.swp
+build
+dist
+rust-verifier/target
+*.egg-info
+data_cache
+paper/main.pdf

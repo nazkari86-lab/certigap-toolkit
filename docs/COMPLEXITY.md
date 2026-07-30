@@ -25,7 +25,10 @@ of two frontiers. Its corresponding conservative arithmetic bound is
 These are worst-case bounds for numerically validated floating-point reference
 implementations; the recurrence is mathematically exact, but finite `EPS`
 dominance comparisons are not rational-arithmetic proofs. The candidate-pruned
-C++ path is a separate heuristic and has no exactness guarantee.
+C++ path is a separate heuristic and has no exactness guarantee or
+approximation ratio. It exports a feasible upper bound and a separately
+replayed entropy/max-cost lower bound, giving a valid but potentially loose
+instance-specific interval.
 
 The generalized executable-fallback DP has the same asymptotic recurrence after
 fallback profiles have been precomputed. A direct midpoint-profile

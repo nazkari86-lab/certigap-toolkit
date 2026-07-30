@@ -14,6 +14,7 @@ from certigap import (
     verify_autodro_selection_artifact,
     verify_dynamic_range_certificate,
     verify_hybrid_certificate,
+    verify_pruned_beam_certificate,
     verify_range_optimizer_artifact,
 )
 
@@ -69,6 +70,8 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "synthesis_validation.csv": 24,
         "hybrid_validation.csv": 24,
         "synthesis_native_latency.csv": 110,
+        "sqlite_ycsb_raw.csv": 375,
+        "sqlite_ycsb_summary.csv": 15,
     }
     observed: dict[str, int] = {}
     for name, minimum in minimum_rows.items():
@@ -379,6 +382,15 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
     )
     if not verify_hybrid_certificate(hybrid_artifact)["verified"]:
         raise ValueError("CertiGap-H certificate did not replay")
+    pruned_artifact = json.loads(
+        (RESULTS / "pruned_beam_certificate_example.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if not verify_pruned_beam_certificate(
+        pruned_artifact["weights"], pruned_artifact
+    )["verified"]:
+        raise ValueError("C++ pruned-beam certificate did not replay")
 
     native_rows = csv_records("synthesis_native_latency.csv")
     native_methods = {
@@ -445,6 +457,64 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
             raise ValueError(
                 "native AutoIndex holdout row does not reuse its selected backend"
             )
+
+    hybrid_vs_fenwick = 0
+    hybrid_vs_uniform = 0
+    hybrid_fastest = 0
+    for group in native_groups.values():
+        by_method = {row["method"]: row for row in group}
+        hybrid_latency = float(
+            by_method["certigap_hybrid"]["median_ns_per_operation"]
+        )
+        if hybrid_latency < float(
+            by_method["fenwick"]["median_ns_per_operation"]
+        ):
+            hybrid_vs_fenwick += 1
+        if hybrid_latency < float(
+            by_method["uniform_prefix"]["median_ns_per_operation"]
+        ):
+            hybrid_vs_uniform += 1
+        specialized = [
+            float(row["median_ns_per_operation"])
+            for row in group
+            if row["method"] != "certigap_auto"
+        ]
+        if hybrid_latency <= min(specialized) + 1e-12:
+            hybrid_fastest += 1
+    claim_register = (ROOT / "docs" / "CLAIMS.md").read_text(
+        encoding="utf-8"
+    )
+    required_claim_values = {
+        f"`{hybrid_vs_fenwick}/11` holdout scenarios",
+        f"`{hybrid_vs_uniform}/11` holdout scenarios",
+        f"`{hybrid_fastest}/11` holdout scenarios",
+    }
+    if not required_claim_values.issubset(set(claim_register.splitlines())):
+        # Values normally occur inside table rows, so use substring validation.
+        if any(value not in claim_register for value in required_claim_values):
+            raise ValueError(
+                "CLAIMS.md native claims disagree with committed CSV evidence"
+            )
+    reader_surfaces = [
+        ROOT / "README.md",
+        ROOT / "paper" / "main.tex",
+        ROOT / "docs" / "RKNP_ISEF_POSITIONING.md",
+    ]
+    forbidden_unscoped_claims = (
+        "fastest possible index",
+        "universally faster",
+        "universal speedup",
+        "first robust search",
+        "first in the world",
+    )
+    for path in reader_surfaces:
+        content = path.read_text(encoding="utf-8").lower()
+        for phrase in forbidden_unscoped_claims:
+            if phrase in content:
+                raise ValueError(
+                    f"{path.relative_to(ROOT)} contains forbidden unscoped "
+                    f"claim: {phrase}"
+                )
     native_metadata = json.loads(
         (RESULTS / "synthesis_native_latency_metadata.json").read_text(
             encoding="utf-8"
@@ -468,6 +538,47 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         != file_sha256(RESULTS / "synthesis_native_latency.csv")
     ):
         raise ValueError("CertiGap-X native provenance contract is incomplete")
+
+    sqlite_rows = csv_records("sqlite_ycsb_raw.csv")
+    sqlite_summary = csv_records("sqlite_ycsb_summary.csv")
+    sqlite_groups = {
+        (row["workload"], row["backend"]) for row in sqlite_summary
+    }
+    if sqlite_groups != {
+        (workload, backend)
+        for workload in ("A", "B", "C", "F", "R")
+        for backend in ("sqlite_btree", "fenwick", "certigap_h")
+    }:
+        raise ValueError("SQLite/YCSB-compatible summary is incomplete")
+    if any(
+        float(row["bootstrap_median_ci95_low"])
+        > float(row["median_ns_per_operation"])
+        or float(row["median_ns_per_operation"])
+        > float(row["bootstrap_median_ci95_high"])
+        or float(row["median_ns_per_operation"]) <= 0.0
+        for row in sqlite_summary
+    ):
+        raise ValueError("SQLite/YCSB-compatible confidence interval is invalid")
+    for workload in ("A", "B", "C", "F", "R"):
+        checksums = {
+            row["checksum"]
+            for row in sqlite_rows
+            if row["workload"] == workload
+        }
+        if len(checksums) != 1:
+            raise ValueError(
+                f"SQLite/YCSB-compatible checksum mismatch for {workload}"
+            )
+    sqlite_metadata = json.loads(
+        (RESULTS / "sqlite_ycsb_metadata.json").read_text(encoding="utf-8")
+    )
+    if (
+        sqlite_metadata.get("schema")
+        != "certigap-sqlite-ycsb-pilot-v1"
+        or sqlite_metadata.get("mode") != "full"
+        or len(sqlite_metadata.get("limitations", [])) < 5
+    ):
+        raise ValueError("SQLite/YCSB-compatible metadata is incomplete")
 
     optimizer_rows = csv_records("range_optimizer_validation.csv")
     exact_optimizer_rows = [

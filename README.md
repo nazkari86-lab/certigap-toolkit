@@ -3,7 +3,14 @@
 [![CI](https://github.com/nazkari86-lab/certigap-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/nazkari86-lab/certigap-toolkit/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-CertiGap is a toolkit for **budgeted robust partial search trees**.
+CertiGap is a toolkit for **certified workload-adaptive synthesis and selection
+of ordered in-memory structures**.
+
+The precise claim register is [`docs/CLAIMS.md`](docs/CLAIMS.md). Certificates
+prove results only inside their declared structural grammar or candidate
+portfolio; native timings are separate machine-specific evidence. Exact
+reproduction roles and commands are in
+[`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
 
 CertiGap-X can synthesize a new variable-block aggregate index instead of
 selecting only a named backend. Its exact dynamic program and independent
@@ -278,13 +285,42 @@ per-backend unit costs can be calibrated from target measurements. See
 Compile a strict JSON trace into a verified artifact and C++17 header:
 
 ```bash
-certigap-compile compile trace.json \
+certigap compile trace.json \
   --artifact build/selection.json \
   --header build/generated_index.hpp
 
-certigap-compile verify build/selection.json
-certigap-compile include-dir
+certigap verify build/selection.json
+certigap explain build/selection.json
+certigap include-dir
 ```
+
+The unified CLI auto-detects AutoIndex, CertiGap-X, CertiGap-H, Dynamic
+CertiRange, range-optimizer, AutoDRO, and anytime-TV artifacts. Verification
+fails closed for unknown schemas or modified digests. The legacy
+`certigap-compile` and `certigap-calibrate` commands remain supported.
+
+Large-instance C++ beam artifacts additionally have a solver-independent Rust
+verifier:
+
+```bash
+cargo build --release --manifest-path rust-verifier/Cargo.toml
+rust-verifier/target/release/certigap-verifier \
+  results/pruned_beam_certificate_example.json
+```
+
+See [`docs/RUST_VERIFIER.md`](docs/RUST_VERIFIER.md).
+
+A real SQLite application-level pilot covers YCSB-compatible A/B/C/F mixes and
+a range-heavy workload with raw repetitions, checksum agreement, and bootstrap
+confidence intervals:
+
+```bash
+PYTHONPATH=. python3 benchmarks/sqlite_ycsb.py --mode quick
+```
+
+It is explicitly not presented as the official Java YCSB harness or as a
+SQLite extension. See
+[`results/sqlite_ycsb_pilot.md`](results/sqlite_ycsb_pilot.md).
 
 The generated `Index` exposes `get`, `range_query`, `point_update`, and
 `snapshot`. Selection is resolved at C++ compile time. A complete buildable
@@ -299,10 +335,22 @@ and performs opt-in TV-drift reoptimization.
 
 ## Quick Start
 
-Run the full project build:
+Run the tests through the installed command:
 
 ```bash
-PYTHONPATH=. python3 build_all.py
+certigap reproduce --mode tests
+```
+
+Verify every committed scientific artifact:
+
+```bash
+certigap reproduce --mode artifacts
+```
+
+Run a complete source-checkout rebuild:
+
+```bash
+certigap reproduce --mode full --benchmark-mode max
 ```
 
 Run the test suite:

@@ -23,7 +23,9 @@ The implementation is cross-validated against a second exact recurrence,
 brute force, and proof-carrying branch-and-bound on small instances. A
 candidate-pruned C++ implementation and matched-budget microbenchmark evaluate
 the quality, construction cost, lookup cost, and auxiliary memory of scalable
-solutions. We report both wins and losses and distinguish mathematical,
+solutions. Its feasible solution is paired with a replayable entropy/max-cost
+lower bound, including an independently implemented Rust verifier. We report
+both wins and losses and distinguish mathematical,
 empirical, and external-validation claims. AutoDRO additionally derives a
 finite-sample total-variation radius from integer query counts, evaluates the
 worst-case expectation of every generated candidate exactly, and automatically
@@ -40,6 +42,11 @@ Fenwick tree, segment tree, or one of two CertiRange variants under aggregate,
 memory, depth, and snapshot constraints. Its omission-resistant artifact
 proves minimum declared training cost over the complete fixed portfolio while
 keeping chronological holdout evaluation outside the selection path.
+As a representation-aware synthesis case, CertiGap-H exactly selects
+nonuniform two-level-prefix partitions for range sums and point updates. This
+is exact optimization inside an explicitly programmed representation grammar,
+not unconstrained discovery of a previously unknown data structure. Its
+dynamic program and replay verifier use deterministic fixed-point score units.
 \end{abstract}
 
 \section{Problem}
@@ -165,6 +172,18 @@ scenario and earth-mover uncertainty use different uncertainty sets and
 solution classes \cite{angelopoulos2025,dinitz2024}. Learned indexes optimize
 model-size and last-mile-search tradeoffs but generally do not provide this
 split-budget exact program \cite{pgm2020,sosd2020}.
+End-to-end learned data-structure discovery can recover binary and
+interpolation search and structures resembling k-d trees or locality-sensitive
+hashing \cite{salemohamed2025}; it does not currently provide CertiGap's
+functional, resource, or instance-specific optimality certificates.
+Proof-directed systems such as SuSLik and ReSyn synthesize correct
+heap-manipulating or resource-bounded recursive programs
+\cite{polikarpova2019,knoth2019}, but target different specifications and do
+not optimize measured ordered-index workloads under distribution drift.
+These adjacent results rule out a broad ``first synthesized data structure''
+claim. CertiGap's narrower contribution is exact or gap-certified optimization
+inside declared executable grammars, with native measurements reported
+separately.
 
 \section{Certified AutoIndex}
 We evaluate a fixed ordered portfolio containing a contiguous array, Fenwick
@@ -223,6 +242,11 @@ power-of-two cases close immediately through the entropy bound, while skewed
 cases retain explicitly reported nonzero gaps. The C++ lookup benchmark also
 includes read-only 80/20-hotspot and latest-biased YCSB-inspired
 distributions, but is not presented as an official YCSB or RocksDB result.
+For the separate candidate-pruned C++ path, every committed large-instance
+result now reports a feasible upper bound and the independently replayed
+entropy/max-cost lower bound. The bound is valid but intentionally coarse and
+does not establish an approximation ratio. A standalone Rust program consumes
+the JSON artifact without importing or linking the Python or C++ solver.
 Dynamic CertiRange matches complete routing-space optimization in 6 of 6 small
 range-workload cases. In 36 scaling groups, range-aware search is never worse
 than its included balanced candidate and strictly improves the former
@@ -275,6 +299,18 @@ read-heavy stationary traces. The train-only portfolio retains all three
 backends. A declared temporal shift produces its largest holdout regret,
 showing that target-specific calibration and online re-selection remain
 necessary.
+
+A separate in-memory SQLite application pilot executes five YCSB-compatible
+operation mixes with deterministic checksums, repeated measurements, and
+bootstrap median intervals. It is neither the official Java YCSB harness nor a
+SQLite extension. In this pilot CertiGap-H is slower than Fenwick in all five
+mixes; this negative result bounds the current systems claim and motivates
+native storage-engine integration rather than stronger performance language.
+
+Finally, a pinned Lean 4 kernel checks the non-negative fixed-point
+Pareto-dominance lemma and its common-additive-extension corollary. This small
+formal result supports one pruning step only; it is not a formalization of
+recurrence completeness, verifier correctness, or the full implementation.
 
 \bibliographystyle{plain}
 \bibliography{references}

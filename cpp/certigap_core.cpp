@@ -277,9 +277,21 @@ extern "C" void* certigap_pruned_beam_json(const double* weights, int n, int bud
     auto cost = [](const FastLeaf& leaf) { return leaf.depth + interval_cost(leaf.r - leaf.l + 1); };
     FastCandidate best = pruned_beam_solve(normalized, budget, eta, beam_width, candidate_limit);
     auto objective = [eta](const FastCandidate& c) { return (1.0 - eta) * c.average + eta * c.maximum; };
+    double entropy = 0.0;
+    for (int i = 1; i <= n; ++i) {
+        if (normalized[i] > 0.0) entropy -= normalized[i] * std::log2(normalized[i]);
+    }
+    int largest_leaf = (n + budget) / (budget + 1);
+    double lower_bound =
+        (1.0 - eta) * entropy
+        + eta * interval_cost(largest_leaf);
+    double upper_bound = objective(best);
+    lower_bound = std::min(lower_bound, upper_bound);
+    double absolute_gap = std::max(0.0, upper_bound - lower_bound);
+    double relative_gap = absolute_gap / std::max(std::abs(upper_bound), EPS);
     std::vector<int> per_key(n + 1, 0); for (const auto& leaf : best.leaves) for (int i = leaf.l; i <= leaf.r; ++i) per_key[i] = cost(leaf);
-    std::ostringstream out; out.setf(std::ios::fixed); out.precision(6);
-    out << "{\"n\":" << n << ",\"budget\":" << budget << ",\"requested_budget\":" << requested_budget << ",\"eta\":" << eta << ",\"average_cost\":" << best.average << ",\"max_cost\":" << best.maximum << ",\"objective\":" << objective(best) << ",\"beam_width\":" << beam_width << ",\"candidate_limit\":" << candidate_limit << ",\"per_key_costs\":[";
+    std::ostringstream out; out.setf(std::ios::fixed); out.precision(12);
+    out << "{\"schema\":\"certigap-pruned-beam-v1\",\"n\":" << n << ",\"budget\":" << budget << ",\"requested_budget\":" << requested_budget << ",\"eta\":" << eta << ",\"average_cost\":" << best.average << ",\"max_cost\":" << best.maximum << ",\"objective\":" << upper_bound << ",\"lower_bound\":" << lower_bound << ",\"absolute_gap\":" << absolute_gap << ",\"relative_gap_to_upper\":" << relative_gap << ",\"bound_type\":\"entropy_maxcost\",\"beam_width\":" << beam_width << ",\"candidate_limit\":" << candidate_limit << ",\"per_key_costs\":[";
     for (int i = 1; i <= n; ++i) { if (i > 1) out << ","; out << per_key[i]; }
     out << "],\"tree\":"; dump_tree(best.tree, out); out << "}";
     std::string payload = out.str(); char* raw = static_cast<char*>(std::malloc(payload.size() + 1)); if (!raw) return nullptr; std::memcpy(raw, payload.c_str(), payload.size() + 1); return raw;

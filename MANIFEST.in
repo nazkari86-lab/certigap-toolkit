@@ -1,0 +1,17 @@
+include CHANGELOG.md
+include CITATION.cff
+include CMakeLists.txt
+include Dockerfile
+include requirements-dev.txt
+include lean-toolchain
+prune rust-verifier/target
+recursive-include benchmarks *.py
+recursive-include cmake *.cmake.in
+recursive-include docs *.md
+recursive-include examples *.cpp *.json *.py CMakeLists.txt
+recursive-include formal *.lean
+recursive-include paper *.bib *.tex
+recursive-include results *.csv *.json *.md
+include rust-verifier/Cargo.lock
+include rust-verifier/Cargo.toml
+include rust-verifier/src/main.rs

@@ -10,6 +10,9 @@
 | Scenario-based robust BSTs (AAAI-25) | yes | scenario regret / competitive ratio | no | no |
 | Dinitz et al. distributional predictions | yes | entropy plus earth-mover prediction error | no | different uncertainty model |
 | PGM-index | ordered predecessor queries | space-time learned-index tradeoff | different model | no |
+| Learned data-structure discovery (NeurIPS 2025) | nearest-neighbor and frequency estimation | learned query/space tradeoff | yes, learned end-to-end | no |
+| SuSLik / ReSyn | heap programs / resource-bounded recursive programs | logical correctness or symbolic resources | program synthesis | proof-directed, different model |
+| TVM MetaSchedule | tensor schedules | measured hardware performance | schedule discovery inside TensorIR | compiler legality, not CertiGap optimality |
 | CertiGap | yes | average plus worst-case contamination risk | yes | yes |
 
 CertiGap must not be described as the first robust search-tree method. Its
@@ -45,6 +48,17 @@ fallback, and a contamination-robust objective.
    *Inequalities for the L1 Deviation of the Empirical Distribution*, 2003.
    AutoDRO uses its finite-alphabet concentration form to derive a conservative
    TV radius and adds the exact smoothing distance by triangle inequality.
+8. O. Salemohamed, L. Charlin, S. Garg, V. Sharan, and G. Valiant,
+   *Discovering Data Structures: Nearest Neighbor Search and Beyond*,
+   NeurIPS 2025. It learns data structures and query policies end-to-end and
+   recovers binary/interpolation-search, k-d-tree-like, and LSH-like behavior.
+   It does not emit CertiGap-style functional, resource, or instance-optimality
+   certificates.
+9. N. Polikarpova and I. Sergey, *Structuring the Synthesis of
+   Heap-Manipulating Programs*, POPL 2019; T. Knoth et al.,
+   *Resource-Guided Program Synthesis*, PLDI 2019. These systems establish
+   important adjacent proof-directed synthesis capabilities but target
+   different specifications and cost semantics.
 
 AutoDRO does not claim a new generic ambiguity set. Its narrower contribution
 is integrating exact finite-support TV evaluation with budgeted partial-search

@@ -94,7 +94,9 @@ intentional usability tradeoffs, not certified build-time claims.
 
 ## Honest Boundaries
 
-- The C++ pruned beam is empirical: it has no approximation theorem and no proof certificate.
+- The C++ pruned beam is empirical: it has no approximation theorem. Its
+  replay certificate establishes only feasibility and a coarse
+  entropy/max-cost lower bound.
 - The exact DP recurrence is mathematically exact, while the current
   implementation uses floating-point dominance with `EPS`. Rational arithmetic
   verifies submitted-tree costs but does not machine-prove DP enumeration.

@@ -3,8 +3,13 @@ import sys
 import unittest
 from pathlib import Path
 
-from certigap import CppCertiGap, frontier_dp_best, normalize_weights
-from certigap.cpp_bindings import library_path
+from certigap import (
+    CppCertiGap,
+    PrunedBeamVerificationError,
+    frontier_dp_best,
+    normalize_weights,
+    verify_pruned_beam_certificate,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,3 +44,26 @@ class CppEquivalenceTests(unittest.TestCase):
         self.assertLessEqual(python_result["objective"], result["objective"] + 1e-5)
         self.assertEqual(len(result["per_key_costs"]), len(weights))
         self.assertEqual(result["tree"]["interval"], [1, len(weights)])
+
+    def test_cpp_pruned_beam_exports_replayable_gap(self) -> None:
+        weights = [1, 2, 8, 3, 1, 13, 2, 1]
+        result = self.cpp.pruned_beam(
+            weights,
+            budget=3,
+            eta=0.15,
+            beam_width=8,
+            candidate_limit=8,
+        )
+        verification = verify_pruned_beam_certificate(weights, result)
+        self.assertTrue(verification["verified"])
+        self.assertLessEqual(
+            verification["lower_bound"],
+            verification["objective"] + 1e-9,
+        )
+
+        tampered = dict(result)
+        tampered["lower_bound"] += 0.1
+        with self.assertRaisesRegex(
+            PrunedBeamVerificationError, "lower_bound"
+        ):
+            verify_pruned_beam_certificate(weights, tampered)

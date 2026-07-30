@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "certigap-toolkit"
-version = "1.9.0"
+version = "1.10.0"
 description = "Certified workload-adaptive index compilation and robust partial search"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,7 +16,14 @@ classifiers = [
   "Topic :: Scientific/Engineering",
 ]
 
+[project.optional-dependencies]
+dev = [
+  "build==1.3.0",
+  "ruff==0.15.18",
+]
+
 [project.scripts]
+certigap = "certigap.cli:main"
 certigap-compile = "certigap.compiler:main"
 certigap-calibrate = "certigap.hardware:main"
 
@@ -32,3 +39,10 @@ include = ["certigap*"]
 ]
 "share/certigap/schemas" = ["schemas/certigap_compile_input_v1.schema.json"]
 "share/certigap/tools" = ["cpp/hardware_calibration.cpp"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

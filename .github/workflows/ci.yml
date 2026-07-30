@@ -25,6 +25,14 @@ jobs:
           python --version
           g++ --version
 
+      - name: Install development checks
+        run: python -m pip install --requirement requirements-dev.txt
+
+      - name: Static Python checks
+        run: |
+          ruff check certigap tests *.py
+          python -m compileall -q certigap
+
       - name: Build C++ core
         env:
           PYTHONPATH: .
@@ -52,6 +60,7 @@ jobs:
           python generate_adaptive_validation.py
           python generate_synthesis_validation.py
           python generate_hybrid_validation.py
+          python benchmarks/sqlite_ycsb.py --mode full
           python generate_figures.py
 
       - name: Verify committed scientific artifacts
@@ -70,7 +79,9 @@ jobs:
           python examples/certified_autoindex.py
 
       - name: Build installable wheel
-        run: python -m pip wheel . --no-deps --wheel-dir /tmp/certigap-wheel
+        run: |
+          python -m build
+          python -m pip wheel . --no-deps --wheel-dir /tmp/certigap-wheel
 
       - name: Build generated CMake example
         env:
@@ -86,3 +97,113 @@ jobs:
           cmake --build /tmp/certigap-header --parallel 2
           /tmp/certigap-header/certigap_online_example
           cmake --install /tmp/certigap-header --prefix /tmp/certigap-install
+
+  portable-python:
+    name: Python ${{ matrix.python }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: "3.10"
+          - os: ubuntu-latest
+            python: "3.12"
+          - os: ubuntu-latest
+            python: "3.13"
+          - os: ubuntu-latest
+            python: "3.14"
+          - os: macos-latest
+            python: "3.11"
+          - os: macos-latest
+            python: "3.14"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Build native core
+        run: python build_cpp_core.py
+      - name: Run complete test suite
+        env:
+          PYTHONPATH: .
+        run: python -m unittest discover -s tests -v
+      - name: Verify installed unified CLI
+        run: |
+          python -m pip install .
+          certigap --version
+          certigap include-dir
+
+  windows-header:
+    name: Windows / MSVC header
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure header-only example
+        run: cmake -S . -B build/windows -DCERTIGAP_BUILD_EXAMPLES=ON
+      - name: Build header-only example
+        run: cmake --build build/windows --config Release --parallel 2
+      - name: Run header-only example
+        run: .\build\windows\Release\certigap_online_example.exe
+
+  sanitizers:
+    name: C++ ASan / UBSan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build adaptive validation with sanitizers
+        run: |
+          c++ -std=c++17 -O1 -g \
+            -fsanitize=address,undefined \
+            -fno-omit-frame-pointer \
+            cpp/adaptive_validation.cpp \
+            -o /tmp/certigap-adaptive-sanitized
+      - name: Run adaptive validation with sanitizers
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: /tmp/certigap-adaptive-sanitized > /tmp/adaptive-validation.csv
+
+  rust-verifier:
+    name: Standalone Rust verifier
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+      - name: Check standalone verifier
+        run: |
+          cargo fmt --manifest-path rust-verifier/Cargo.toml -- --check
+          cargo clippy --manifest-path rust-verifier/Cargo.toml -- -D warnings
+          cargo test --manifest-path rust-verifier/Cargo.toml
+          cargo build --release --manifest-path rust-verifier/Cargo.toml
+      - name: Generate independently verifiable C++ artifact
+        run: |
+          python build_cpp_core.py
+          PYTHONPATH=. python generate_pruned_certificate.py
+      - name: Replay with Rust
+        run: |
+          rust-verifier/target/release/certigap-verifier \
+            results/pruned_beam_certificate_example.json
+
+  lean-kernel:
+    name: Lean proof kernel
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Lean
+        run: |
+          curl -sSf https://elan.lean-lang.org/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Check Pareto-dominance proof
+        run: |
+          elan show
+          lean formal/CertiGap.lean

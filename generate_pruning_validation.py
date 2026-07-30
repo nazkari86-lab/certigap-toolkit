@@ -25,7 +25,8 @@ def main() -> None:
     RESULTS.mkdir(exist_ok=True)
     with (RESULTS / "pruning_validation.csv").open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
-        writer.writeheader(); writer.writerows(rows)
+        writer.writeheader()
+        writer.writerows(rows)
     lines = ["# C++ Pruning Quality Validation", "", "Exact frontier DP is the oracle. This validates empirical quality only; it is not an approximation proof.", "", "| Candidate limit | Mean absolute gap | Max absolute gap | Mean relative gap |", "|---:|---:|---:|---:|"]
     for limit in (4, 8, 16, 32):
         subset = [row for row in rows if row["candidate_limit"] == limit]

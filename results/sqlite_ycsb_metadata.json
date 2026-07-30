@@ -1,0 +1,19 @@
+{
+  "limitations": [
+    "YCSB-compatible operation mixes, not the official Java harness",
+    "application-level Python integration, not a SQLite extension",
+    "SQLite uses an in-memory primary-key table and one transaction",
+    "single-machine timings are not portable",
+    "CertiGap-H grammar is fixed before timed holdout execution"
+  ],
+  "mode": "full",
+  "schema": "certigap-sqlite-ycsb-pilot-v1",
+  "sqlite_version": "3.50.4",
+  "workloads": {
+    "A": "50% get, 50% update",
+    "B": "95% get, 5% update",
+    "C": "100% get",
+    "F": "50% get, 50% read-modify-write",
+    "R": "70% range sum, 25% get, 5% update"
+  }
+}

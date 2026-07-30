@@ -1,0 +1,21 @@
+# Lean Formalization
+
+`formal/CertiGap.lean` is a deliberately small machine-checked kernel for the
+fixed-point Pareto-pruning argument.
+
+It proves:
+
+1. If one DP state is no worse in both average and maximum coordinates, every
+   non-negative scalarization also scores it no worse.
+2. The ordering remains safe after adding the same non-negative continuation
+   cost to both states.
+
+The checked-in `lean-toolchain` pins the exact Lean 4 release. Run:
+
+```bash
+elan show
+lean formal/CertiGap.lean
+```
+
+This is not a formalization of recurrence completeness, the C++ runtime, or
+the complete CertiGap paper. Those remain explicit future proof work.

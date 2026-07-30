@@ -2,23 +2,35 @@
 
 ## Topic
 
-**CertiGap-AutoDRO: automatic portfolio selection for budgeted robust partial search**
+**CertiGap: certified workload-adaptive synthesis and selection of ordered
+in-memory structures**
 
 ## One-Sentence Contribution
 
-We automatically select **how much order to materialize**, which solver and fallback to use, and how to trade latency against memory under statistically uncertain query predictions, with exact fixed-candidate TV-DRO evaluation and independently verifiable portfolio arithmetic.
+We synthesize or select an ordered in-memory structure inside an explicit finite
+design space, optimize its structural cost under workload and resource
+constraints, and emit a replay-verifiable artifact that states exactly what was
+and was not proved.
 
 ## Research Question
 
-Given sorted keys, a predicted query distribution, and a budget `B` on materialized threshold comparisons, which parts of the order should be resolved in advance and which should remain unresolved intervals, so that the resulting search structure is both efficient under the prediction and robust when the prediction is wrong?
+Given ordered data, supported operations, a measured workload, and resource
+constraints, which legal representation should be materialized so that modeled
+work is minimized without claiming optimality outside the declared design
+space?
 
 ## Main Claim
 
-For the budgeted partial-search model with interval leaves and contamination robustness, CertiGap can produce:
+For each declared finite grammar or portfolio, CertiGap aims to produce:
 
-1. an exact optimum on small and medium instances;
-2. a scalable heuristic on larger instances;
-3. a certificate containing an upper bound, a lower bound, and a gap between them.
+1. an exact optimum and replayable winner when exhaustive dynamic programming
+   is tractable;
+2. a feasible incumbent and certified interval for supported anytime paths;
+3. an explicitly labelled empirical heuristic when neither guarantee is
+   available;
+4. native measurements separated from structural certificates.
+
+The claim-by-claim source of truth is [`CLAIMS.md`](CLAIMS.md).
 
 ## Theorem Targets
 
@@ -1002,7 +1014,7 @@ five portfolio candidates, and emits a normal C++17 configuration header.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install certigap_toolkit-1.9.0-py3-none-any.whl
+pip install certigap_toolkit-1.10.0-py3-none-any.whl
 
 certigap-compile include-dir
 ```
@@ -1280,7 +1292,7 @@ include(FetchContent)
 FetchContent_Declare(
     certigap
     GIT_REPOSITORY https://github.com/nazkari86-lab/certigap-toolkit.git
-    GIT_TAG v1.9.0
+    GIT_TAG v1.10.0
 )
 FetchContent_MakeAvailable(certigap)
 
@@ -1473,6 +1485,9 @@ the whole-operation maximum.
 For every legal block count, dynamic programming evaluates all contiguous
 partitions respecting `max_block_width`. The independent verifier separately
 reconstructs statistics, the complete frontier, tie-breaking, and the winner.
+Proof-critical interval scores and DP comparisons use integer fixed-point units
+of `1e-12`; floating-point values are retained only at the public artifact and
+runtime boundary.
 
 ```python
 from certigap import (

@@ -4,10 +4,14 @@ import hashlib
 import json
 import math
 from dataclasses import asdict, dataclass
+from decimal import Decimal, ROUND_HALF_EVEN
 from typing import Iterable, Sequence
 
 from .autoindex import WorkloadTrace
 from .synthesis import HardwareProfile
+
+
+_SCORE_SCALE = 1_000_000_000_000
 
 
 def _canonical_sha256(value: object) -> str:
@@ -264,6 +268,80 @@ def _interval_score(
     return robust, mean, local_maximum
 
 
+def _interval_score_units(
+    trace: WorkloadTrace,
+    left: int,
+    right: int,
+    block_index: int,
+    total_blocks: int,
+    constraints: HybridConstraints,
+    hardware: HardwareProfile,
+    statistics: dict,
+) -> int:
+    def decimal(value: float) -> Decimal:
+        return Decimal(str(value))
+
+    get_count = (
+        statistics["get_prefix"][right]
+        - statistics["get_prefix"][left - 1]
+    )
+    update_count = (
+        statistics["update_prefix"][right]
+        - statistics["update_prefix"][left - 1]
+    )
+    weighted_updates = (
+        statistics["weighted_update_prefix"][right]
+        - statistics["weighted_update_prefix"][left - 1]
+    )
+    crossing_count = (
+        statistics["crossing_prefix"][right][right]
+        - statistics["crossing_prefix"][right][left - 1]
+    )
+    top_suffix = total_blocks - block_index + 1
+    aggregate_read = decimal(hardware.aggregate_read_ns)
+    combine = decimal(hardware.combine_ns)
+    aggregate_write = decimal(hardware.aggregate_write_ns)
+    value_read = decimal(hardware.value_read_ns)
+    value_write = decimal(hardware.value_write_ns)
+    crossing_cost = Decimal(4) * aggregate_read + combine
+    update_sum = (
+        Decimal(update_count)
+        * (
+            value_write
+            + Decimal(right + 1 + top_suffix) * aggregate_write
+        )
+        - Decimal(weighted_updates) * aggregate_write
+    )
+    mean = (
+        Decimal(get_count) * value_read
+        + update_sum
+        + Decimal(crossing_count) * crossing_cost
+    ) / Decimal(len(trace.operations))
+    first_update = statistics["next_update"][left]
+    maximum_update = (
+        value_write
+        + Decimal(right - first_update + 1 + top_suffix) * aggregate_write
+        if first_update <= right
+        else Decimal(0)
+    )
+    local_maximum = max(
+        value_read if get_count else Decimal(0),
+        maximum_update,
+        crossing_cost if crossing_count else Decimal(0),
+    )
+    tail_weight = decimal(constraints.tail_weight)
+    robust = (
+        (Decimal(1) - tail_weight) * mean
+        + tail_weight * local_maximum
+        + Decimal(2) * decimal(constraints.memory_weight_ns)
+    )
+    return int(
+        (robust * _SCORE_SCALE).to_integral_value(
+            rounding=ROUND_HALF_EVEN
+        )
+    )
+
+
 def _best_for_block_count(
     trace: WorkloadTrace,
     total_blocks: int,
@@ -272,12 +350,13 @@ def _best_for_block_count(
 ) -> dict | None:
     n = trace.n
     statistics = _statistics(trace)
-    infinity = math.inf
-    scores = [[infinity] * (n + 1) for _ in range(total_blocks + 1)]
+    scores: list[list[int | None]] = [
+        [None] * (n + 1) for _ in range(total_blocks + 1)
+    ]
     paths: list[list[tuple[int, ...] | None]] = [
         [None] * (n + 1) for _ in range(total_blocks + 1)
     ]
-    scores[0][0] = 0.0
+    scores[0][0] = 0
     paths[0][0] = ()
     for block_index in range(1, total_blocks + 1):
         minimum_right = block_index
@@ -296,27 +375,26 @@ def _best_for_block_count(
                 previous_path = paths[block_index - 1][previous]
                 if previous_path is None:
                     continue
-                interval = round(
-                    _interval_score(
-                        trace,
-                        left,
-                        right,
-                        block_index,
-                        total_blocks,
-                        constraints,
-                        hardware,
-                        statistics,
-                    )[0],
-                    12,
+                previous_score = scores[block_index - 1][previous]
+                if previous_score is None:
+                    continue
+                interval = _interval_score_units(
+                    trace,
+                    left,
+                    right,
+                    block_index,
+                    total_blocks,
+                    constraints,
+                    hardware,
+                    statistics,
                 )
-                candidate = round(
-                    scores[block_index - 1][previous] + interval, 12
-                )
+                candidate = previous_score + interval
                 candidate_path = (*previous_path, right)
                 if (
-                    candidate < scores[block_index][right] - 1e-12
+                    scores[block_index][right] is None
+                    or candidate < scores[block_index][right]
                     or (
-                        abs(candidate - scores[block_index][right]) <= 1e-12
+                        candidate == scores[block_index][right]
                         and (
                             paths[block_index][right] is None
                             or candidate_path < paths[block_index][right]
@@ -336,7 +414,7 @@ def _best_for_block_count(
     return {
         "blocks": total_blocks,
         "boundaries": list(path),
-        "score": round(scores[total_blocks][n], 12),
+        "score": scores[total_blocks][n] / _SCORE_SCALE,
         "memory_slots": memory_slots,
         "feasible": feasible,
     }
@@ -442,7 +520,7 @@ def compile_hybrid_index(
             "objective": (
                 "exact additive partition-dependent prefix work plus a "
                 "certified sum-of-local-maxima tail upper bound; interval "
-                "and DP scores use canonical 12-decimal rounding"
+                "and DP scores use integer fixed-point units of 1e-12"
             ),
         },
         "candidates": candidates,

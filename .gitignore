@@ -7,3 +7,5 @@ data/external/*
 dist/
 *.egg-info/
 *.tmp
+*.swp
+rust-verifier/target/

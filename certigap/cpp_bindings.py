@@ -60,6 +60,8 @@ class CppCertiGap:
         if not raw_ptr:
             raise RuntimeError("C++ pruned beam returned null")
         try:
-            return json.loads(ctypes.string_at(raw_ptr).decode("utf-8"))
+            result = json.loads(ctypes.string_at(raw_ptr).decode("utf-8"))
+            result["weights"] = [float(weight) for weight in weights]
+            return result
         finally:
             self._lib.certigap_free_string(raw_ptr)

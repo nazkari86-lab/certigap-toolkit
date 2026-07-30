@@ -175,7 +175,7 @@
   },
   "grammar": {
     "layout": "two_level_prefix_sum",
-    "objective": "exact additive partition-dependent prefix work plus a certified sum-of-local-maxima tail upper bound; interval and DP scores use canonical 12-decimal rounding",
+    "objective": "exact additive partition-dependent prefix work plus a certified sum-of-local-maxima tail upper bound; interval and DP scores use integer fixed-point units of 1e-12",
     "partition_space": "all contiguous partitions within declared limits"
   },
   "hardware": {
@@ -198,7 +198,7 @@
       32
     ]
   },
-  "sha256": "b5cbc5097e0170a5b06a5628ff30310c87841dc85a02de4131fa9eac524b2def",
+  "sha256": "413c2e5ffb5b3b48bee92537f4543e293c1e58cb037e1f009a93f14d7fc73be4",
   "trace": {
     "n": 32,
     "operations": [
