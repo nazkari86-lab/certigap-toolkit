@@ -2,13 +2,13 @@ cff-version: 1.2.0
 message: "If you use CertiGap, cite this software and its accompanying paper."
 title: "CertiGap Toolkit"
 type: software
-version: 1.10.0
+version: 1.10.1
 date-released: 2026-07-30
 authors:
   - family-names: Nurlanuly
     given-names: Dulat
 repository-code: "https://github.com/nazkari86-lab/certigap-toolkit"
-url: "https://github.com/nazkari86-lab/certigap-toolkit/releases/tag/v1.10.0"
+url: "https://github.com/nazkari86-lab/certigap-toolkit/releases/tag/v1.10.1"
 license: MIT
 keywords:
   - data structures

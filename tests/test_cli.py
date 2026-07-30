@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from certigap.compiler import compile_spec
 from certigap.hybrid import HybridConstraints, compile_hybrid_index
@@ -109,6 +110,15 @@ class UnifiedCliTests(unittest.TestCase):
         from certigap.cli import _checkout_root
 
         self.assertEqual(_checkout_root(), ROOT)
+
+    def test_installed_cli_finds_checkout_from_working_directory(self) -> None:
+        from certigap.cli import _checkout_root
+
+        with patch(
+            "certigap.cli.__file__",
+            "/tmp/site-packages/certigap/cli.py",
+        ):
+            self.assertEqual(_checkout_root(), ROOT)
 
 
 if __name__ == "__main__":

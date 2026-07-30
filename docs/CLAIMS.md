@@ -4,7 +4,7 @@ This register is the source of truth for statements made in the README, paper,
 presentations, and competition material. A result outside the stated scope must
 not be used to strengthen the claim.
 
-Status: CertiGap Toolkit `v1.10.0` release candidate.
+Status: CertiGap Toolkit `v1.10.1`.
 
 ## Central Claim
 

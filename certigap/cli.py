@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from importlib.metadata import PackageNotFoundError, version
@@ -43,7 +44,7 @@ def _package_version() -> str:
     try:
         return version("certigap-toolkit")
     except PackageNotFoundError:
-        return "1.10.0"
+        return "1.10.1"
 
 
 def verify_artifact(artifact: dict) -> tuple[str, dict]:
@@ -320,13 +321,27 @@ def _include_dir(args: argparse.Namespace) -> int:
 
 
 def _checkout_root() -> Path:
-    root = Path(__file__).resolve().parents[1]
-    if not (root / "verify_artifacts.py").is_file():
-        raise ValueError(
-            "reproduction requires a CertiGap source checkout, not only an "
-            "installed wheel"
-        )
-    return root
+    candidates: list[Path] = []
+    configured = os.environ.get("CERTIGAP_SOURCE_ROOT")
+    if configured:
+        candidates.append(Path(configured).expanduser())
+    for start in (Path.cwd(), Path(__file__).resolve().parents[1]):
+        candidates.extend((start, *start.parents))
+    visited: set[Path] = set()
+    for candidate in candidates:
+        root = candidate.resolve()
+        if root in visited:
+            continue
+        visited.add(root)
+        if (
+            (root / "verify_artifacts.py").is_file()
+            and (root / "pyproject.toml").is_file()
+        ):
+            return root
+    raise ValueError(
+        "reproduction requires a CertiGap source checkout; run from the "
+        "checkout or set CERTIGAP_SOURCE_ROOT"
+    )
 
 
 def _reproduce(args: argparse.Namespace) -> int:

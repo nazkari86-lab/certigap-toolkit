@@ -128,7 +128,7 @@ include(FetchContent)
 FetchContent_Declare(
     certigap
     GIT_REPOSITORY https://github.com/nazkari86-lab/certigap-toolkit.git
-    GIT_TAG v1.10.0
+    GIT_TAG v1.10.1
 )
 FetchContent_MakeAvailable(certigap)
 

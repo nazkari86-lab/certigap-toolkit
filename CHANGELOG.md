@@ -3,6 +3,12 @@
 All notable changes are documented here. Scientific claim changes are also
 recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
 
+## 1.10.1 - 2026-07-30
+
+- Make installed `certigap reproduce` discover a source checkout from the
+  working directory or `CERTIGAP_SOURCE_ROOT`.
+- Add a regression test for the installed-CLI Docker execution path.
+
 ## 1.10.0 - 2026-07-30
 
 - Add the unified `certigap` CLI with compile, verify, explain, calibrate,

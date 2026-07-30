@@ -487,7 +487,7 @@ five portfolio candidates, and emits a normal C++17 configuration header.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install certigap_toolkit-1.10.0-py3-none-any.whl
+pip install certigap_toolkit-1.10.1-py3-none-any.whl
 
 certigap-compile include-dir
 ```
@@ -754,7 +754,7 @@ include(FetchContent)
 FetchContent_Declare(
     certigap
     GIT_REPOSITORY https://github.com/nazkari86-lab/certigap-toolkit.git
-    GIT_TAG v1.10.0
+    GIT_TAG v1.10.1
 )
 FetchContent_MakeAvailable(certigap)
 
