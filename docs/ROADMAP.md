@@ -107,6 +107,19 @@
 Completed in `v1.7.0`. Learned routing, storage-engine integration,
 concurrency, and independently reproduced wall-clock gains remain external.
 
+## Phase 12: Native Transfer Audit
+
+- train-only partition selection and separately seeded holdout timing;
+- identical C++ operations and checksum oracle across five implementations;
+- skew, uniform, adversarial-boundary, temporal-shift, and three public
+  frequency-derived scenarios;
+- median, nearest-rank p95, MAD, memory slots, compiler and source hashes;
+- explicit negative result: Fenwick wins every committed range-sum scenario;
+- fail-safe deployment rule retaining the classical AutoIndex candidate.
+
+Completed in `v1.8.0`. Independent machines, production traces, concurrency,
+storage integration, and a pre-registered domain-owner pilot remain external.
+
 ## External Closure
 
 - independent proof review or machine-assisted formalization

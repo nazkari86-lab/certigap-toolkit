@@ -68,6 +68,28 @@ strictly exceed rebuild cost plus an explicit confidence margin. This is an
 amortization rule, not a workload forecast or statistical confidence
 estimator.
 
+## Native Holdout Result
+
+The structural theorem does not imply wall-clock speed. The matched native
+benchmark selects partitions from `800` train operations and measures five C++
+implementations on `6000` separately seeded holdout operations. It covers four
+stationary synthetic cases, one temporal shift, and three public
+frequency-derived cases.
+
+On the committed Apple M4/Apple clang run, CertiGap-X beats the
+model-selected uniform partition in `1/8` scenarios, but Fenwick is fastest in
+all eight. CertiGap-X ranges from `1.48x` to `2.95x` the fastest median latency
+in this run. Therefore the defensible contribution is exact, verifiable
+structure synthesis under a declared grammar, not universal range-sum
+acceleration.
+
+The practical policy is fail-safe: include the synthesized index as an
+AutoIndex candidate, calibrate on the target workload and hardware, and deploy
+it only when a holdout or confidence-aware migration gate beats the classical
+candidate. See
+[`results/synthesis_native_latency.md`](../results/synthesis_native_latency.md)
+and its machine-readable provenance JSON.
+
 ## Claim Boundary
 
 The current grammar synthesizes in-memory rank-addressed block indexes. It

@@ -118,6 +118,10 @@
 - [calibrate_hardware.py](calibrate_hardware.py)
 - [generate_synthesis_validation.py](generate_synthesis_validation.py)
 - [synthesis_validation.csv](results/synthesis_validation.csv)
+- [generate_synthesis_native_benchmark.py](generate_synthesis_native_benchmark.py)
+- [synthesis_native_benchmark.cpp](cpp/synthesis_native_benchmark.cpp)
+- [synthesis_native_latency.csv](results/synthesis_native_latency.csv)
+- [synthesis_native_latency_metadata.json](results/synthesis_native_latency_metadata.json)
 - [SYNTHESIS.md](docs/SYNTHESIS.md)
 
 - [FORMAL_RESULTS.md](docs/FORMAL_RESULTS.md)

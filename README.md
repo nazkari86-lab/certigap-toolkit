@@ -9,6 +9,9 @@ CertiGap-X can synthesize a new variable-block aggregate index instead of
 selecting only a named backend. Its exact dynamic program and independent
 verifier cover every legal partition in the declared grammar; see
 [`docs/SYNTHESIS.md`](docs/SYNTHESIS.md).
+The native holdout benchmark is intentionally non-promotional: Fenwick wins
+all eight committed range-sum scenarios, so synthesized deployment is gated
+on target-specific evidence rather than assumed to be faster.
 
 The easiest C++ mode is one header:
 
@@ -61,6 +64,10 @@ License:
 Simple practitioner story:
 
 > When memory or split budget is tight and access is skewed, CertiGap beats naive structures by spending structural effort only where queries are concentrated.
+
+Here, "naive" means untuned or linearly scanned alternatives. It does not mean
+Fenwick or segment trees: the compiler keeps those classical candidates when
+they are faster.
 
 Good fits:
 
@@ -380,6 +387,8 @@ Generated artifacts live in [`results/`](results):
 - [`cpp_dynamic_range.md`](results/cpp_dynamic_range.md): C++ mixed traces against Fenwick and segment tree
 - [`range_optimizer_validation.md`](results/range_optimizer_validation.md): exact-oracle and scaling validation
 - [`anytime_validation.md`](results/anytime_validation.md): exact-oracle and scalable certified-gap trajectories
+- [`synthesis_native_latency.md`](results/synthesis_native_latency.md): train-only structure selection and native C++ holdout latency
+- [`synthesis_native_latency_metadata.json`](results/synthesis_native_latency_metadata.json): compiler, source hashes, seeds, public-data derivation, and limitations
 
 Figures live in [`figures/`](figures):
 

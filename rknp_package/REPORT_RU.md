@@ -1564,7 +1564,7 @@ five portfolio candidates, and emits a normal C++17 configuration header.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install certigap_toolkit-1.7.0-py3-none-any.whl
+pip install certigap_toolkit-1.8.0-py3-none-any.whl
 
 certigap-compile include-dir
 ```
@@ -1842,7 +1842,7 @@ include(FetchContent)
 FetchContent_Declare(
     certigap
     GIT_REPOSITORY https://github.com/nazkari86-lab/certigap-toolkit.git
-    GIT_TAG v1.7.0
+    GIT_TAG v1.8.0
 )
 FetchContent_MakeAvailable(certigap)
 
@@ -1951,6 +1951,28 @@ strictly exceed rebuild cost plus an explicit confidence margin. This is an
 amortization rule, not a workload forecast or statistical confidence
 estimator.
 
+## Native Holdout Result
+
+The structural theorem does not imply wall-clock speed. The matched native
+benchmark selects partitions from `800` train operations and measures five C++
+implementations on `6000` separately seeded holdout operations. It covers four
+stationary synthetic cases, one temporal shift, and three public
+frequency-derived cases.
+
+On the committed Apple M4/Apple clang run, CertiGap-X beats the
+model-selected uniform partition in `1/8` scenarios, but Fenwick is fastest in
+all eight. CertiGap-X ranges from `1.48x` to `2.95x` the fastest median latency
+in this run. Therefore the defensible contribution is exact, verifiable
+structure synthesis under a declared grammar, not universal range-sum
+acceleration.
+
+The practical policy is fail-safe: include the synthesized index as an
+AutoIndex candidate, calibrate on the target workload and hardware, and deploy
+it only when a holdout or confidence-aware migration gate beats the classical
+candidate. See
+[`results/synthesis_native_latency.md`](../results/synthesis_native_latency.md)
+and its machine-readable provenance JSON.
+
 ## Claim Boundary
 
 The current grammar synthesizes in-memory rank-addressed block indexes. It
@@ -1968,6 +1990,25 @@ unit primitive costs; target-specific nanoseconds must be measured locally.
 - Minimum certified gain over best uniform blocks: `0.00%`.
 
 The committed matrix uses unit primitive costs for deterministic reproduction. Machine-specific nanosecond profiles are conditional inputs produced by `calibrate_hardware.py`, not portable facts.
+
+# CertiGap-X native holdout benchmark
+
+| Scenario | Fastest | CertiGap-X ns/op | Uniform ns/op | X vs uniform | X / fastest |
+|---|---:|---:|---:|---:|---:|
+| left_hot | fenwick | 21.805 | 18.076 | -17.1% | 2.95x |
+| two_hot | fenwick | 24.722 | 18.347 | -25.8% | 2.38x |
+| uniform | fenwick | 35.438 | 35.792 | +1.0% | 2.00x |
+| adversarial_edges | fenwick | 33.097 | 23.917 | -27.7% | 2.58x |
+| temporal_shift | fenwick | 27.007 | 21.278 | -21.2% | 1.48x |
+| movielens_100k_frequency_derived | fenwick | 21.201 | 18.035 | -14.9% | 1.88x |
+| uci_online_retail_frequency_derived | fenwick | 26.625 | 19.555 | -26.6% | 2.35x |
+| wikimedia_pageviews_frequency_derived | fenwick | 24.042 | 23.243 | -3.3% | 2.10x |
+
+- CertiGap-X beats the model-selected uniform block baseline in `1/8` holdout scenarios.
+- CertiGap-X is the fastest tested implementation in `0/8` scenarios.
+- Timings are post-build medians of nine complete trace executions; p95 is the nearest-rank batch statistic and MAD reports robust spread. Each method receives a separate untimed warm-up trace.
+- Public datasets provide observed key-frequency distributions, not native range-query traces. Their range/get/update operations are deterministically generated and labelled `frequency_derived`.
+- These measurements describe this machine and compiler only. They are not a portable speed guarantee.
 
 ## 10. Вывод
 

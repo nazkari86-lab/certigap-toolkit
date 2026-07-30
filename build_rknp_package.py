@@ -46,12 +46,18 @@ def build_abstract_ru(summary_text: str) -> str:
 6. масштабируемый anytime TV-DRO Branch-and-Bound с проверяемым интервалом оптимальности;
 7. формальную границу regret `g + 2 delta R` при изменении распределения;
 8. синтетические, публичные, temporal и matched-budget C++ эксперименты.
+9. точный синтез неравномерных блоков CertiGap-X и отдельный native holdout,
+   проверяющий перенос структурной модели в реальную задержку.
 
 Текущее состояние прототипа подтверждается следующими результатами:
 
 {metric_lines}
 
 Полученные результаты поддерживают основную гипотезу работы: оптимизация степени материализации порядка является нетривиальной алгоритмической задачей и даёт измеримое преимущество над простыми greedy и balanced baseline на скошенных распределениях запросов.
+При этом native range-sum benchmark не подтверждает универсальное ускорение:
+Fenwick быстрее CertiGap-X во всех восьми сценариях. Поэтому синтезированная
+структура допускается к применению только после target-specific проверки, а
+отрицательный результат включён в работу.
 """
 
 
@@ -244,6 +250,7 @@ def main() -> None:
             RESULTS_DIR / "adaptive_header_validation.md",
             DOCS_DIR / "SYNTHESIS.md",
             RESULTS_DIR / "synthesis_validation.md",
+            RESULTS_DIR / "synthesis_native_latency.md",
         )
     )
     counterexample_text = read(RESULTS_DIR / "counterexamples.md") if (RESULTS_DIR / "counterexamples.md").exists() else ""

@@ -256,7 +256,14 @@ robust upper objective whose global minimum over all declared partitions is
 computed by dynamic programming and independently regenerated. A 24-case
 matrix verifies every frontier and runtime oracle; 20 cases select genuinely
 nonuniform designs. Hardware coefficients are conditional measurements, not
-portable latency guarantees.
+portable latency guarantees. A separate native C++ holdout study selects
+partitions from 800 train operations and measures 6000 independently seeded
+operations in each of eight synthetic, temporal-shift, and public
+frequency-derived scenarios. CertiGap-X beats its model-selected uniform-block
+ablation in one scenario but is not the fastest overall in any scenario;
+Fenwick is fastest in all eight on the reported Apple M4 run. Thus exact
+structural synthesis is the supported contribution, while native deployment
+requires target-specific validation and a fail-safe classical fallback.
 
 \bibliographystyle{plain}
 \bibliography{references}

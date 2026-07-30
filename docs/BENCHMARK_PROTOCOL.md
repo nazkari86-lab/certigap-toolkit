@@ -83,6 +83,41 @@ limits; it is not a hardware-routing or external-library claim.
 PYTHONPATH=. python3 generate_lookup_benchmark.py
 ```
 
+## CertiGap-X Native Holdout Protocol
+
+`generate_synthesis_native_benchmark.py` tests whether the exact structural
+objective transfers to native wall-clock latency. Each of eight scenarios has
+two independently seeded roles:
+
+- `800` train operations select the exact variable-block partition and the
+  best legal uniform-block partition under the same structural-unit model;
+- `6000` holdout operations are emitted to C++ and are never consulted during
+  partition selection.
+
+The C++17 harness compares array scan, Fenwick tree, iterative segment tree,
+uniform blocks, and CertiGap-X on identical operations. Construction is
+excluded. Every method receives one untimed warm-up and nine timed complete
+trace batches. The CSV reports median, nearest-rank p95, MAD, memory slots, and
+a checksum that must agree across all five methods.
+
+The synthetic matrix includes skew, uniform access, adversarial boundary
+placement, and an explicit train-to-holdout temporal shift. MovieLens, UCI,
+and Wikimedia cases use only their observed ordered key-frequency vectors;
+the actual range/get/update traces are deterministic synthetic draws and are
+therefore labelled `frequency_derived`.
+
+```bash
+PYTHONPATH=. python3 generate_synthesis_native_benchmark.py
+python3 verify_artifacts.py
+```
+
+The committed Apple M4/Apple clang run does not show blanket native
+superiority: CertiGap-X beats the model-selected uniform baseline in only
+`1/8` holdout scenarios and is fastest in `0/8`; Fenwick is fastest in all
+eight. This negative transfer result defines the deployment rule: use
+synthesis only after target-specific evidence, otherwise retain the classical
+AutoIndex winner.
+
 ## AutoDRO Distribution Shift
 
 `generate_autodro_benchmark.py` uses eight predefined train/test scenarios at

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import math
 import re
@@ -18,6 +19,14 @@ from certigap import (
 
 ROOT = Path(__file__).resolve().parent
 RESULTS = ROOT / "results"
+
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def csv_rows(name: str) -> tuple[list[str], int]:
@@ -57,6 +66,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "compiler_integration_validation.csv": 24,
         "adaptive_header_validation.csv": 24,
         "synthesis_validation.csv": 24,
+        "synthesis_native_latency.csv": 40,
     }
     observed: dict[str, int] = {}
     for name, minimum in minimum_rows.items():
@@ -344,6 +354,64 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         or sum(row["nonuniform"] == "true" for row in synthesis_rows) < 12
     ):
         raise ValueError("CertiGap-X synthesis validation is incomplete")
+
+    native_rows = csv_records("synthesis_native_latency.csv")
+    native_methods = {
+        "array",
+        "fenwick",
+        "segment_tree",
+        "uniform_block",
+        "certigap_x",
+    }
+    native_groups: dict[str, list[dict[str, str]]] = {}
+    for row in native_rows:
+        native_groups.setdefault(row["scenario"], []).append(row)
+    if (
+        len(native_groups) != 8
+        or any(
+            {row["method"] for row in group} != native_methods
+            or len(group) != len(native_methods)
+            or len({row["checksum"] for row in group}) != 1
+            for group in native_groups.values()
+        )
+        or any(
+            row["correct"] != "true"
+            or row["operations"] != "6000"
+            or row["repeats"] != "9"
+            or not math.isfinite(float(row["median_ns_per_operation"]))
+            or float(row["median_ns_per_operation"]) <= 0.0
+            or not math.isfinite(float(row["p95_batch_ns_per_operation"]))
+            or float(row["p95_batch_ns_per_operation"])
+            < float(row["median_ns_per_operation"])
+            or not math.isfinite(float(row["mad_ns_per_operation"]))
+            or float(row["mad_ns_per_operation"]) < 0.0
+            for row in native_rows
+        )
+    ):
+        raise ValueError("CertiGap-X native holdout matrix is incomplete")
+    native_metadata = json.loads(
+        (RESULTS / "synthesis_native_latency_metadata.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if (
+        native_metadata.get("schema") != "certigap-native-benchmark-v1"
+        or native_metadata.get("holdout_operations_per_scenario") != 6000
+        or native_metadata.get("train_operations_per_scenario") != 800
+        or native_metadata.get("repeats") != 9
+        or set(native_metadata.get("methods", [])) != native_methods
+        or "train trace only"
+        not in native_metadata.get("selection_protocol", "")
+        or len(native_metadata.get("cases", [])) != 8
+        or len(native_metadata.get("limitations", [])) < 4
+        or native_metadata.get("benchmark_source_sha256")
+        != file_sha256(ROOT / "cpp" / "synthesis_native_benchmark.cpp")
+        or native_metadata.get("generated_cases_sha256")
+        != file_sha256(ROOT / "cpp" / "synthesis_native_cases.hpp")
+        or native_metadata.get("results_sha256")
+        != file_sha256(RESULTS / "synthesis_native_latency.csv")
+    ):
+        raise ValueError("CertiGap-X native provenance contract is incomplete")
 
     optimizer_rows = csv_records("range_optimizer_validation.csv")
     exact_optimizer_rows = [

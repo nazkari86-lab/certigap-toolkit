@@ -487,7 +487,7 @@ five portfolio candidates, and emits a normal C++17 configuration header.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install certigap_toolkit-1.7.0-py3-none-any.whl
+pip install certigap_toolkit-1.8.0-py3-none-any.whl
 
 certigap-compile include-dir
 ```
@@ -754,7 +754,7 @@ include(FetchContent)
 FetchContent_Declare(
     certigap
     GIT_REPOSITORY https://github.com/nazkari86-lab/certigap-toolkit.git
-    GIT_TAG v1.7.0
+    GIT_TAG v1.8.0
 )
 FetchContent_MakeAvailable(certigap)
 
@@ -851,6 +851,28 @@ slots: values, key-to-block mapping, boundaries, and block aggregates.
 strictly exceed rebuild cost plus an explicit confidence margin. This is an
 amortization rule, not a workload forecast or statistical confidence
 estimator.
+
+## Native Holdout Result
+
+The structural theorem does not imply wall-clock speed. The matched native
+benchmark selects partitions from `800` train operations and measures five C++
+implementations on `6000` separately seeded holdout operations. It covers four
+stationary synthetic cases, one temporal shift, and three public
+frequency-derived cases.
+
+On the committed Apple M4/Apple clang run, CertiGap-X beats the
+model-selected uniform partition in `1/8` scenarios, but Fenwick is fastest in
+all eight. CertiGap-X ranges from `1.48x` to `2.95x` the fastest median latency
+in this run. Therefore the defensible contribution is exact, verifiable
+structure synthesis under a declared grammar, not universal range-sum
+acceleration.
+
+The practical policy is fail-safe: include the synthesized index as an
+AutoIndex candidate, calibrate on the target workload and hardware, and deploy
+it only when a holdout or confidence-aware migration gate beats the classical
+candidate. See
+[`results/synthesis_native_latency.md`](../results/synthesis_native_latency.md)
+and its machine-readable provenance JSON.
 
 ## Claim Boundary
 
@@ -969,6 +991,19 @@ unit primitive costs; target-specific nanoseconds must be measured locally.
 
 Completed in `v1.7.0`. Learned routing, storage-engine integration,
 concurrency, and independently reproduced wall-clock gains remain external.
+
+## Phase 12: Native Transfer Audit
+
+- train-only partition selection and separately seeded holdout timing;
+- identical C++ operations and checksum oracle across five implementations;
+- skew, uniform, adversarial-boundary, temporal-shift, and three public
+  frequency-derived scenarios;
+- median, nearest-rank p95, MAD, memory slots, compiler and source hashes;
+- explicit negative result: Fenwick wins every committed range-sum scenario;
+- fail-safe deployment rule retaining the classical AutoIndex candidate.
+
+Completed in `v1.8.0`. Independent machines, production traces, concurrency,
+storage integration, and a pre-registered domain-owner pilot remain external.
 
 ## External Closure
 
