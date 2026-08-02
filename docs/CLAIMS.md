@@ -27,6 +27,7 @@ latency is measured separately and is never certified by a structural score.
 | Candidate-pruned C++ beam returns a valid interval | Replay-certified | `certigap-pruned-beam-v1` and scaling artifacts | Feasible heuristic upper bound plus entropy/max-cost lower bound; no approximation ratio |
 | Online mean-cost regret is at most `g + 2 delta R` | Mathematical | Theorem I and `online_regret_certificate` tests | Mean modeled execution cost; excludes unmodeled DB and migration latency |
 | AutoIndex selects the minimum-score feasible candidate | Replay-certified | `results/autoindex_validation.csv` | The complete declared eight-candidate portfolio, not all data structures |
+| TrackingAutoIndex exactly replays its causal trajectory and ex-post K-switch regret | Replay-certified and differential | `results/tracking_autoindex_validation.csv`, exhaustive path tests, and `verify_tracking_autoindex_certificate` | Fixed feasible portfolio, declared structural costs, positive uniform migration metric, and recorded finite trace; not wall-clock or future-workload optimality |
 | Safe AutoIndex deploys specialization only below its validation upper bound | Statistical and replay-certified | `results/safe_autoindex_validation.csv` | One-sided Hoeffding bound conditional on independent IID bounded validation operations and declared structural costs |
 | Sequential Safe AutoIndex permits optional stopping during validation | Mathematical, statistical, and replay-certified | Corollary L.2, `results/sequential_safe_validation.csv`, and `results/optional_stopping_monte_carlo.csv` | Alpha-spending Hoeffding sequence conditional on independent IID bounded validation operations; not a future-drift guarantee |
 | Martingale Safe AutoIndex controls optional-stopping errors for adapted observations | Mathematical, statistical, and replay-certified | Theorem L.3, `results/martingale_safe_validation.csv`, and `results/martingale_null_monte_carlo.csv` | Mixture Hoeffding e-process under the declared bounded conditional-mean deployment/revocation nulls; detection delay and future safety are not guaranteed |
@@ -61,6 +62,8 @@ The following statements must not appear as project conclusions:
 - The current replay verifiers are machine-checked formal proofs.
 - The current project discovers arbitrary new data structures from operation
   specifications.
+- TrackingAutoIndex predicts future workload phases or always beats the best
+  retrospective switching path.
 - Results from one Apple M4 machine transfer to other processors.
 - The toolkit is ready for insert/delete-heavy, concurrent, durable, or
   disk-resident production use.

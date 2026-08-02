@@ -879,6 +879,45 @@ def analytical_candidate_costs(
     return tuple(_analytical_costs(name, trace, topology, constraints))
 
 
+def analytical_portfolio_costs(
+    artifact: dict,
+    trace: WorkloadTrace,
+) -> dict[CandidateName, tuple[float, ...]]:
+    """Replay every feasible candidate after one artifact verification."""
+    from .autoindex_verifier import verify_autoindex_artifact
+
+    verify_autoindex_artifact(artifact)
+    return _analytical_portfolio_costs_verified(artifact, trace)
+
+
+def _analytical_portfolio_costs_verified(
+    artifact: dict,
+    trace: WorkloadTrace,
+) -> dict[CandidateName, tuple[float, ...]]:
+    """Evaluate a portfolio whose artifact was already verified by the caller."""
+    if not isinstance(trace, WorkloadTrace):
+        raise TypeError("trace must be WorkloadTrace")
+    if trace.n != artifact["n"] or not trace.operations:
+        raise ValueError("trace must be non-empty and match the key universe")
+    constraints = AutoIndexConstraints(**artifact["constraints"])
+    minimum = 0 if trace.n <= 1 else math.ceil(math.log2(trace.n))
+    max_depth = constraints.max_depth or (2 * minimum + 1)
+    result: dict[CandidateName, tuple[float, ...]] = {}
+    for row in artifact["candidates"]:
+        if not row["feasible"]:
+            continue
+        name = row["name"]
+        topology = None
+        if name.startswith("certirange"):
+            topology = _complete_topology(
+                row["routing_tree"], 1, trace.n, max_depth
+            )
+        result[name] = tuple(
+            _analytical_costs(name, trace, topology, constraints)
+        )
+    return result
+
+
 def compile_autoindex(
     values: Iterable[float],
     train_trace: WorkloadTrace,

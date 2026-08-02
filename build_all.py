@@ -50,6 +50,7 @@ def main() -> None:
     run([python, "generate_dynamic_range_benchmark.py", "--mode", "full"])
     run([python, "generate_range_optimizer_validation.py"])
     run([python, "generate_autoindex_validation.py"])
+    run([python, "generate_tracking_autoindex_validation.py"])
     run([python, "generate_safe_autoindex_validation.py"])
     run([python, "generate_sequential_safe_validation.py"])
     run([python, "generate_martingale_safe_validation.py"])

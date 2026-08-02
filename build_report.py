@@ -230,6 +230,8 @@ def main() -> None:
             RESULTS_DIR / "python_adaptive_array_validation.md",
             DOCS_DIR / "MEASURED_DEPLOYMENT.md",
             RESULTS_DIR / "measured_deployment_validation.md",
+            DOCS_DIR / "TRACKING_AUTOINDEX.md",
+            RESULTS_DIR / "tracking_autoindex_validation.md",
             DOCS_DIR / "SYNTHESIS.md",
             RESULTS_DIR / "synthesis_validation.md",
             DOCS_DIR / "HYBRID.md",
@@ -276,6 +278,8 @@ def main() -> None:
             + read_text(DOCS_DIR / "SEQUENTIAL_SAFE_AUTOINDEX.md")
             + "\n\n"
             + read_text(DOCS_DIR / "MARTINGALE_SAFE_AUTOINDEX.md")
+            + "\n\n"
+            + read_text(DOCS_DIR / "TRACKING_AUTOINDEX.md")
             + "\n\n"
             + read_text(DOCS_DIR / "COMPILER_INTEGRATION.md")
             + "\n\n"

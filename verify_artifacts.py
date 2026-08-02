@@ -19,6 +19,7 @@ from certigap import (
     verify_range_optimizer_artifact,
     verify_safe_autoindex_certificate,
     verify_sequential_safe_autoindex_certificate,
+    verify_tracking_autoindex_certificate,
 )
 
 
@@ -68,6 +69,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "cpp_dynamic_range.csv": 36,
         "range_optimizer_validation.csv": 114,
         "autoindex_validation.csv": 120,
+        "tracking_autoindex_validation.csv": 15,
         "safe_autoindex_validation.csv": 16,
         "sequential_safe_validation.csv": 4,
         "optional_stopping_monte_carlo.csv": 1,
@@ -91,6 +93,26 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         if count < minimum:
             raise ValueError(f"{name} has {count} rows; expected at least {minimum}")
         observed[name] = count
+
+    tracking_rows = csv_records("tracking_autoindex_validation.csv")
+    if (
+        {row["scenario"] for row in tracking_rows}
+        != {
+            "stable_points",
+            "stable_ranges",
+            "point_to_range_shift",
+            "range_to_updates_shift",
+            "alternating",
+        }
+        or {row["migration_cost_units"] for row in tracking_rows}
+        != {"2.0", "8.0", "32.0"}
+        or any(row["certificate_verified"] != "True" for row in tracking_rows)
+    ):
+        raise ValueError("tracking AutoIndex validation is incomplete")
+    tracking_artifact = json.loads(
+        (RESULTS / "tracking_autoindex_example.json").read_text(encoding="utf-8")
+    )
+    verify_tracking_autoindex_certificate(tracking_artifact)
 
     sqlite_vtab_rows = csv_records("sqlite_vtab_validation.csv")
     if (

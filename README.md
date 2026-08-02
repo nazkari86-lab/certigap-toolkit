@@ -361,6 +361,33 @@ per-backend unit costs can be calibrated from target measurements. See
 [`docs/AUTOINDEX.md`](docs/AUTOINDEX.md) and the objective
 [`portfolio expansion policy`](docs/PORTFOLIO_EXPANSION.md).
 
+## Online Representation Tracking
+
+Track a changing workload causally while charging for backend migration:
+
+```python
+from certigap import AdaptiveSpec, TrackingPolicy, start_tracking_autoindex
+
+index = start_tracking_autoindex(
+    range(32),
+    trace,
+    AdaptiveSpec(),
+    policy=TrackingPolicy(
+        migration_cost_units=8.0,
+        max_comparator_switches=3,
+    ),
+)
+index.range_query(1, 32)
+certificate = index.export_certificate()
+```
+
+The runtime uses the causal Work Function Algorithm over every feasible
+AutoIndex backend and actually rebuilds when its state changes. Its verifier
+replays every decision and computes an exact offline comparator with a declared
+switch budget. The certificate reports exact ex-post dynamic regret in
+structural units, not future prediction or portable latency. See
+[`docs/TRACKING_AUTOINDEX.md`](docs/TRACKING_AUTOINDEX.md).
+
 ## Safe AutoIndex
 
 Add a no-regression deployment gate with separate training, validation, and
@@ -609,6 +636,7 @@ Generated artifacts live in [`results/`](results):
 - [`synthesis_native_latency_metadata.json`](results/synthesis_native_latency_metadata.json): compiler, source hashes, seeds, public-data derivation, and limitations
 - [`hybrid_validation.md`](results/hybrid_validation.md): exact representation-aware frontier and best-uniform ablation
 - [`hybrid_certificate_example.json`](results/hybrid_certificate_example.json): independently replayable CertiGap-H certificate
+- [`tracking_autoindex_validation.md`](results/tracking_autoindex_validation.md): causal switching and exact K-switch regret
 
 Figures live in [`figures/`](figures):
 
@@ -654,6 +682,7 @@ Russian RKNP package:
 - [`docs/ARXIV_NOTE.md`](docs/ARXIV_NOTE.md)
 - [`docs/COMPLEXITY.md`](docs/COMPLEXITY.md)
 - [`docs/RELATED_WORK.md`](docs/RELATED_WORK.md)
+- [`docs/TRACKING_AUTOINDEX.md`](docs/TRACKING_AUTOINDEX.md)
 
 ## Project Status
 
@@ -677,6 +706,7 @@ What is already done:
 - a proved infinite family with an unbounded absolute gap for one-step greedy
 - globally exact direct TV-DRO search on exhaustively enumerable instances
 - complete v2 portfolio manifests and omission-resistant verification
+- causal WFA representation tracking with exact K-switch replay oracles
 - fair tuned TV-vs-nominal distribution-shift ablation
 - scalable anytime TV-DRO search with replay-verified optimality intervals
 - conditional-entropy lower bounds and drift-regret certificates

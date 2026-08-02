@@ -1,0 +1,1566 @@
+{
+  "actual_cost": 26.0,
+  "autoindex_artifact": {
+    "candidates": [
+      {
+        "capabilities": {
+          "aggregates": [
+            "sum",
+            "min",
+            "max"
+          ],
+          "persistent_snapshots": false
+        },
+        "feasible": true,
+        "holdout": null,
+        "name": "sorted_array",
+        "reason": "feasible",
+        "resources": {
+          "build_units": 32,
+          "height": 0,
+          "memory_slots": 32
+        },
+        "routing_tree": null,
+        "topology_sha256": null,
+        "train": {
+          "build_units": 32,
+          "height": 0,
+          "max_primitive_visits": 1.0,
+          "mean_primitive_visits": 1.0,
+          "memory_slots": 32,
+          "operation_count": 96,
+          "score": 1.0,
+          "structural_score": 1.0
+        }
+      },
+      {
+        "capabilities": {
+          "aggregates": [
+            "sum"
+          ],
+          "persistent_snapshots": false
+        },
+        "feasible": true,
+        "holdout": null,
+        "name": "prefix_sum",
+        "reason": "feasible",
+        "resources": {
+          "build_units": 32,
+          "height": 1,
+          "memory_slots": 65
+        },
+        "routing_tree": null,
+        "topology_sha256": null,
+        "train": {
+          "build_units": 32,
+          "height": 1,
+          "max_primitive_visits": 1.0,
+          "mean_primitive_visits": 1.0,
+          "memory_slots": 65,
+          "operation_count": 96,
+          "score": 1.0,
+          "structural_score": 1.0
+        }
+      },
+      {
+        "capabilities": {
+          "aggregates": [
+            "sum"
+          ],
+          "persistent_snapshots": false
+        },
+        "feasible": true,
+        "holdout": null,
+        "name": "fenwick",
+        "reason": "feasible",
+        "resources": {
+          "build_units": 192,
+          "height": 5,
+          "memory_slots": 65
+        },
+        "routing_tree": null,
+        "topology_sha256": null,
+        "train": {
+          "build_units": 192,
+          "height": 5,
+          "max_primitive_visits": 1.0,
+          "mean_primitive_visits": 1.0,
+          "memory_slots": 65,
+          "operation_count": 96,
+          "score": 1.0,
+          "structural_score": 1.0
+        }
+      },
+      {
+        "capabilities": {
+          "aggregates": [
+            "sum",
+            "min",
+            "max"
+          ],
+          "persistent_snapshots": false
+        },
+        "feasible": true,
+        "holdout": null,
+        "name": "sqrt_decomposition",
+        "reason": "feasible",
+        "resources": {
+          "build_units": 38,
+          "height": 1,
+          "memory_slots": 38
+        },
+        "routing_tree": null,
+        "topology_sha256": null,
+        "train": {
+          "build_units": 38,
+          "height": 1,
+          "max_primitive_visits": 1.0,
+          "mean_primitive_visits": 1.0,
+          "memory_slots": 38,
+          "operation_count": 96,
+          "score": 1.0,
+          "structural_score": 1.0
+        }
+      },
+      {
+        "capabilities": {
+          "aggregates": [
+            "sum",
+            "min",
+            "max"
+          ],
+          "persistent_snapshots": false
+        },
+        "feasible": true,
+        "holdout": null,
+        "name": "segment_tree",
+        "reason": "feasible",
+        "resources": {
+          "build_units": 64,
+          "height": 5,
+          "memory_slots": 64
+        },
+        "routing_tree": null,
+        "topology_sha256": null,
+        "train": {
+          "build_units": 64,
+          "height": 5,
+          "max_primitive_visits": 1.0,
+          "mean_primitive_visits": 1.0,
+          "memory_slots": 64,
+          "operation_count": 96,
+          "score": 1.0,
+          "structural_score": 1.0
+        }
+      },
+      {
+        "capabilities": {
+          "aggregates": [
+            "min",
+            "max"
+          ],
+          "persistent_snapshots": false
+        },
+        "feasible": false,
+        "holdout": null,
+        "name": "sparse_table",
+        "reason": "sparse_table supports idempotent min/max only",
+        "resources": {
+          "build_units": 135,
+          "height": 1,
+          "memory_slots": 167
+        },
+        "routing_tree": null,
+        "topology_sha256": null,
+        "train": {
+          "build_units": 135,
+          "height": 1,
+          "max_primitive_visits": 1.0,
+          "mean_primitive_visits": 1.0,
+          "memory_slots": 167,
+          "operation_count": 96,
+          "score": 1.0,
+          "structural_score": 1.0
+        }
+      },
+      {
+        "capabilities": {
+          "aggregates": [
+            "sum",
+            "min",
+            "max"
+          ],
+          "persistent_snapshots": true
+        },
+        "feasible": true,
+        "holdout": null,
+        "name": "certirange_point",
+        "reason": "feasible",
+        "resources": {
+          "build_units": 63,
+          "height": 5,
+          "memory_slots": 95
+        },
+        "routing_tree": {
+          "interval": [
+            1,
+            32
+          ],
+          "type": "leaf"
+        },
+        "topology_sha256": "ebd8248c0900e9944725d40553d9a7da668e5ce1bcd2ca6d828632c9f68ae182",
+        "train": {
+          "build_units": 63,
+          "height": 5,
+          "max_primitive_visits": 6.0,
+          "mean_primitive_visits": 6.0,
+          "memory_slots": 95,
+          "operation_count": 96,
+          "score": 6.0,
+          "structural_score": 6.0
+        }
+      },
+      {
+        "capabilities": {
+          "aggregates": [
+            "sum",
+            "min",
+            "max"
+          ],
+          "persistent_snapshots": true
+        },
+        "feasible": true,
+        "holdout": null,
+        "name": "certirange_range",
+        "reason": "feasible",
+        "resources": {
+          "build_units": 63,
+          "height": 5,
+          "memory_slots": 95
+        },
+        "routing_tree": {
+          "interval": [
+            1,
+            32
+          ],
+          "type": "leaf"
+        },
+        "topology_sha256": "ebd8248c0900e9944725d40553d9a7da668e5ce1bcd2ca6d828632c9f68ae182",
+        "train": {
+          "build_units": 63,
+          "height": 5,
+          "max_primitive_visits": 6.0,
+          "mean_primitive_visits": 6.0,
+          "memory_slots": 95,
+          "operation_count": 96,
+          "score": 6.0,
+          "structural_score": 6.0
+        }
+      }
+    ],
+    "constraints": {
+      "aggregate": "sum",
+      "array_unit_cost": 1.0,
+      "budget": 6,
+      "build_weight": 0.0,
+      "certirange_unit_cost": 1.0,
+      "fenwick_unit_cost": 1.0,
+      "max_depth": null,
+      "memory_limit_slots": null,
+      "memory_weight": 0.0,
+      "prefix_unit_cost": 1.0,
+      "range_beam_width": 8,
+      "range_candidate_limit": 12,
+      "require_persistent_snapshots": false,
+      "segment_tree_unit_cost": 1.0,
+      "sparse_unit_cost": 1.0,
+      "sqrt_unit_cost": 1.0,
+      "tail_weight": 0.1
+    },
+    "holdout_trace": null,
+    "metric": {
+      "unit": "declared_weighted_primitive_work",
+      "warning": "defaults are uncalibrated structural visits, not nanoseconds; set candidate unit costs from target-system measurements"
+    },
+    "n": 32,
+    "portfolio_order": [
+      "sorted_array",
+      "prefix_sum",
+      "fenwick",
+      "sqrt_decomposition",
+      "segment_tree",
+      "sparse_table",
+      "certirange_point",
+      "certirange_range"
+    ],
+    "schema": "certigap-autoindex-v2",
+    "scope": "minimum declared analytical score over the complete deterministic eight-candidate portfolio; holdout is evaluation-only",
+    "selected": "sorted_array",
+    "sha256": "504ed134cc063fe6333d09da04440d814319e505ca5eefa622f0ed4194293154",
+    "train_trace": {
+      "n": 32,
+      "operations": [
+        {
+          "kind": "get",
+          "left": 1,
+          "right": 1,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 2,
+          "right": 2,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 3,
+          "right": 3,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 4,
+          "right": 4,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 5,
+          "right": 5,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 6,
+          "right": 6,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 7,
+          "right": 7,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 8,
+          "right": 8,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 9,
+          "right": 9,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 10,
+          "right": 10,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 11,
+          "right": 11,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 12,
+          "right": 12,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 13,
+          "right": 13,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 14,
+          "right": 14,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 15,
+          "right": 15,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 16,
+          "right": 16,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 17,
+          "right": 17,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 18,
+          "right": 18,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 19,
+          "right": 19,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 20,
+          "right": 20,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 21,
+          "right": 21,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 22,
+          "right": 22,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 23,
+          "right": 23,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 24,
+          "right": 24,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 25,
+          "right": 25,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 26,
+          "right": 26,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 27,
+          "right": 27,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 28,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 29,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 30,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 31,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 32,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 1,
+          "right": 1,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 2,
+          "right": 2,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 3,
+          "right": 3,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 4,
+          "right": 4,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 5,
+          "right": 5,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 6,
+          "right": 6,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 7,
+          "right": 7,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 8,
+          "right": 8,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 9,
+          "right": 9,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 10,
+          "right": 10,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 11,
+          "right": 11,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 12,
+          "right": 12,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 13,
+          "right": 13,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 14,
+          "right": 14,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 15,
+          "right": 15,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 16,
+          "right": 16,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 17,
+          "right": 17,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 18,
+          "right": 18,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 19,
+          "right": 19,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 20,
+          "right": 20,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 21,
+          "right": 21,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 22,
+          "right": 22,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 23,
+          "right": 23,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 24,
+          "right": 24,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 25,
+          "right": 25,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 26,
+          "right": 26,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 27,
+          "right": 27,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 28,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 29,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 30,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 31,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 32,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 1,
+          "right": 1,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 2,
+          "right": 2,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 3,
+          "right": 3,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 4,
+          "right": 4,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 5,
+          "right": 5,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 6,
+          "right": 6,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 7,
+          "right": 7,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 8,
+          "right": 8,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 9,
+          "right": 9,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 10,
+          "right": 10,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 11,
+          "right": 11,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 12,
+          "right": 12,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 13,
+          "right": 13,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 14,
+          "right": 14,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 15,
+          "right": 15,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 16,
+          "right": 16,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 17,
+          "right": 17,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 18,
+          "right": 18,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 19,
+          "right": 19,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 20,
+          "right": 20,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 21,
+          "right": 21,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 22,
+          "right": 22,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 23,
+          "right": 23,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 24,
+          "right": 24,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 25,
+          "right": 25,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 26,
+          "right": 26,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 27,
+          "right": 27,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 28,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 29,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 30,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 31,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "get",
+          "left": 32,
+          "right": 32,
+          "value": 0.0
+        }
+      ]
+    }
+  },
+  "candidates": [
+    "sorted_array",
+    "prefix_sum",
+    "fenwick",
+    "sqrt_decomposition",
+    "segment_tree",
+    "certirange_point",
+    "certirange_range"
+  ],
+  "constrained_oracle": {
+    "cost": 26.0,
+    "path": [
+      "sorted_array",
+      "sorted_array",
+      "sorted_array",
+      "sorted_array",
+      "sorted_array",
+      "sorted_array",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum"
+    ],
+    "switches": 1
+  },
+  "dynamic_regret": 0.0,
+  "n": 32,
+  "observed_factor_bound": 338.0,
+  "observed_factor_bound_holds": true,
+  "policy": {
+    "initial_candidate": "sorted_array",
+    "max_comparator_switches": 3,
+    "migration_cost_units": 8.0
+  },
+  "schema": "certigap-tracking-autoindex-v1",
+  "scope": "causal deterministic Work Function Algorithm over the fixed feasible portfolio with a positive uniform metric migration cost; the exact replay oracle uses the recorded structural cost model, not wall-clock latency",
+  "sha256": "bf3e243bc8df48dda10e40f866eded19c8de0b89ae046017ed6a0349eea61fc9",
+  "spec": {
+    "claim_boundary": "The current contract covers fixed-size get/range/update containers; unsupported operations fail before compilation.",
+    "constraints": {
+      "aggregate": "sum",
+      "array_unit_cost": 1.0,
+      "budget": 6,
+      "build_weight": 0.0,
+      "certirange_unit_cost": 1.0,
+      "fenwick_unit_cost": 1.0,
+      "max_depth": null,
+      "memory_limit_slots": null,
+      "memory_weight": 0.0,
+      "prefix_unit_cost": 1.0,
+      "range_beam_width": 8,
+      "range_candidate_limit": 12,
+      "require_persistent_snapshots": false,
+      "segment_tree_unit_cost": 1.0,
+      "sparse_unit_cost": 1.0,
+      "sqrt_unit_cost": 1.0,
+      "tail_weight": 0.1
+    },
+    "fixed_size": true,
+    "operations": [
+      "get",
+      "range",
+      "update"
+    ],
+    "schema": "certigap-adaptive-spec-v1",
+    "unsupported_operations": [
+      "insert",
+      "erase",
+      "range_add",
+      "range_assign"
+    ]
+  },
+  "steps": [
+    {
+      "cumulative_cost": 1.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "get",
+        "left": 3,
+        "right": 3,
+        "value": 0.0
+      },
+      "previous": "sorted_array",
+      "selected": "sorted_array",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 6.0,
+        "certirange_range": 6.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 1.0,
+        "sqrt_decomposition": 1.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 14.0,
+        "certirange_range": 14.0,
+        "fenwick": 9.0,
+        "prefix_sum": 9.0,
+        "segment_tree": 9.0,
+        "sorted_array": 1.0,
+        "sqrt_decomposition": 9.0
+      }
+    },
+    {
+      "cumulative_cost": 2.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "get",
+        "left": 3,
+        "right": 3,
+        "value": 0.0
+      },
+      "previous": "sorted_array",
+      "selected": "sorted_array",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 6.0,
+        "certirange_range": 6.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 1.0,
+        "sqrt_decomposition": 1.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 15.0,
+        "certirange_range": 15.0,
+        "fenwick": 10.0,
+        "prefix_sum": 10.0,
+        "segment_tree": 10.0,
+        "sorted_array": 2.0,
+        "sqrt_decomposition": 10.0
+      }
+    },
+    {
+      "cumulative_cost": 3.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "get",
+        "left": 3,
+        "right": 3,
+        "value": 0.0
+      },
+      "previous": "sorted_array",
+      "selected": "sorted_array",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 6.0,
+        "certirange_range": 6.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 1.0,
+        "sqrt_decomposition": 1.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 16.0,
+        "certirange_range": 16.0,
+        "fenwick": 11.0,
+        "prefix_sum": 11.0,
+        "segment_tree": 11.0,
+        "sorted_array": 3.0,
+        "sqrt_decomposition": 11.0
+      }
+    },
+    {
+      "cumulative_cost": 4.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "get",
+        "left": 3,
+        "right": 3,
+        "value": 0.0
+      },
+      "previous": "sorted_array",
+      "selected": "sorted_array",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 6.0,
+        "certirange_range": 6.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 1.0,
+        "sqrt_decomposition": 1.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 17.0,
+        "certirange_range": 17.0,
+        "fenwick": 12.0,
+        "prefix_sum": 12.0,
+        "segment_tree": 12.0,
+        "sorted_array": 4.0,
+        "sqrt_decomposition": 12.0
+      }
+    },
+    {
+      "cumulative_cost": 5.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "get",
+        "left": 3,
+        "right": 3,
+        "value": 0.0
+      },
+      "previous": "sorted_array",
+      "selected": "sorted_array",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 6.0,
+        "certirange_range": 6.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 1.0,
+        "sqrt_decomposition": 1.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 18.0,
+        "certirange_range": 18.0,
+        "fenwick": 13.0,
+        "prefix_sum": 13.0,
+        "segment_tree": 13.0,
+        "sorted_array": 5.0,
+        "sqrt_decomposition": 13.0
+      }
+    },
+    {
+      "cumulative_cost": 6.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "get",
+        "left": 3,
+        "right": 3,
+        "value": 0.0
+      },
+      "previous": "sorted_array",
+      "selected": "sorted_array",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 6.0,
+        "certirange_range": 6.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 1.0,
+        "sqrt_decomposition": 1.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 19.0,
+        "certirange_range": 19.0,
+        "fenwick": 14.0,
+        "prefix_sum": 14.0,
+        "segment_tree": 14.0,
+        "sorted_array": 6.0,
+        "sqrt_decomposition": 14.0
+      }
+    },
+    {
+      "cumulative_cost": 15.0,
+      "migration_cost": 8.0,
+      "operation": {
+        "kind": "range",
+        "left": 1,
+        "right": 32,
+        "value": 0.0
+      },
+      "previous": "sorted_array",
+      "selected": "prefix_sum",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 1.0,
+        "certirange_range": 1.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 32.0,
+        "sqrt_decomposition": 7.0
+      },
+      "switched": true,
+      "work_function": {
+        "certirange_point": 15.0,
+        "certirange_range": 15.0,
+        "fenwick": 15.0,
+        "prefix_sum": 15.0,
+        "segment_tree": 15.0,
+        "sorted_array": 38.0,
+        "sqrt_decomposition": 21.0
+      }
+    },
+    {
+      "cumulative_cost": 16.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "range",
+        "left": 1,
+        "right": 32,
+        "value": 0.0
+      },
+      "previous": "prefix_sum",
+      "selected": "prefix_sum",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 1.0,
+        "certirange_range": 1.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 32.0,
+        "sqrt_decomposition": 7.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 16.0,
+        "certirange_range": 16.0,
+        "fenwick": 16.0,
+        "prefix_sum": 16.0,
+        "segment_tree": 16.0,
+        "sorted_array": 55.0,
+        "sqrt_decomposition": 28.0
+      }
+    },
+    {
+      "cumulative_cost": 17.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "range",
+        "left": 1,
+        "right": 32,
+        "value": 0.0
+      },
+      "previous": "prefix_sum",
+      "selected": "prefix_sum",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 1.0,
+        "certirange_range": 1.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 32.0,
+        "sqrt_decomposition": 7.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 17.0,
+        "certirange_range": 17.0,
+        "fenwick": 17.0,
+        "prefix_sum": 17.0,
+        "segment_tree": 17.0,
+        "sorted_array": 56.0,
+        "sqrt_decomposition": 31.0
+      }
+    },
+    {
+      "cumulative_cost": 18.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "range",
+        "left": 1,
+        "right": 32,
+        "value": 0.0
+      },
+      "previous": "prefix_sum",
+      "selected": "prefix_sum",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 1.0,
+        "certirange_range": 1.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 32.0,
+        "sqrt_decomposition": 7.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 18.0,
+        "certirange_range": 18.0,
+        "fenwick": 18.0,
+        "prefix_sum": 18.0,
+        "segment_tree": 18.0,
+        "sorted_array": 57.0,
+        "sqrt_decomposition": 32.0
+      }
+    },
+    {
+      "cumulative_cost": 19.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "range",
+        "left": 1,
+        "right": 32,
+        "value": 0.0
+      },
+      "previous": "prefix_sum",
+      "selected": "prefix_sum",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 1.0,
+        "certirange_range": 1.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 32.0,
+        "sqrt_decomposition": 7.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 19.0,
+        "certirange_range": 19.0,
+        "fenwick": 19.0,
+        "prefix_sum": 19.0,
+        "segment_tree": 19.0,
+        "sorted_array": 58.0,
+        "sqrt_decomposition": 33.0
+      }
+    },
+    {
+      "cumulative_cost": 20.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "range",
+        "left": 1,
+        "right": 32,
+        "value": 0.0
+      },
+      "previous": "prefix_sum",
+      "selected": "prefix_sum",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 1.0,
+        "certirange_range": 1.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 32.0,
+        "sqrt_decomposition": 7.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 20.0,
+        "certirange_range": 20.0,
+        "fenwick": 20.0,
+        "prefix_sum": 20.0,
+        "segment_tree": 20.0,
+        "sorted_array": 59.0,
+        "sqrt_decomposition": 34.0
+      }
+    },
+    {
+      "cumulative_cost": 21.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "range",
+        "left": 1,
+        "right": 32,
+        "value": 0.0
+      },
+      "previous": "prefix_sum",
+      "selected": "prefix_sum",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 1.0,
+        "certirange_range": 1.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 32.0,
+        "sqrt_decomposition": 7.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 21.0,
+        "certirange_range": 21.0,
+        "fenwick": 21.0,
+        "prefix_sum": 21.0,
+        "segment_tree": 21.0,
+        "sorted_array": 60.0,
+        "sqrt_decomposition": 35.0
+      }
+    },
+    {
+      "cumulative_cost": 22.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "range",
+        "left": 1,
+        "right": 32,
+        "value": 0.0
+      },
+      "previous": "prefix_sum",
+      "selected": "prefix_sum",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 1.0,
+        "certirange_range": 1.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 32.0,
+        "sqrt_decomposition": 7.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 22.0,
+        "certirange_range": 22.0,
+        "fenwick": 22.0,
+        "prefix_sum": 22.0,
+        "segment_tree": 22.0,
+        "sorted_array": 61.0,
+        "sqrt_decomposition": 36.0
+      }
+    },
+    {
+      "cumulative_cost": 23.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "range",
+        "left": 1,
+        "right": 32,
+        "value": 0.0
+      },
+      "previous": "prefix_sum",
+      "selected": "prefix_sum",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 1.0,
+        "certirange_range": 1.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 32.0,
+        "sqrt_decomposition": 7.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 23.0,
+        "certirange_range": 23.0,
+        "fenwick": 23.0,
+        "prefix_sum": 23.0,
+        "segment_tree": 23.0,
+        "sorted_array": 62.0,
+        "sqrt_decomposition": 37.0
+      }
+    },
+    {
+      "cumulative_cost": 24.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "range",
+        "left": 1,
+        "right": 32,
+        "value": 0.0
+      },
+      "previous": "prefix_sum",
+      "selected": "prefix_sum",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 1.0,
+        "certirange_range": 1.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 32.0,
+        "sqrt_decomposition": 7.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 24.0,
+        "certirange_range": 24.0,
+        "fenwick": 24.0,
+        "prefix_sum": 24.0,
+        "segment_tree": 24.0,
+        "sorted_array": 63.0,
+        "sqrt_decomposition": 38.0
+      }
+    },
+    {
+      "cumulative_cost": 25.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "range",
+        "left": 1,
+        "right": 32,
+        "value": 0.0
+      },
+      "previous": "prefix_sum",
+      "selected": "prefix_sum",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 1.0,
+        "certirange_range": 1.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 32.0,
+        "sqrt_decomposition": 7.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 25.0,
+        "certirange_range": 25.0,
+        "fenwick": 25.0,
+        "prefix_sum": 25.0,
+        "segment_tree": 25.0,
+        "sorted_array": 64.0,
+        "sqrt_decomposition": 39.0
+      }
+    },
+    {
+      "cumulative_cost": 26.0,
+      "migration_cost": 0.0,
+      "operation": {
+        "kind": "range",
+        "left": 1,
+        "right": 32,
+        "value": 0.0
+      },
+      "previous": "prefix_sum",
+      "selected": "prefix_sum",
+      "service_cost": 1.0,
+      "service_costs": {
+        "certirange_point": 1.0,
+        "certirange_range": 1.0,
+        "fenwick": 1.0,
+        "prefix_sum": 1.0,
+        "segment_tree": 1.0,
+        "sorted_array": 32.0,
+        "sqrt_decomposition": 7.0
+      },
+      "switched": false,
+      "work_function": {
+        "certirange_point": 26.0,
+        "certirange_range": 26.0,
+        "fenwick": 26.0,
+        "prefix_sum": 26.0,
+        "segment_tree": 26.0,
+        "sorted_array": 65.0,
+        "sqrt_decomposition": 40.0
+      }
+    }
+  ],
+  "theorem_scope": "The classical finite metrical-task-system WFA guarantee is (2m-1)-competitive under its standard theorem conventions, including initialization-dependent additive terms. This artifact verifies the realized trajectory and exact ex-post oracles; observed_factor_bound_holds is an observation for this trace, not a standalone proof of the universal theorem.",
+  "unrestricted_oracle": {
+    "cost": 26.0,
+    "path": [
+      "sorted_array",
+      "sorted_array",
+      "sorted_array",
+      "sorted_array",
+      "sorted_array",
+      "sorted_array",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum",
+      "prefix_sum"
+    ],
+    "switches": 1
+  },
+  "wfa_competitive_factor": 13
+}

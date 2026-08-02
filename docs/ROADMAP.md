@@ -224,6 +224,23 @@ Completed on `main`. Insert/erase and lazy range updates, a long-running online
 shadow lifecycle, p99-safe inference under dependent measurements, official
 SOSD/GRE/YCSB results, and production rollback evidence remain future work.
 
+## Phase 20: Causal Representation Tracking
+
+- deterministic Work Function Algorithm over every feasible AutoIndex backend;
+- real backend materialization with positive modeled migration cost;
+- exact dynamic-programming offline oracle with a declared switch budget;
+- unrestricted exact oracle and exact ex-post dynamic regret;
+- independent replay of service vectors, work functions, tie-breaking, paths,
+  and digests;
+- exhaustive small-path differential test and prefix-causality test;
+- 15-case stationary, phase-shift, alternating, and migration-cost matrix;
+- unified CLI verification and explicit classical-theorem boundary.
+
+Completed on `main`. The next internal research step is a calibrated asymmetric
+migration metric plus a safe measured shadow-execution gate. External closure
+still requires production traces, independent hardware, and a storage-engine
+pilot.
+
 ## External Closure
 
 - independent proof review and broader recurrence/verifier formalization

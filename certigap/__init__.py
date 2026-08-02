@@ -18,10 +18,20 @@ from .autoindex import (
     TraceOperation,
     WorkloadTrace,
     compile_autoindex,
+    analytical_portfolio_costs,
 )
 from .autoindex_verifier import (
     AutoIndexVerificationError,
     verify_autoindex_artifact,
+)
+from .tracking_autoindex import (
+    TrackingAutoIndex,
+    TrackingPolicy,
+    start_tracking_autoindex,
+)
+from .tracking_autoindex_verifier import (
+    TrackingAutoIndexVerificationError,
+    verify_tracking_autoindex_certificate,
 )
 from .branch_and_bound import branch_and_bound_exact
 from .cpp_bindings import CppCertiGap
@@ -187,6 +197,7 @@ __all__ = [
     "AutoDROVerificationError",
     "AutoIndexConstraints",
     "AutoIndexVerificationError",
+    "analytical_portfolio_costs",
     "baseline_learned_segment",
     "baseline_balanced",
     "baseline_weighted_median",
@@ -283,6 +294,9 @@ __all__ = [
     "expectation_shift_bound",
     "total_variation_distance",
     "TraceOperation",
+    "TrackingAutoIndex",
+    "TrackingAutoIndexVerificationError",
+    "TrackingPolicy",
     "solve_with",
     "validate_problem",
     "UncertaintyModel",
@@ -293,6 +307,7 @@ __all__ = [
     "verify_autodro_selection_artifact",
     "verify_anytime_tv_certificate",
     "verify_autoindex_artifact",
+    "verify_tracking_autoindex_certificate",
     "verify_martingale_safe_autoindex_certificate",
     "verify_measured_deployment_artifact",
     "verify_safe_autoindex_certificate",
@@ -304,6 +319,7 @@ __all__ = [
     "verify_serialized_tree_exact",
     "worst_case_tv_expectation",
     "WorkloadTrace",
+    "start_tracking_autoindex",
     "VariableBlockIndex",
     "compile_synthesized_index",
     "compile_hybrid_index",

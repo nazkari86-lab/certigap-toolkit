@@ -48,6 +48,10 @@ nonuniform two-level-prefix partitions for range sums and point updates. This
 is exact optimization inside an explicitly programmed representation grammar,
 not unconstrained discovery of a previously unknown data structure. Its
 dynamic program and replay verifier use deterministic fixed-point score units.
+For nonstationary operation streams, TrackingAutoIndex runs the causal Work
+Function Algorithm over the feasible portfolio, pays explicit representation
+migration cost, and reports exact ex-post regret against a dynamic-programming
+$K$-switch oracle.
 \end{abstract}
 
 \section{Problem}
@@ -250,6 +254,29 @@ TV-drift-triggered call rather than hidden query work. This mode exposes the
 complete leaderboard but deliberately omits the independent artifact replay
 of the build-time compiler.
 
+\section{Causal Representation Tracking}
+Let $S$ be the feasible AutoIndex candidates, $s_0$ the initial backend,
+$c_t(s)$ the declared service cost of operation $t$ in state $s$, and $d$ a
+positive uniform migration metric. TrackingAutoIndex updates the work function
+\[
+w_t(s)=c_t(s)+\min_{y\in S}\{w_{t-1}(y)+d(y,s)\}
+\]
+and causally selects the state minimizing
+$w_t(s)+d(s_{t-1},s)$. A changed state is actually rebuilt from canonical
+values before executing the operation. This is the classical Work Function
+Algorithm for a finite metrical task system \cite{borodin1992}.
+
+For evaluation, an independent dynamic program computes the minimum service
+plus migration cost over all retrospective paths with at most $K$ switches.
+It stores every predecessor and reconstructs an exact optimal path in
+$O(TK|S|^2)$ time. The certificate replays every service vector, work-function
+update, tie-break, migration, cumulative cost, and both constrained and
+unrestricted oracle paths. Thus realized dynamic regret is exact for the
+declared structural model. The classical $(2|S|-1)$ WFA theorem is cited, not
+reproved; its standard statement includes initialization conventions and an
+additive term. The artifact's stronger factor-only check is explicitly an
+observation for the recorded trace, not a universal theorem.
+
 \section{Evidence And Limits}
 The repository contains exact cross-validation, a standalone certificate
 checker, synthetic and public-frequency workloads, temporal holdout, pruning
@@ -306,6 +333,12 @@ segment-tree baseline at operation 3253. In 5,000 adapted-null simulations
 with history-dependent amplitudes and fresh conditional-mean-zero signs, 101
 false deployments occurred at nominal $\alpha=0.05$. This diagnostic does not
 replace the e-process theorem.
+The tracking matrix contains 15 independently replayed stationary,
+phase-shift, alternating, and migration-cost scenarios. Maximum exact
+$K$-switch regret is 121 structural units and the maximum observed ratio to
+the unrestricted oracle is 2.657534. These losses are retained to bound the
+claim; the result does not certify wall-clock latency or future phase
+prediction.
 Across 24 compiler-integration cases, repeated generation produces
 byte-identical headers and every source artifact independently verifies.
 Cross-language executable tests cover all backend families, all three

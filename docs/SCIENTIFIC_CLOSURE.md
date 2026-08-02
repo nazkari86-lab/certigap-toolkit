@@ -107,6 +107,21 @@ intentional usability tradeoffs, not certified build-time claims.
 - The rational evaluator verifies submitted-tree arithmetic; it is not a
   machine-checked proof that the DP enumerates every feasible tree.
 
+## Causal Tracking Layer
+
+The fixed-choice temporal-shift gap is now addressed by an executable online
+layer rather than another retrospective drift statistic. `TrackingAutoIndex`
+uses WFA to choose among all feasible backends, pays a positive migration cost,
+materializes the chosen backend, and records a complete trajectory. An
+independent verifier recomputes every service vector and decision. A separate
+exact DP supplies both K-switch and unrestricted ex-post comparators.
+
+This closes the internal causality and exact-comparator gap. It does not close
+calibration or deployment safety: current costs are structural, migration is a
+uniform metric, and the algorithm has no claim of predicting phase changes.
+The 15-case matrix deliberately records positive regret and a worst observed
+oracle ratio of `2.657534` rather than hiding losses.
+
 ## External Work Required For A Literal 10/10 Claim
 
 These cannot be completed truthfully by local code generation:

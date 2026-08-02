@@ -5,6 +5,11 @@ recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
 
 ## Unreleased
 
+- Add causal `TrackingAutoIndex` using the Work Function Algorithm, real
+  backend migration, exact K-switch and unrestricted offline oracles,
+  independently replayed certificates, CLI support, exhaustive path tests,
+  and a 15-scenario phase-shift validation matrix.
+
 - Expand Certified AutoIndex from five to eight executable candidates with
   prefix sums, square-root decomposition, and sparse tables.
 - Add Python and generated C++17 runtimes, calibrated cost fields, capability

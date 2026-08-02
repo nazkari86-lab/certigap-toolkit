@@ -45,6 +45,7 @@ from .sequential_safe_compiler import (
     generate_sequential_safe_cpp_header,
 )
 from .synthesis_verifier import verify_synthesis_certificate
+from .tracking_autoindex_verifier import verify_tracking_autoindex_certificate
 
 
 Verifier = Callable[[dict], dict]
@@ -63,6 +64,7 @@ _SCHEMA_VERIFIERS: dict[str, Verifier] = {
         verify_sequential_safe_autoindex_certificate
     ),
     "certigap-synthesis-v1": verify_synthesis_certificate,
+    "certigap-tracking-autoindex-v1": verify_tracking_autoindex_certificate,
 }
 
 
@@ -154,6 +156,28 @@ def explain_artifact(kind: str, artifact: dict, verification: dict) -> dict:
                         ),
                     )
                 ],
+            }
+        )
+    elif kind == "certigap-tracking-autoindex-v1":
+        explanation.update(
+            {
+                "selected": artifact["steps"][-1]["selected"],
+                "operations": len(artifact["steps"]),
+                "switches": sum(step["switched"] for step in artifact["steps"]),
+                "actual_structural_cost": artifact["actual_cost"],
+                "comparator_switch_limit": artifact["policy"][
+                    "max_comparator_switches"
+                ],
+                "constrained_oracle": artifact["constrained_oracle"],
+                "dynamic_regret": artifact["dynamic_regret"],
+                "wfa_competitive_factor": artifact[
+                    "wfa_competitive_factor"
+                ],
+                "observed_factor_bound_holds": artifact[
+                    "observed_factor_bound_holds"
+                ],
+                "scope": artifact["scope"],
+                "theorem_scope": artifact["theorem_scope"],
             }
         )
     elif kind == "certigap-safe-autoindex-v1":

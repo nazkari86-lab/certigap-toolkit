@@ -537,3 +537,26 @@ omitted frontier. `QED`
 This theorem does not claim that the conservative upper-bound minimizer is the
 minimum measured tail-latency design, nor that supplied hardware measurements
 transfer to another machine.
+
+## Theorem P: Exact Switch-Budget Tracking Oracle
+
+Fix a finite candidate set `S`, initial candidate `s0`, non-negative operation
+costs `c_t(s)`, a positive uniform migration cost `d`, and switch budget `K`.
+Let `D[t,s,k]` be the minimum total service plus migration cost through
+operation `t`, ending in `s` after exactly `k` changes of state, counting a
+change from `s0` at the first operation. Initialization assigns zero only to
+`(s0,0)` and infinity to every other state. The recurrence
+
+`D[t,s,k] = c_t(s) + min_y D[t-1,y,k-[y != s]] + d[y != s]`
+
+enumerates every possible predecessor of every feasible path exactly once.
+Induction on `t` therefore proves each table entry is optimal for its endpoint
+and exact switch count. Taking the minimum over `s` and `k <= K` returns the
+global K-switch optimum. Stored predecessors reconstruct an optimal path.
+`QED`
+
+The tracking verifier implements this recurrence independently and also
+replays the causal Work Function Algorithm trajectory. The classical
+`(2|S|-1)` WFA competitive theorem is cited from the metrical-task-system
+literature; it is not newly proved here. The certificate's exact new
+instance-level statement is realized cost minus exact K-switch oracle cost.
