@@ -52,6 +52,10 @@ def build_abstract_ru(summary_text: str) -> str:
     независимо воспроизводимым сертификатом полного пространства разбиений.
 11. Sequential SafeAutoIndex с alpha-spending confidence sequence и
     проверяемой первой точкой optional stopping.
+12. Martingale SafeAutoIndex с e-process deployment, автоматическим
+    revocation при доказанном вреде и bounded adapted-data гарантией.
+13. настоящий SQLite loadable extension, выполняющий C++ CertiGap lifecycle
+    непосредственно из SQL без Python runtime.
 
 Текущее состояние прототипа подтверждается следующими результатами:
 
@@ -139,6 +143,12 @@ CertiGap не строит полное поисковое дерево на в�
 - sequential no-regression gate прошёл 4 из 4 replay-сценариев; в
   mean-zero диагностике корректная граница дала 0 из 5000 ложных одобрений,
   тогда как повторное использование fixed-time интервала дало 576 из 5000.
+- martingale lifecycle прошёл 4 из 4 сценариев: стабильный поток развёрнут,
+  а update-heavy shift вернул классический baseline; adapted-null диагностика
+  дала 101 ложное решение из 5000 при номинальном alpha 0.05.
+- SQLite ABI integration загружается командой `.load`, выполняет build,
+  profile, optimize, get, range sum и update с checksum-проверкой; это пока
+  function extension, а не planner-native virtual table.
 
 ## 8. Примеры сертификатов
 
@@ -167,7 +177,11 @@ def build_theses_ru() -> str:
 8. При TV-сдвиге online certificate ограничивает mean-cost regret через `g + 2 delta R`.
 9. Sequential SafeAutoIndex допускает остановку на первом доказанном
    validation-префиксе без увеличения общего риска выше `alpha`.
-10. Проект хорошо подходит для РКНП как теоретико-алгоритмическая работа с воспроизводимым результатом.
+10. Martingale SafeAutoIndex допускает зависимые bounded observations при
+    явно сформулированных conditional-mean null hypotheses.
+11. SQLite extension показывает прямую интеграцию C++ алгоритма в реальную
+    систему управления данными без Python-посредника.
+12. Проект хорошо подходит для РКНП как теоретико-алгоритмическая работа с воспроизводимым результатом.
 """
 
 

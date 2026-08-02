@@ -216,6 +216,9 @@ def main() -> None:
             RESULTS_DIR / "safe_autoindex_validation.md",
             DOCS_DIR / "SEQUENTIAL_SAFE_AUTOINDEX.md",
             RESULTS_DIR / "sequential_safe_validation.md",
+            DOCS_DIR / "MARTINGALE_SAFE_AUTOINDEX.md",
+            RESULTS_DIR / "martingale_safe_validation.md",
+            DOCS_DIR / "SQLITE_EXTENSION.md",
             DOCS_DIR / "COMPILER_INTEGRATION.md",
             RESULTS_DIR / "compiler_integration_validation.md",
             DOCS_DIR / "ADAPTIVE_CPP.md",
@@ -264,6 +267,8 @@ def main() -> None:
             + read_text(DOCS_DIR / "SAFE_AUTOINDEX.md")
             + "\n\n"
             + read_text(DOCS_DIR / "SEQUENTIAL_SAFE_AUTOINDEX.md")
+            + "\n\n"
+            + read_text(DOCS_DIR / "MARTINGALE_SAFE_AUTOINDEX.md")
             + "\n\n"
             + read_text(DOCS_DIR / "COMPILER_INTEGRATION.md")
             + "\n\n"

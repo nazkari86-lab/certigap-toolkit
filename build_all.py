@@ -20,6 +20,15 @@ def main() -> None:
     python = sys.executable
     run([python, "generate_single_header.py"])
     run([python, "build_cpp_core.py"])
+    sqlite_suffix = ".dylib" if sys.platform == "darwin" else ".so"
+    run(
+        [
+            python,
+            "build_sqlite_extension.py",
+            "--output",
+            str(ROOT / "build" / f"certigap{sqlite_suffix}"),
+        ]
+    )
     run([python, "generate_adaptive_validation.py"])
     run([python, "generate_synthesis_validation.py"])
     run([python, "generate_hybrid_validation.py"])
@@ -32,6 +41,7 @@ def main() -> None:
     run([python, "generate_autoindex_validation.py"])
     run([python, "generate_safe_autoindex_validation.py"])
     run([python, "generate_sequential_safe_validation.py"])
+    run([python, "generate_martingale_safe_validation.py"])
     run([python, "generate_compiler_integration_validation.py"])
     run([python, "generate_autodro_benchmark.py"])
     run([python, "generate_direct_tv_validation.py"])

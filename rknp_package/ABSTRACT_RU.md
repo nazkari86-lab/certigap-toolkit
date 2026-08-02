@@ -20,6 +20,10 @@
     независимо воспроизводимым сертификатом полного пространства разбиений.
 11. Sequential SafeAutoIndex с alpha-spending confidence sequence и
     проверяемой первой точкой optional stopping.
+12. Martingale SafeAutoIndex с e-process deployment, автоматическим
+    revocation при доказанном вреде и bounded adapted-data гарантией.
+13. настоящий SQLite loadable extension, выполняющий C++ CertiGap lifecycle
+    непосредственно из SQL без Python runtime.
 
 Текущее состояние прототипа подтверждается следующими результатами:
 

@@ -56,6 +56,20 @@ from .online import (
     online_regret_certificate,
     total_variation_distance,
 )
+from .martingale_safe_autoindex import (
+    MartingaleSafeCompiledAutoIndex,
+    MartingaleSafeSelectionPolicy,
+    compile_martingale_safe_autoindex,
+)
+from .martingale_safe_autoindex_verifier import (
+    MartingaleSafeAutoIndexVerificationError,
+    verify_martingale_safe_autoindex_certificate,
+)
+from .martingale_safe_compiler import (
+    compile_martingale_safe_spec,
+    generate_martingale_safe_cpp_header,
+    load_martingale_safe_compile_spec,
+)
 from .pruned_verifier import (
     PrunedBeamVerificationError,
     verify_pruned_beam_certificate,
@@ -94,6 +108,7 @@ from .sequential_safe_compiler import (
     generate_sequential_safe_cpp_header,
     load_sequential_safe_compile_spec,
 )
+from .sqlite_extension import build_sqlite_extension, extension_source_path
 from .synthesis import (
     HardwareProfile,
     SynthesisConstraints,
@@ -159,6 +174,7 @@ __all__ = [
     "branch_and_bound_exact",
     "benchmark_case",
     "brute_force_best",
+    "build_sqlite_extension",
     "CertiGapToolkit",
     "CompiledAutoIndex",
     "CertiRangeWorkload",
@@ -167,6 +183,8 @@ __all__ = [
     "cost_cap_dp_best",
     "counterexample_search",
     "compile_autoindex",
+    "compile_martingale_safe_autoindex",
+    "compile_martingale_safe_spec",
     "compile_safe_autoindex",
     "compile_safe_spec",
     "compile_sequential_safe_autoindex",
@@ -176,6 +194,7 @@ __all__ = [
     "calibrate_hardware",
     "calibration_source_path",
     "entropy_lower_bound",
+    "extension_source_path",
     "enumerate_partial_trees",
     "effective_budget",
     "evaluate_tree",
@@ -199,6 +218,9 @@ __all__ = [
     "interval_cost",
     "lagrangian_lower_bound",
     "make_distribution",
+    "MartingaleSafeAutoIndexVerificationError",
+    "MartingaleSafeCompiledAutoIndex",
+    "MartingaleSafeSelectionPolicy",
     "max_cost_lower_bound",
     "midpoint_binary_profile",
     "multinomial_uncertainty",
@@ -239,6 +261,7 @@ __all__ = [
     "verify_autodro_selection_artifact",
     "verify_anytime_tv_certificate",
     "verify_autoindex_artifact",
+    "verify_martingale_safe_autoindex_certificate",
     "verify_safe_autoindex_certificate",
     "verify_sequential_safe_autoindex_certificate",
     "verify_tree",
@@ -253,7 +276,9 @@ __all__ = [
     "compile_hybrid_index",
     "synthesize_hybrid_partitions",
     "generate_safe_cpp_header",
+    "generate_martingale_safe_cpp_header",
     "generate_sequential_safe_cpp_header",
     "load_safe_compile_spec",
+    "load_martingale_safe_compile_spec",
     "load_sequential_safe_compile_spec",
 ]

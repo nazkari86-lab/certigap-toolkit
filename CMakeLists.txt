@@ -5,6 +5,7 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 option(CERTIGAP_BUILD_EXAMPLES "Build CertiGap C++ examples" OFF)
+option(CERTIGAP_BUILD_SQLITE_EXTENSION "Build SQLite loadable extension" OFF)
 
 add_library(certigap INTERFACE)
 add_library(CertiGap::certigap ALIAS certigap)
@@ -24,6 +25,28 @@ if(CERTIGAP_BUILD_EXAMPLES)
     target_link_libraries(
         certigap_online_example PRIVATE CertiGap::certigap
     )
+endif()
+
+if(CERTIGAP_BUILD_SQLITE_EXTENSION)
+    find_path(SQLITE3EXT_INCLUDE_DIR sqlite3ext.h REQUIRED)
+    add_library(certigap_sqlite MODULE cpp/certigap_sqlite.cpp)
+    target_compile_features(certigap_sqlite PRIVATE cxx_std_17)
+    target_include_directories(
+        certigap_sqlite PRIVATE
+            "${CMAKE_CURRENT_SOURCE_DIR}/cpp"
+            "${SQLITE3EXT_INCLUDE_DIR}"
+    )
+    set_target_properties(
+        certigap_sqlite PROPERTIES
+            PREFIX ""
+            OUTPUT_NAME "certigap"
+    )
+    if(APPLE)
+        # SQLite resolves extension API symbols from the loading process.
+        target_link_options(
+            certigap_sqlite PRIVATE "LINKER:-undefined,dynamic_lookup"
+        )
+    endif()
 endif()
 
 install(

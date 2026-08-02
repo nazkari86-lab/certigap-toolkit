@@ -25,6 +25,12 @@ Sequential SafeAutoIndex supports continuous validation inspection without
 invalid repeated use of a fixed-time interval. It records and replays the first
 alpha-spending Hoeffding crossing; see
 [`docs/SEQUENTIAL_SAFE_AUTOINDEX.md`](docs/SEQUENTIAL_SAFE_AUTOINDEX.md).
+Martingale SafeAutoIndex adds mixture e-process deployment and revocation for
+bounded adapted observations under declared conditional-mean nulls; see
+[`docs/MARTINGALE_SAFE_AUTOINDEX.md`](docs/MARTINGALE_SAFE_AUTOINDEX.md).
+An actual SQLite loadable extension exposes connection-local adaptive C++
+indexes through SQL, with no Python runtime; see
+[`docs/SQLITE_EXTENSION.md`](docs/SQLITE_EXTENSION.md).
 
 The easiest C++ mode is one header:
 
@@ -89,6 +95,10 @@ It ships with:
   workload-adaptive CertiRange variants.
 - Optional-stopping-safe sequential deployment over the complete eight-backend
   portfolio, with fail-closed conventional fallback.
+- Adapted-data e-process deployment plus post-deployment harm revocation with
+  separately controlled false-decision risks.
+- SQLite `sqlite3_load_extension` integration for SQL build/get/range/update/
+  optimize lifecycle operations.
 - CertiGap-H `O(1)` range sums with exact representation-aware partition
   synthesis and a train-only native backend tuner.
 

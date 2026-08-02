@@ -1,0 +1,2 @@
+seed,trials,horizon,alpha,false_deployments,false_deployment_rate,within_nominal_alpha,process,scope
+20260802,5000,1000,0.05,101,0.020200,True,history-adaptive amplitude times fresh Rademacher sign,"diagnostic bounded martingale-difference simulation; Ville's inequality, not Monte Carlo, supplies the guarantee"

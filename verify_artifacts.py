@@ -14,6 +14,7 @@ from certigap import (
     verify_autodro_selection_artifact,
     verify_dynamic_range_certificate,
     verify_hybrid_certificate,
+    verify_martingale_safe_autoindex_certificate,
     verify_pruned_beam_certificate,
     verify_range_optimizer_artifact,
     verify_safe_autoindex_certificate,
@@ -70,6 +71,8 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "safe_autoindex_validation.csv": 16,
         "sequential_safe_validation.csv": 4,
         "optional_stopping_monte_carlo.csv": 1,
+        "martingale_safe_validation.csv": 4,
+        "martingale_null_monte_carlo.csv": 1,
         "compiler_integration_validation.csv": 24,
         "adaptive_header_validation.csv": 24,
         "synthesis_validation.csv": 24,
@@ -383,6 +386,54 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         <= float(monte_carlo[0]["alpha"])
     ):
         raise ValueError("optional-stopping Monte Carlo witness is invalid")
+
+    martingale_artifact = json.loads(
+        (RESULTS / "martingale_safe_example.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if not verify_martingale_safe_autoindex_certificate(
+        martingale_artifact
+    )["verified"]:
+        raise ValueError("Martingale Safe AutoIndex example did not replay")
+    martingale_rows = csv_records("martingale_safe_validation.csv")
+    martingale_by_scenario = {
+        row["scenario"]: row for row in martingale_rows
+    }
+    if (
+        set(martingale_by_scenario)
+        != {
+            "stable_benefit",
+            "insufficient_evidence",
+            "migration_dominated",
+            "deploy_then_harm",
+        }
+        or any(
+            row["certificate_verified"] != "True"
+            for row in martingale_rows
+        )
+        or martingale_by_scenario["stable_benefit"][
+            "candidate_approved"
+        ]
+        != "True"
+        or martingale_by_scenario["deploy_then_harm"][
+            "candidate_revoked"
+        ]
+        != "True"
+        or martingale_by_scenario["deploy_then_harm"]["deployed"]
+        != martingale_by_scenario["deploy_then_harm"]["baseline"]
+    ):
+        raise ValueError(
+            "Martingale Safe AutoIndex lifecycle matrix is incomplete"
+        )
+    adapted_null = csv_records("martingale_null_monte_carlo.csv")
+    if (
+        len(adapted_null) != 1
+        or adapted_null[0]["within_nominal_alpha"] != "True"
+        or float(adapted_null[0]["false_deployment_rate"])
+        > float(adapted_null[0]["alpha"])
+    ):
+        raise ValueError("adapted martingale-null diagnostic is invalid")
 
     compiler_rows = csv_records("compiler_integration_validation.csv")
     if (

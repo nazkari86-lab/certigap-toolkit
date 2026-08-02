@@ -148,6 +148,21 @@ concurrency, persistence, inserts/deletes, and storage-engine integration.
 Completed in `v1.10.0`. The SQLite pilot is intentionally reported as a
 negative result: CertiGap-H does not beat Fenwick in the five committed mixes.
 
+## Phase 15: Dependence-Aware Deployment And SQLite ABI
+
+- mixture Hoeffding e-process deployment under a bounded conditional-mean null;
+- separately budgeted post-deployment harm detection and baseline revocation;
+- first-crossing lifecycle artifacts and independent decision replay;
+- adapted martingale-null diagnostic with history-dependent amplitudes;
+- strict JSON/C++ compilation and installed-package support;
+- Python-free SQLite loadable extension for build, profile, optimize, query,
+  update, and drop operations;
+- real SQLite ABI loading, SQL correctness checks, CMake, and package builder.
+
+Completed on `main` after `v1.10.1`. Remaining storage work is a planner-native
+virtual table or RocksDB plugin, official YCSB, durable synchronization,
+concurrent writers, and independent production traces.
+
 ## External Closure
 
 - independent proof review and broader recurrence/verifier formalization

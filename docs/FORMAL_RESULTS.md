@@ -433,6 +433,37 @@ improvement preserves the comparison. This result does not establish
 generalization after distribution change and does not cover dependent
 validation operations. `QED`
 
+## Theorem L.3: Adapted E-process Deployment And Revocation
+
+Let `Y_t` be adapted to filtration `F_t`, satisfy
+`E[Y_t | F_{t-1}] <= 0`, and lie almost surely in an interval of width `B`.
+For every fixed `lambda > 0`, define
+
+`E_t(lambda) = exp(lambda sum_{i=1}^t Y_i - lambda^2 B^2 t / 8)`.
+
+Conditional Hoeffding's lemma gives
+
+`E[exp(lambda Y_t - lambda^2 B^2/8) | F_{t-1}] <= 1`.
+
+Thus `E_t(lambda)` is a non-negative supermartingale beginning at one. Any
+fixed convex mixture over declared lambda values is also a non-negative
+supermartingale beginning at one. Ville's inequality yields
+
+`Pr(sup_t E_t >= 1/alpha) <= alpha`.
+
+For deployment the implementation takes
+`Y_t = -(D_t + A + m)`, so the null is
+`E[D_t | F_{t-1}] >= -(A+m)` at every monitored step. For revocation it starts
+a new process after deployment with `Y_t = D_t-r`, whose null is
+`E[D_t | F_{t-1}] <= r`. Here `D_t` is candidate-minus-baseline work, `A` is
+amortized transition cost, `m` is required improvement, and `r` is tolerated
+harm. Each process has its own alpha budget. Crossing controls the
+corresponding false decision under its null at arbitrary stopping times.
+
+The theorem does not bound detection delay, losses before revocation, future
+behavior after monitoring ends, or observations outside the declared bounded
+structural model. `QED`
+
 ## Theorem M: Generated C++ Configuration Fidelity
 
 Let `A` be an AutoIndex artifact accepted by the independent verifier. The

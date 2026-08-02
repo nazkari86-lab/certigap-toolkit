@@ -26,6 +26,7 @@ dev = [
 certigap = "certigap.cli:main"
 certigap-compile = "certigap.compiler:main"
 certigap-calibrate = "certigap.hardware:main"
+certigap-sqlite-build = "certigap.sqlite_extension:main"
 
 [tool.setuptools.packages.find]
 include = ["certigap*"]
@@ -41,8 +42,12 @@ include = ["certigap*"]
   "schemas/certigap_compile_input_v1.schema.json",
   "schemas/certigap_safe_compile_input_v1.schema.json",
   "schemas/certigap_sequential_safe_compile_input_v1.schema.json",
+  "schemas/certigap_martingale_safe_compile_input_v1.schema.json",
 ]
-"share/certigap/tools" = ["cpp/hardware_calibration.cpp"]
+"share/certigap/tools" = [
+  "cpp/hardware_calibration.cpp",
+  "cpp/certigap_sqlite.cpp",
+]
 
 [tool.ruff]
 target-version = "py310"

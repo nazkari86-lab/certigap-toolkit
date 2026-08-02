@@ -223,6 +223,16 @@ optional stopping. The certificate records that first crossing, cumulative
 risk spent, and a post-stop audit. The IID condition remains necessary; this
 is not a guarantee under future workload drift.
 
+Martingale Safe AutoIndex removes the IID requirement while retaining an
+explicit bounded conditional-mean assumption. For adapted evidence $Y_t$ of
+range width $B$, each
+$\exp(\lambda\sum_{i\le t}Y_i-\lambda^2B^2t/8)$ is a non-negative
+supermartingale. A fixed mixture over betting fractions and Ville's inequality
+controls arbitrary stopping. Separate processes deploy on evidence of benefit
+and revoke on evidence of post-deployment harm. Revocation controls false
+alarms under its null but cannot remove detection delay or guarantee future
+safety.
+
 For deployment, a strict versioned JSON compiler verifies the artifact before
 emitting a deterministic C++17 header. Backend, aggregate, universe size, and
 artifact digest are compile-time constants; a selected CertiRange additionally
@@ -288,6 +298,13 @@ evaluation-only audit. In 5,000 deterministic mean-zero Monte Carlo trials,
 alpha spending produced zero false approvals, whereas invalid repeated use of
 the fixed-time interval produced 576; this simulation is diagnostic rather
 than the source of the theorem.
+The martingale lifecycle matrix contains four replay-verified scenarios:
+stable benefit deploys, insufficient evidence and migration cost fail closed,
+and a range-to-update shift deploys at operation 371 before revoking to the
+segment-tree baseline at operation 3253. In 5,000 adapted-null simulations
+with history-dependent amplitudes and fresh conditional-mean-zero signs, 101
+false deployments occurred at nominal $\alpha=0.05$. This diagnostic does not
+replace the e-process theorem.
 Across 24 compiler-integration cases, repeated generation produces
 byte-identical headers and every source artifact independently verifies.
 Cross-language executable tests cover all backend families, all three

@@ -29,6 +29,7 @@ latency is measured separately and is never certified by a structural score.
 | AutoIndex selects the minimum-score feasible candidate | Replay-certified | `results/autoindex_validation.csv` | The complete declared eight-candidate portfolio, not all data structures |
 | Safe AutoIndex deploys specialization only below its validation upper bound | Statistical and replay-certified | `results/safe_autoindex_validation.csv` | One-sided Hoeffding bound conditional on independent IID bounded validation operations and declared structural costs |
 | Sequential Safe AutoIndex permits optional stopping during validation | Mathematical, statistical, and replay-certified | Corollary L.2, `results/sequential_safe_validation.csv`, and `results/optional_stopping_monte_carlo.csv` | Alpha-spending Hoeffding sequence conditional on independent IID bounded validation operations; not a future-drift guarantee |
+| Martingale Safe AutoIndex controls optional-stopping errors for adapted observations | Mathematical, statistical, and replay-certified | Theorem L.3, `results/martingale_safe_validation.csv`, and `results/martingale_null_monte_carlo.csv` | Mixture Hoeffding e-process under the declared bounded conditional-mean deployment/revocation nulls; detection delay and future safety are not guaranteed |
 | CertiGap-X selects an exact contiguous partition | Replay-certified | `results/synthesis_validation.csv` | Declared aggregate, constraints, cost profile, and block grammar |
 | CertiGap-H selects an exact representation-aware partition | Replay-certified | `results/hybrid_validation.csv` | Declared two-level-prefix representation and additive structural model |
 | CertiGap-H DP tie-breaking is platform-stable | Arithmetic and differential | Integer `1e-12` score units in solver and separately implemented verifier | Decimalized declared hardware profile; native timings remain floating-point |
@@ -39,6 +40,7 @@ latency is measured separately and is never certified by a structural score.
 | CertiGap-H is the fastest tested implementation | Empirical | `4/11` holdout scenarios in `results/synthesis_native_latency.csv` | Tested implementations and committed machine only |
 | AutoIndex has low stationary three-backend regret | Empirical | `1.02%` mean, `6.42%` maximum over ten stationary scenarios | Same machine and three-candidate holdout oracle |
 | SQLite pilot executes real SQL operations | Empirical systems pilot | 375 raw repetitions, checksums, and bootstrap intervals | In-memory Python application integration with YCSB-compatible mixes; not official YCSB or a SQLite extension |
+| SQLite loadable extension executes CertiGap C++ operations from SQL | Cross-language systems integration | `cpp/certigap_sqlite.cpp` and `tests/test_sqlite_extension.py` | Connection-local SQL functions loaded through SQLite extension ABI; not a virtual table, planner integration, durability layer, or performance claim |
 | Temporal shift can break train-only selection | Empirical failure case | `219.69%` regret in the declared shift scenario | One deterministic stress case; not a drift frequency estimate |
 | Generated C++ implements the selected semantics | Cross-language differential | compiler integration and native runtime oracle tests | Supported get/range/update/snapshot operations and generated backends |
 
@@ -64,7 +66,8 @@ The following statements must not appear as project conclusions:
 1. Independent reproduction on separate Intel, AMD, and ARM Linux machines.
 2. External learned-index and robust-BST implementations under matched
    operation semantics, memory budgets, and hardware.
-3. Official YCSB or a storage-engine integration with real operation traces.
+3. Official YCSB plus planner-visible SQLite virtual-table or RocksDB plugin
+   integration with real operation traces.
 4. A non-trivial approximation theorem or tighter certified gaps for the
    candidate-pruned scalable path.
 5. Exact or machine-assisted checking of proof-critical arithmetic and
@@ -73,8 +76,8 @@ The following statements must not appear as project conclusions:
    and failure metrics.
 7. Train/validation/test separation for grammar and hyperparameter decisions,
    repeated native measurements, confidence intervals, and ablations.
-8. A dependence-aware martingale, mixing-process, or block-bootstrap extension
-   for temporally correlated operations and post-deployment drift.
+8. Mixing-process or block-bootstrap inference for dependent traces that do not
+   satisfy the current conditional-mean martingale nulls.
 
 ## Language Rules
 

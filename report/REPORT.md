@@ -1226,6 +1226,161 @@ does not claim that an old deployment remains safe after distribution shift.
 
 The confidence-sequence theorem is conditional on independent IID bounded validation operations. The Monte Carlo row is a diagnostic, not a proof and not evidence for arbitrary drift.
 
+# Martingale Safe AutoIndex
+
+Martingale Safe AutoIndex extends sequential deployment from IID validation to
+bounded adapted observations under explicit conditional-mean null hypotheses.
+It has two independently budgeted lifecycle gates:
+
+- deployment rejects the null that specialization has no conditional expected
+  advantage after required improvement and amortized transition cost;
+- revocation rejects the null that the deployed candidate remains no worse
+  than a declared tolerance.
+
+If deployment evidence is insufficient, the conventional baseline remains
+active. If post-deployment harm evidence crosses its threshold, the emitted
+configuration returns to that baseline.
+
+```python
+from certigap import (
+    MartingaleSafeSelectionPolicy,
+    WorkloadTrace,
+    compile_martingale_safe_autoindex,
+)
+
+train = WorkloadTrace(8)
+monitoring = WorkloadTrace(8)
+for _ in range(100):
+    train.add_range(2, 7)
+for _ in range(1_000):
+    monitoring.add_range(2, 7)
+for index in range(3_000):
+    monitoring.add_update(1 + index % 8, float(index))
+
+index = compile_martingale_safe_autoindex(
+    range(8),
+    train,
+    monitoring,
+    policy=MartingaleSafeSelectionPolicy(minimum_observations=50),
+)
+print(index.summary())
+```
+
+The example first deploys the training winner and later revokes it after an
+update-heavy workload shift. Compilation to a verified C++17 configuration is:
+
+```bash
+certigap martingale-safe-compile input.json \
+  --artifact build/martingale-selection.json \
+  --header build/martingale-index.hpp
+```
+
+## E-process
+
+Let `Y_t` be adapted to filtration `F_t`, have conditional mean at most zero,
+and lie in an interval of width `B`. For fixed positive `lambda`, Hoeffding's
+lemma makes
+
+`E_t(lambda) = exp(lambda sum_{i<=t} Y_i - lambda^2 B^2 t / 8)`
+
+a non-negative supermartingale. The implementation uses an equal-weight
+mixture over declared dimensionless betting fractions `c_j`, with
+`lambda_j = c_j/B`. A fixed mixture of supermartingales is again a
+supermartingale. Ville's inequality therefore gives
+
+`Pr(sup_t E_t >= 1/alpha) <= alpha`.
+
+For deployment, `Y_t = -(D_t + A + m)`, where `D_t` is candidate work minus
+baseline work, `A` is amortized transition cost, and `m` is required
+improvement. For revocation, `Y_t = D_t - r`, where `r` is the allowed harm
+tolerance. Deployment and revocation have separate alpha budgets and separate
+e-processes.
+
+## Certificate
+
+The artifact contains the complete policy, first deployment crossing, first
+revocation crossing, final audits, monitoring trace, selected baseline, final
+backend, and outer digest. The replay verifier reconstructs both lifecycle
+crossings and rejects edited decisions even if the outer digest is recomputed.
+
+## Claim Boundary
+
+The result permits adapted, non-IID bounded observations only under the stated
+conditional-mean null. It does not prove:
+
+- that arbitrary adversarial drift is harmless;
+- that the candidate remains safe before harm is detected;
+- correctness under unbounded or incorrectly bounded costs;
+- wall-clock performance from structural work;
+- global optimality outside the eight-backend portfolio.
+
+Revocation controls false alarms under its null. It cannot eliminate detection
+delay or losses accumulated before crossing.
+
+# Martingale Safe AutoIndex validation
+
+- Lifecycle scenarios: `4/4` replay-verified.
+- Stable benefit deploys specialization.
+- Insufficient evidence and migration cost fail closed.
+- Update-heavy post-deployment harm revokes to baseline.
+- Adapted-null false deployments: `101/5000` at nominal alpha `0.05`.
+
+The Monte Carlo process has history-dependent amplitude and fresh mean-zero signs. It is diagnostic only; the formal claim follows from the e-process supermartingale and Ville inequality under the declared conditional-mean null.
+
+# SQLite Loadable Extension
+
+CertiGap ships an actual SQLite loadable extension implemented against
+`sqlite3ext.h`. It exposes connection-local named C++ adaptive indexes through
+SQL functions:
+
+```sql
+.load ./certigap
+
+SELECT certigap_build('catalog', '[0,1,2,3,4,5,6,7]');
+SELECT certigap_range_sum('catalog', 2, 7);
+SELECT certigap_optimize('catalog');
+SELECT certigap_update('catalog', 4, 100);
+SELECT certigap_get('catalog', 4);
+SELECT certigap_selected('catalog');
+SELECT certigap_drop('catalog');
+```
+
+Build from a checkout:
+
+```bash
+python3 build_sqlite_extension.py --output build/certigap.so
+```
+
+After package installation:
+
+```bash
+certigap-sqlite-build --output certigap.so
+```
+
+On macOS use the `.dylib` suffix. If `sqlite3ext.h` is outside the standard
+locations, set `SQLITE_INCLUDE_DIR`. CMake users can set
+`-DCERTIGAP_BUILD_SQLITE_EXTENSION=ON`.
+
+The registry is isolated per SQLite connection, protected by a mutex, and
+released when the connection closes. SQL argument types, finite values, key
+ranges, JSON array syntax, and unknown names fail closed with SQLite errors.
+The generated extension has no Python runtime dependency.
+
+## Exact Boundary
+
+This is a real `sqlite3_load_extension` integration and executes adaptive C++
+operations from SQL. It is not yet:
+
+- a virtual table;
+- integrated with SQLite `xBestIndex` or the query planner;
+- durable across connection restart;
+- synchronized transactionally with an ordinary SQLite table;
+- evidence of a performance improvement over SQLite B-trees.
+
+Those distinctions are intentional. The next storage step is a virtual-table
+module with planner-visible equality/range constraints and an official YCSB
+protocol.
+
 # Compiler And CMake Integration
 
 CertiGap uses a profile-guided build step. It is not a GCC or Clang plugin:

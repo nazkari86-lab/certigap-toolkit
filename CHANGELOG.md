@@ -19,6 +19,12 @@ recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
 - Add Sequential SafeAutoIndex with alpha-spending Hoeffding confidence
   sequences, first-crossing replay verification, optional-stopping diagnostics,
   strict JSON compilation, and deployment-specific C++17 output.
+- Add Martingale SafeAutoIndex with mixture Hoeffding e-process deployment,
+  post-deployment harm revocation, replayed lifecycle events, adapted-null
+  diagnostics, strict compilation, and C++17 baseline restoration.
+- Add a Python-free SQLite loadable C++ extension, installed build command,
+  connection-local lifecycle registry, strict SQL validation, CMake option,
+  and real SQLite CLI integration tests.
 
 ## 1.10.1 - 2026-07-30
 

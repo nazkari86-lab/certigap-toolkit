@@ -24,6 +24,13 @@ from .compiler import (
 from .dynamic_range_verifier import verify_dynamic_range_certificate
 from .hardware import calibrate_hardware
 from .hybrid_verifier import verify_hybrid_certificate
+from .martingale_safe_autoindex_verifier import (
+    verify_martingale_safe_autoindex_certificate,
+)
+from .martingale_safe_compiler import (
+    compile_martingale_safe_spec,
+    generate_martingale_safe_cpp_header,
+)
 from .pruned_verifier import verify_pruned_beam_certificate
 from .range_optimizer_verifier import verify_range_optimizer_artifact
 from .safe_autoindex_verifier import verify_safe_autoindex_certificate
@@ -44,6 +51,9 @@ _SCHEMA_VERIFIERS: dict[str, Verifier] = {
     "certigap-autoindex-v2": verify_autoindex_artifact,
     "certigap-dynamic-range-v1": verify_dynamic_range_certificate,
     "certigap-hybrid-v1": verify_hybrid_certificate,
+    "certigap-martingale-safe-autoindex-v1": (
+        verify_martingale_safe_autoindex_certificate
+    ),
     "certigap-range-optimizer-v1": verify_range_optimizer_artifact,
     "certigap-safe-autoindex-v1": verify_safe_autoindex_certificate,
     "certigap-sequential-safe-autoindex-v1": (
@@ -163,6 +173,29 @@ def explain_artifact(kind: str, artifact: dict, verification: dict) -> dict:
         decision = artifact["decision"]
         checkpoint = (
             decision["selection_checkpoint"] or decision["final_audit"]
+        )
+    elif kind == "certigap-martingale-safe-autoindex-v1":
+        decision = artifact["decision"]
+        explanation.update(
+            {
+                "selected": decision["deployed"],
+                "train_candidate": decision["train_candidate"],
+                "safe_baseline": decision["safe_baseline"],
+                "candidate_approved": decision["candidate_approved"],
+                "candidate_revoked": decision["candidate_revoked"],
+                "selection_reason": decision["reason"],
+                "deployment_operation": (
+                    None
+                    if decision["deployment_event"] is None
+                    else decision["deployment_event"]["stream_operation"]
+                ),
+                "revocation_operation": (
+                    None
+                    if decision["revocation_event"] is None
+                    else decision["revocation_event"]["stream_operation"]
+                ),
+                "scope": artifact["scope"],
+            }
         )
         explanation.update(
             {
@@ -394,6 +427,44 @@ def _sequential_safe_compile(args: argparse.Namespace) -> int:
     return 0
 
 
+def _martingale_safe_compile(args: argparse.Namespace) -> int:
+    source = Path(args.input).resolve()
+    artifact_path = Path(args.artifact).resolve()
+    header_path = Path(args.header).resolve()
+    if len({source, artifact_path, header_path}) != 3:
+        raise CompileInputError(
+            "input, artifact, and header paths must be distinct"
+        )
+    certificate = compile_martingale_safe_spec(_read_json(source))
+    header = generate_martingale_safe_cpp_header(
+        certificate, namespace=args.namespace
+    )
+    _write_json(artifact_path, certificate)
+    _write_text(header_path, header)
+    verification = verify_martingale_safe_autoindex_certificate(certificate)
+    print(
+        json.dumps(
+            {
+                "artifact_type": certificate["schema"],
+                "selected": verification["selected"],
+                "candidate_approved": verification["candidate_approved"],
+                "candidate_revoked": verification["candidate_revoked"],
+                "deployment_operation": verification[
+                    "deployment_operation"
+                ],
+                "revocation_operation": verification[
+                    "revocation_operation"
+                ],
+                "artifact": str(artifact_path),
+                "header": str(header_path),
+                "sha256": certificate["sha256"],
+            },
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
 def _verify(args: argparse.Namespace) -> int:
     artifact = _read_json(Path(args.artifact).resolve())
     kind, verification = verify_artifact(artifact)
@@ -532,6 +603,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--namespace", default="certigap_generated"
     )
     sequential_parser.set_defaults(handler=_sequential_safe_compile)
+
+    martingale_parser = commands.add_parser(
+        "martingale-safe-compile",
+        help="compile with adapted-data e-process deploy/revoke gates",
+    )
+    martingale_parser.add_argument("input")
+    martingale_parser.add_argument("--artifact", required=True)
+    martingale_parser.add_argument("--header", required=True)
+    martingale_parser.add_argument(
+        "--namespace", default="certigap_generated"
+    )
+    martingale_parser.set_defaults(handler=_martingale_safe_compile)
 
     verify_parser = commands.add_parser(
         "verify", help="auto-detect and independently replay an artifact"

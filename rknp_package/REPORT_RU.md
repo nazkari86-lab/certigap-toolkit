@@ -73,6 +73,12 @@ CertiGap не строит полное поисковое дерево на в�
 - sequential no-regression gate прошёл 4 из 4 replay-сценариев; в
   mean-zero диагностике корректная граница дала 0 из 5000 ложных одобрений,
   тогда как повторное использование fixed-time интервала дало 576 из 5000.
+- martingale lifecycle прошёл 4 из 4 сценариев: стабильный поток развёрнут,
+  а update-heavy shift вернул классический baseline; adapted-null диагностика
+  дала 101 ложное решение из 5000 при номинальном alpha 0.05.
+- SQLite ABI integration загружается командой `.load`, выполняет build,
+  profile, optimize, get, range sum и update с checksum-проверкой; это пока
+  function extension, а не planner-native virtual table.
 
 ## 8. Примеры сертификатов
 
@@ -644,6 +650,37 @@ Adding deterministic amortized transition cost and a non-negative required
 improvement preserves the comparison. This result does not establish
 generalization after distribution change and does not cover dependent
 validation operations. `QED`
+
+## Theorem L.3: Adapted E-process Deployment And Revocation
+
+Let `Y_t` be adapted to filtration `F_t`, satisfy
+`E[Y_t | F_{t-1}] <= 0`, and lie almost surely in an interval of width `B`.
+For every fixed `lambda > 0`, define
+
+`E_t(lambda) = exp(lambda sum_{i=1}^t Y_i - lambda^2 B^2 t / 8)`.
+
+Conditional Hoeffding's lemma gives
+
+`E[exp(lambda Y_t - lambda^2 B^2/8) | F_{t-1}] <= 1`.
+
+Thus `E_t(lambda)` is a non-negative supermartingale beginning at one. Any
+fixed convex mixture over declared lambda values is also a non-negative
+supermartingale beginning at one. Ville's inequality yields
+
+`Pr(sup_t E_t >= 1/alpha) <= alpha`.
+
+For deployment the implementation takes
+`Y_t = -(D_t + A + m)`, so the null is
+`E[D_t | F_{t-1}] >= -(A+m)` at every monitored step. For revocation it starts
+a new process after deployment with `Y_t = D_t-r`, whose null is
+`E[D_t | F_{t-1}] <= r`. Here `D_t` is candidate-minus-baseline work, `A` is
+amortized transition cost, `m` is required improvement, and `r` is tolerated
+harm. Each process has its own alpha budget. Crossing controls the
+corresponding false decision under its null at arbitrary stopping times.
+
+The theorem does not bound detection delay, losses before revocation, future
+behavior after monitoring ends, or observations outside the declared bounded
+structural model. `QED`
 
 ## Theorem M: Generated C++ Configuration Fidelity
 

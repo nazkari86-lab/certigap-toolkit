@@ -26,7 +26,10 @@ jobs:
           g++ --version
 
       - name: Install development checks
-        run: python -m pip install --requirement requirements-dev.txt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sqlite3 libsqlite3-dev
+          python -m pip install --requirement requirements-dev.txt
 
       - name: Static Python checks
         run: |
@@ -56,6 +59,9 @@ jobs:
           python generate_uncertainty_validation.py
           python generate_online_adaptation.py
           python generate_autoindex_validation.py
+          python generate_safe_autoindex_validation.py
+          python generate_sequential_safe_validation.py
+          python generate_martingale_safe_validation.py
           python generate_compiler_integration_validation.py
           python generate_adaptive_validation.py
           python generate_synthesis_validation.py
@@ -77,6 +83,17 @@ jobs:
           python examples/read_heavy_embedded_index.py
           python examples/autodro_catalog.py
           python examples/certified_autoindex.py
+          python examples/safe_autoindex.py
+          python examples/sequential_safe_autoindex.py
+          python examples/martingale_safe_autoindex.py
+
+      - name: Build and smoke-test SQLite extension
+        run: |
+          python build_sqlite_extension.py --output /tmp/certigap.so
+          sqlite3 :memory: \
+            ".load /tmp/certigap.so" \
+            "select certigap_build('ci','[0,1,2,3,4,5,6,7]');" \
+            "select certigap_range_sum('ci',2,7);"
 
       - name: Build installable wheel
         run: |

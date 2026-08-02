@@ -1,0 +1,5 @@
+scenario,monitoring_operations,candidate,baseline,deployed,candidate_approved,candidate_revoked,deployment_operation,deployment_log_e,revocation_operation,revocation_log_e,certificate_verified
+stable_benefit,1000,prefix_sum,segment_tree,prefix_sum,True,False,371,3.003942612735,,,True
+insufficient_evidence,20,prefix_sum,segment_tree,segment_tree,False,False,,,,,True
+migration_dominated,1000,prefix_sum,segment_tree,segment_tree,False,False,,,,,True
+deploy_then_harm,4000,prefix_sum,segment_tree,segment_tree,True,True,371,3.003942612735,3253,2.998524471425,True
