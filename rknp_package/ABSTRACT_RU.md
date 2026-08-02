@@ -26,6 +26,8 @@
     непосредственно из SQL без Python runtime.
 14. planner-native SQLite virtual table с `xBestIndex`, durable shadow storage,
     транзакционным rollback и проверкой двух WAL writers.
+15. zero-based `adaptive_array<T>` с автоматическим профилированием,
+    переносом workload-профиля между запусками и fail-closed score gate.
 
 Текущее состояние прототипа подтверждается следующими результатами:
 

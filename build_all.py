@@ -30,6 +30,7 @@ def main() -> None:
         ]
     )
     run([python, "generate_adaptive_validation.py"])
+    run([python, "generate_adaptive_array_validation.py"])
     run([python, "generate_synthesis_validation.py"])
     run([python, "generate_hybrid_validation.py"])
     run([python, "benchmarks/sqlite_ycsb.py", "--mode", "full"])

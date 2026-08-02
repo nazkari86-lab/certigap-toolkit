@@ -317,6 +317,15 @@ pass point/range/update/snapshot oracles. CMake installation and a downstream
 External implementations, independent hardware reproduction, and a
 domain-owner pilot remain external validation requirements.
 
+For deployment ergonomics, a zero-based \texttt{adaptive\_array<T>} wrapper now
+profiles ordinary operations, evaluates the portfolio after warmup, and keeps a
+backend change only above a declared modeled-improvement threshold. A strict
+versioned workload profile transfers observations across runs, while an
+explicit-maintenance mode avoids unplanned optimization inside latency-critical
+paths. Six native scenarios cover automatic point/range selection, threshold
+rejection, manual maintenance, and profile restoration. This gate concerns the
+structural model and is not a statistical or wall-clock no-regression claim.
+
 CertiGap-X additionally synthesizes unequal contiguous aggregate blocks
 rather than selecting only a named backend. For block contribution
 $c(o,B)$, whole-operation work is additive, so mean work is exactly additive

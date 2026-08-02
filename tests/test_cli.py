@@ -120,6 +120,39 @@ class UnifiedCliTests(unittest.TestCase):
         ):
             self.assertEqual(_checkout_root(), ROOT)
 
+    def test_profile_explain_is_strict_and_zero_based(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            profile = Path(directory) / "workload.profile"
+            profile.write_text(
+                "\n".join(
+                    [
+                        "CERTIGAP_PROFILE_V1",
+                        "size 4",
+                        "aggregate sum",
+                        "get 1 3",
+                        "update 2 2",
+                        "range 2 4 6",
+                        "end",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            explained = self.run_cli("profile-explain", str(profile))
+            self.assertEqual(explained.returncode, 0, explained.stderr)
+            payload = json.loads(explained.stdout)
+            self.assertEqual(payload["total_operations"], 11.0)
+            self.assertEqual(
+                payload["hottest_zero_based_positions"][0]["position"], 1
+            )
+            profile.write_text(
+                "CERTIGAP_PROFILE_V1\nsize 4\naggregate sum\nget 0 1\nend\n",
+                encoding="utf-8",
+            )
+            rejected = self.run_cli("profile-explain", str(profile))
+            self.assertEqual(rejected.returncode, 2)
+            self.assertIn("out of range", rejected.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

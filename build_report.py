@@ -224,6 +224,8 @@ def main() -> None:
             RESULTS_DIR / "compiler_integration_validation.md",
             DOCS_DIR / "ADAPTIVE_CPP.md",
             RESULTS_DIR / "adaptive_header_validation.md",
+            DOCS_DIR / "ADAPTIVE_ARRAY.md",
+            RESULTS_DIR / "adaptive_array_validation.md",
             DOCS_DIR / "SYNTHESIS.md",
             RESULTS_DIR / "synthesis_validation.md",
             DOCS_DIR / "HYBRID.md",

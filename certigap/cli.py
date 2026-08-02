@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Callable, Sequence
 
 from .anytime_verifier import verify_anytime_tv_certificate
+from .adaptive_profile import parse_adaptive_profile
 from .autodro import verify_autodro_selection_artifact
 from .autoindex_verifier import verify_autoindex_artifact
 from .compiler import (
@@ -510,6 +511,12 @@ def _include_dir(args: argparse.Namespace) -> int:
     return 0
 
 
+def _profile_explain(args: argparse.Namespace) -> int:
+    summary = parse_adaptive_profile(Path(args.profile).resolve())
+    print(json.dumps(summary, indent=2, sort_keys=True))
+    return 0
+
+
 def _checkout_root() -> Path:
     candidates: list[Path] = []
     configured = os.environ.get("CERTIGAP_SOURCE_ROOT")
@@ -642,6 +649,13 @@ def build_parser() -> argparse.ArgumentParser:
         "include-dir", help="print the installed C++ header directory"
     )
     include_parser.set_defaults(handler=_include_dir)
+
+    profile_parser = commands.add_parser(
+        "profile-explain",
+        help="strictly inspect an adaptive_array workload profile",
+    )
+    profile_parser.add_argument("profile")
+    profile_parser.set_defaults(handler=_profile_explain)
 
     reproduce_parser = commands.add_parser(
         "reproduce", help="run tests, verify artifacts, or rebuild the package"

@@ -65,6 +65,7 @@ jobs:
           python generate_sqlite_vtab_validation.py
           python generate_compiler_integration_validation.py
           python generate_adaptive_validation.py
+          python generate_adaptive_array_validation.py
           python generate_synthesis_validation.py
           python generate_hybrid_validation.py
           python benchmarks/sqlite_ycsb.py --mode full

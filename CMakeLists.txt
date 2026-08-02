@@ -25,6 +25,13 @@ if(CERTIGAP_BUILD_EXAMPLES)
     target_link_libraries(
         certigap_online_example PRIVATE CertiGap::certigap
     )
+    add_executable(
+        certigap_adaptive_array_example
+        examples/adaptive_array.cpp
+    )
+    target_link_libraries(
+        certigap_adaptive_array_example PRIVATE CertiGap::certigap
+    )
 endif()
 
 if(CERTIGAP_BUILD_SQLITE_EXTENSION)

@@ -79,6 +79,8 @@ CertiGap не строит полное поисковое дерево на в�
 - SQLite ABI integration загружается командой `.load`; virtual table передаёт
   equality/range constraints через `xBestIndex`, сохраняет данные между
   подключениями и прошёл 6 из 6 planner/durability сценариев.
+- `adaptive_array<T>` прошёл 6 из 6 native-сценариев: automatic warmup,
+  отказ слабой миграции, explicit maintenance и восстановление профиля.
 
 ## 8. Примеры сертификатов
 
@@ -1825,6 +1827,21 @@ Header hashes cover exact generated C++ source. They certify deterministic code 
 `certigap.hpp` is the lowest-friction CertiGap interface. It requires only a
 C++17 compiler: no Python, generated file, JSON, or custom compiler.
 
+For the simplest container-like interface, use `adaptive_array<T>`:
+
+```cpp
+certigap::AutoTunePolicy policy;
+policy.profile_path = "workload.profile";
+certigap::adaptive_array<double> data(values, policy);
+
+auto total = data.range_sum(2, 30);  // Zero-based [2,30).
+std::cout << data.explain() << '\n';
+```
+
+It profiles operations, automatically evaluates deployment after warmup,
+rejects backend changes below a declared score improvement, and restores the
+profile on the next run. See [`ADAPTIVE_ARRAY.md`](ADAPTIVE_ARRAY.md).
+
 ## Online Compiler
 
 Download
@@ -1928,6 +1945,10 @@ Reoptimization is explicit rather than silently occurring inside a query.
 This avoids unpredictable latency spikes. TV drift is measured over the
 current range-coverage routing distribution relative to the profile at the
 previous optimization.
+
+This statement applies to the lower-level `Index`. `adaptive_array` offers an
+opt-in automatic policy; disable `automatic_maintenance` to preserve explicit
+maintenance boundaries.
 
 ## Snapshots
 

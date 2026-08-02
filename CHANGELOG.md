@@ -28,6 +28,9 @@ recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
 - Add the `certigap_vtab` SQLite virtual table with planner-visible equality
   and range strategies, inclusive range-sum pushdown, durable shadow storage,
   mutations, rollback/savepoints, reconnect, and two-process WAL validation.
+- Add zero-based `adaptive_array<T>` with automatic profiling, configurable
+  warmup/drift checks, fail-closed modeled-improvement threshold, strict
+  cross-run profile persistence, explicit-maintenance mode, and explanations.
 
 ## 1.10.1 - 2026-07-30
 

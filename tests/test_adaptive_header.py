@@ -178,6 +178,116 @@ int main() {
             run = subprocess.run([str(executable)], check=False)
             self.assertEqual(run.returncode, 0)
 
+    def test_adaptive_array_auto_tuning_and_profile_persistence(self) -> None:
+        source = r"""
+#include <cmath>
+#include <fstream>
+#include <string>
+#include <vector>
+#include "certigap.hpp"
+
+std::vector<double> values() {
+    std::vector<double> result(32);
+    for (int index = 0; index < 32; ++index) result[index] = index;
+    return result;
+}
+
+int main(int argc, char** argv) {
+    if (argc != 2) return 1;
+    certigap::AutoTunePolicy policy;
+    policy.warmup_operations = 32;
+    policy.check_interval = 32;
+    policy.minimum_relative_improvement = 0.01;
+    policy.profile_path = argv[1];
+    {
+        certigap::adaptive_array<double> data(values(), policy);
+        for (int index = 0; index < 32; ++index) {
+            if (std::abs(data.range_sum(2, 30) - 434.0) > 1e-9) return 2;
+        }
+        if (!data.optimized()) return 3;
+        if (data.selected_name() != "fenwick") return 4;
+        if (!data.decision().switched) return 5;
+        if (data.explain().find("deployment threshold") == std::string::npos) {
+            return 6;
+        }
+    }
+    {
+        certigap::adaptive_array<double> restored(values(), policy);
+        if (restored.observed_operations() != 32.0) return 7;
+        if (restored.selected_name() != "fenwick") return 8;
+        if (restored.size() != 32) return 9;
+    }
+
+    certigap::AutoTunePolicy guarded = policy;
+    guarded.profile_path.clear();
+    guarded.minimum_relative_improvement = 2.0;
+    certigap::adaptive_array<double> rejected(values(), guarded);
+    for (int index = 0; index < 32; ++index) rejected.range_sum(2, 30);
+    if (rejected.optimized()) return 10;
+    if (rejected.selected_name() != "sorted_array") return 11;
+    if (rejected.decision().reason.find("below") == std::string::npos) return 12;
+
+    certigap::AutoTunePolicy explicit_policy = policy;
+    explicit_policy.profile_path.clear();
+    explicit_policy.automatic_maintenance = false;
+    certigap::adaptive_array<double> explicit_data(values(), explicit_policy);
+    for (int index = 0; index < 32; ++index) explicit_data.range_sum(2, 30);
+    if (explicit_data.optimized()) return 13;
+    if (!explicit_data.maintenance()) return 14;
+    if (explicit_data.selected_name() != "fenwick") return 15;
+
+    std::ofstream malformed(std::string(argv[1]) + ".bad");
+    malformed << "CERTIGAP_PROFILE_V1\nsize 31\naggregate sum\nend\n";
+    malformed.close();
+    certigap::Index strict(values());
+    try {
+        strict.load_profile(std::string(argv[1]) + ".bad");
+        return 16;
+    } catch (const std::invalid_argument&) {
+    }
+    return 0;
+}
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source_path = root / "adaptive_array.cpp"
+            executable = root / "adaptive_array"
+            profile = root / "workload.profile"
+            source_path.write_text(source, encoding="utf-8")
+            compile_result = subprocess.run(
+                [
+                    "c++",
+                    "-std=c++17",
+                    "-Wall",
+                    "-Wextra",
+                    "-Werror",
+                    "-pedantic",
+                    "-I",
+                    str(ROOT / "cpp"),
+                    str(source_path),
+                    "-o",
+                    str(executable),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(
+                compile_result.returncode, 0, compile_result.stderr
+            )
+            run = subprocess.run(
+                [str(executable), str(profile)],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(run.returncode, 0, run.stderr)
+            self.assertTrue(profile.is_file())
+            self.assertIn(
+                "CERTIGAP_PROFILE_V1",
+                profile.read_text(encoding="utf-8"),
+            )
+
     def test_cmake_install_and_find_package(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

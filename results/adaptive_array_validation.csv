@@ -1,0 +1,7 @@
+scenario,selected,optimized,attempted,switched,observed_operations,passed,reason
+automatic_range_warmup,fenwick,true,true,true,64,true,"candidate passed deployment threshold"
+automatic_point_warmup,sorted_array,true,true,false,64,true,"current backend remains optimal"
+deployment_threshold_rejection,sorted_array,false,true,false,64,true,"candidate improvement below deployment threshold"
+explicit_maintenance,fenwick,true,true,true,64,true,"candidate passed deployment threshold"
+profile_writer,fenwick,true,true,true,64,true,"candidate passed deployment threshold"
+profile_reader,fenwick,true,true,true,64,true,"candidate passed deployment threshold"

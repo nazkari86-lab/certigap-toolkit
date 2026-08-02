@@ -423,9 +423,13 @@ private:
 }  // namespace certigap
 
 #include <cstdint>
+#include <fstream>
+#include <iomanip>
 #include <map>
 #include <numeric>
+#include <sstream>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <variant>
 
@@ -449,6 +453,28 @@ struct OptimizeOptions {
 struct RebuildPolicy {
     std::uint64_t minimum_new_operations = 10'000;
     double minimum_tv_drift = 0.10;
+};
+
+struct AutoTunePolicy {
+    std::uint64_t warmup_operations = 256;
+    std::uint64_t check_interval = 10'000;
+    double minimum_tv_drift = 0.10;
+    double minimum_relative_improvement = 0.05;
+    bool automatic_maintenance = true;
+    bool save_profile_on_destruction = true;
+    std::string profile_path;
+};
+
+struct AutoTuneDecision {
+    bool attempted = false;
+    bool switched = false;
+    std::string previous = "sorted_array";
+    std::string selected = "sorted_array";
+    std::string reason = "collecting warmup profile";
+    double observed_operations = 0.0;
+    double previous_score = 0.0;
+    double selected_score = 0.0;
+    double relative_improvement = 0.0;
 };
 
 struct CandidateReport {
@@ -1061,6 +1087,137 @@ public:
         return leaderboard_;
     }
 
+    void export_profile(std::ostream& output) const {
+        output << "CERTIGAP_PROFILE_V1\n";
+        output << "size " << values_.size() << '\n';
+        output << "aggregate " << aggregate_name(aggregate_) << '\n';
+        output << std::setprecision(17);
+        for (std::size_t index = 0; index < point_counts_.size(); ++index) {
+            if (point_counts_[index] > 0.0) {
+                output << "get " << index + 1 << ' '
+                       << point_counts_[index] << '\n';
+            }
+        }
+        for (std::size_t index = 0; index < update_counts_.size(); ++index) {
+            if (update_counts_[index] > 0.0) {
+                output << "update " << index + 1 << ' '
+                       << update_counts_[index] << '\n';
+            }
+        }
+        for (const auto& [range, weight] : range_counts_) {
+            output << "range " << range.first << ' ' << range.second
+                   << ' ' << weight << '\n';
+        }
+        output << "end\n";
+        if (!output) throw std::runtime_error("failed to write profile");
+    }
+
+    void import_profile(std::istream& input, bool merge = false) {
+        std::string magic;
+        if (!(input >> magic) || magic != "CERTIGAP_PROFILE_V1") {
+            throw std::invalid_argument("invalid CertiGap profile header");
+        }
+        std::string field;
+        std::size_t size = 0;
+        std::string aggregate;
+        if (!(input >> field >> size) || field != "size" || size != values_.size()) {
+            throw std::invalid_argument("profile size mismatch");
+        }
+        if (!(input >> field >> aggregate) || field != "aggregate") {
+            throw std::invalid_argument("profile aggregate is missing");
+        }
+        if (aggregate != aggregate_name(aggregate_)) {
+            throw std::invalid_argument("profile aggregate mismatch");
+        }
+        std::vector<double> points(values_.size(), 0.0);
+        std::vector<double> updates(values_.size(), 0.0);
+        std::map<std::pair<int, int>, double> ranges;
+        std::size_t records = 0;
+        bool ended = false;
+        while (input >> field) {
+            if (field == "end") {
+                ended = true;
+                break;
+            }
+            if (++records > 1'000'000) {
+                throw std::invalid_argument("profile record limit exceeded");
+            }
+            if (field == "get" || field == "update") {
+                int key = 0;
+                double weight = 0.0;
+                if (!(input >> key >> weight)) {
+                    throw std::invalid_argument("invalid point profile record");
+                }
+                validate_key(key);
+                validate_profile_weight(weight);
+                auto& target = field == "get" ? points : updates;
+                target[key - 1] += weight;
+            } else if (field == "range") {
+                int left = 0;
+                int right = 0;
+                double weight = 0.0;
+                if (!(input >> left >> right >> weight)) {
+                    throw std::invalid_argument("invalid range profile record");
+                }
+                validate_range(left, right);
+                validate_profile_weight(weight);
+                ranges[{left, right}] += weight;
+            } else {
+                throw std::invalid_argument("unknown profile record");
+            }
+        }
+        input >> std::ws;
+        if (!ended || !input.eof()) {
+            throw std::invalid_argument("profile has trailing or missing content");
+        }
+        double imported_weight = std::accumulate(
+            points.begin(), points.end(), 0.0
+        );
+        imported_weight = std::accumulate(
+            updates.begin(), updates.end(), imported_weight
+        );
+        for (const auto& entry : ranges) imported_weight += entry.second;
+        if (
+            !std::isfinite(imported_weight)
+            || (merge && !std::isfinite(profile_weight() + imported_weight))
+        ) {
+            throw std::invalid_argument("profile weight overflow");
+        }
+        if (!merge) {
+            point_counts_ = std::move(points);
+            update_counts_ = std::move(updates);
+            range_counts_ = std::move(ranges);
+        } else {
+            for (std::size_t index = 0; index < points.size(); ++index) {
+                point_counts_[index] += points[index];
+                update_counts_[index] += updates[index];
+            }
+            for (const auto& [range, weight] : ranges) {
+                range_counts_[range] += weight;
+            }
+        }
+        observed_weight_ = profile_weight();
+        observed_weight_at_last_optimize_ = 0.0;
+        optimized_ = false;
+        selected_ = Backend::SortedArray;
+        runtime_.emplace<detail::ArrayRuntime>(values_, aggregate_);
+        leaderboard_.clear();
+        last_routing_distribution_.clear();
+    }
+
+    void save_profile(const std::string& path) const {
+        std::ofstream output(path, std::ios::out | std::ios::trunc);
+        if (!output) throw std::runtime_error("cannot open profile for writing");
+        export_profile(output);
+    }
+
+    bool load_profile(const std::string& path, bool merge = false) {
+        std::ifstream input(path);
+        if (!input) return false;
+        import_profile(input, merge);
+        return true;
+    }
+
 private:
     using Runtime = std::variant<
         detail::ArrayRuntime,
@@ -1102,6 +1259,29 @@ private:
         if (!std::isfinite(weight) || weight <= 0.0) {
             throw std::invalid_argument("observation weight must be positive");
         }
+    }
+
+    static void validate_profile_weight(double weight) {
+        if (!std::isfinite(weight) || weight <= 0.0) {
+            throw std::invalid_argument("profile weight must be positive");
+        }
+    }
+
+    static constexpr std::string_view aggregate_name(Aggregate aggregate) {
+        if (aggregate == Aggregate::Sum) return "sum";
+        if (aggregate == Aggregate::Min) return "min";
+        return "max";
+    }
+
+    double profile_weight() const {
+        double total = std::accumulate(
+            point_counts_.begin(), point_counts_.end(), 0.0
+        );
+        total = std::accumulate(
+            update_counts_.begin(), update_counts_.end(), total
+        );
+        for (const auto& entry : range_counts_) total += entry.second;
+        return total;
     }
 
     void record(double weight) {
@@ -1337,5 +1517,253 @@ private:
 };
 
 using Index = AdaptiveIndex;
+
+template <class T = double>
+class adaptive_array {
+    static_assert(std::is_arithmetic<T>::value, "adaptive_array requires arithmetic values");
+
+public:
+    explicit adaptive_array(
+        const std::vector<T>& values,
+        AutoTunePolicy policy = {},
+        OptimizeOptions options = {}
+    )
+        : index_(to_double(values), options.aggregate),
+          policy_(std::move(policy)),
+          options_(options),
+          values_size_(values.size()) {
+        validate_policy();
+        if (!policy_.profile_path.empty()) {
+            index_.load_profile(policy_.profile_path);
+            decision_.observed_operations = index_.observed_weight();
+            if (index_.observed_weight() >= policy_.warmup_operations) {
+                maintenance();
+            }
+        }
+    }
+
+    adaptive_array(const adaptive_array&) = default;
+    adaptive_array(adaptive_array&&) noexcept = default;
+    adaptive_array& operator=(const adaptive_array&) = default;
+    adaptive_array& operator=(adaptive_array&&) noexcept = default;
+
+    ~adaptive_array() {
+        if (
+            policy_.save_profile_on_destruction
+            && !policy_.profile_path.empty()
+        ) {
+            try {
+                index_.save_profile(policy_.profile_path);
+            } catch (...) {
+                // Destructors cannot report persistence errors safely.
+            }
+        }
+    }
+
+    T get(int position) {
+        const T result = static_cast<T>(index_.get(internal_key(position)));
+        automatic_maintenance();
+        return result;
+    }
+
+    double range_query(int first, int last) {
+        validate_half_open_range(first, last);
+        const double result = index_.range_query(first + 1, last);
+        automatic_maintenance();
+        return result;
+    }
+
+    double range_sum(int first, int last) {
+        if (options_.aggregate != Aggregate::Sum) {
+            throw std::logic_error("range_sum requires the sum aggregate");
+        }
+        return range_query(first, last);
+    }
+
+    void update(int position, T value) {
+        index_.point_update(internal_key(position), static_cast<double>(value));
+        automatic_maintenance();
+    }
+
+    bool maintenance() {
+        const double observed = index_.observed_weight();
+        decision_.observed_operations = observed;
+        const double threshold = index_.optimized()
+            ? last_attempt_weight_ + static_cast<double>(policy_.check_interval)
+            : (
+                last_attempt_weight_ == 0.0
+                    ? static_cast<double>(policy_.warmup_operations)
+                    : last_attempt_weight_
+                        + static_cast<double>(policy_.check_interval)
+            );
+        if (observed + 1e-12 < threshold) return false;
+
+        AdaptiveIndex previous = index_;
+        const Backend previous_backend = previous.selected_backend();
+        bool attempted = false;
+        if (!index_.optimized()) {
+            index_.optimize(options_);
+            attempted = true;
+        } else {
+            RebuildPolicy rebuild;
+            rebuild.minimum_new_operations = policy_.check_interval;
+            rebuild.minimum_tv_drift = policy_.minimum_tv_drift;
+            attempted = index_.maybe_reoptimize(rebuild);
+        }
+        last_attempt_weight_ = observed;
+        if (!attempted) {
+            decision_.attempted = false;
+            decision_.reason = "profile drift below reoptimization threshold";
+            return false;
+        }
+
+        const auto& rows = index_.leaderboard();
+        const auto previous_row = std::find_if(
+            rows.begin(), rows.end(),
+            [previous_backend](const CandidateReport& row) {
+                return row.backend == previous_backend;
+            }
+        );
+        const auto selected_row = std::find_if(
+            rows.begin(), rows.end(),
+            [this](const CandidateReport& row) {
+                return row.backend == index_.selected_backend();
+            }
+        );
+        if (previous_row == rows.end() || selected_row == rows.end()) {
+            throw std::logic_error("adaptive leaderboard is incomplete");
+        }
+        const double denominator = std::max(std::abs(previous_row->score), 1e-12);
+        const double improvement =
+            (previous_row->score - selected_row->score) / denominator;
+        decision_.attempted = true;
+        decision_.previous = std::string(backend_name(previous_backend));
+        decision_.previous_score = previous_row->score;
+        decision_.selected_score = selected_row->score;
+        decision_.relative_improvement = improvement;
+        if (
+            index_.selected_backend() != previous_backend
+            && improvement + 1e-12 < policy_.minimum_relative_improvement
+        ) {
+            index_ = std::move(previous);
+            decision_.switched = false;
+            decision_.selected = decision_.previous;
+            decision_.reason = "candidate improvement below deployment threshold";
+            persist_after_decision();
+            return false;
+        }
+        decision_.switched = index_.selected_backend() != previous_backend;
+        decision_.selected = std::string(index_.selected_name());
+        decision_.reason = decision_.switched
+            ? "candidate passed deployment threshold"
+            : "current backend remains optimal";
+        persist_after_decision();
+        return decision_.switched;
+    }
+
+    void save_profile() const {
+        if (policy_.profile_path.empty()) {
+            throw std::logic_error("profile_path is not configured");
+        }
+        index_.save_profile(policy_.profile_path);
+    }
+
+    bool load_profile(bool merge = false) {
+        if (policy_.profile_path.empty()) {
+            throw std::logic_error("profile_path is not configured");
+        }
+        const bool loaded = index_.load_profile(policy_.profile_path, merge);
+        if (loaded) {
+            last_attempt_weight_ = 0.0;
+            decision_ = {};
+            decision_.observed_operations = index_.observed_weight();
+        }
+        return loaded;
+    }
+
+    std::string explain() const {
+        std::ostringstream output;
+        output << "selected=" << index_.selected_name()
+               << " observed=" << index_.observed_weight()
+               << " attempted=" << std::boolalpha << decision_.attempted
+               << " switched=" << decision_.switched
+               << " improvement=" << std::setprecision(6)
+               << 100.0 * decision_.relative_improvement << "%"
+               << " reason=\"" << decision_.reason << "\"";
+        return output.str();
+    }
+
+    std::size_t size() const { return values_size_; }
+    std::string_view selected_name() const { return index_.selected_name(); }
+    bool optimized() const { return index_.optimized(); }
+    double observed_operations() const { return index_.observed_weight(); }
+    const AutoTuneDecision& decision() const { return decision_; }
+    const std::vector<CandidateReport>& leaderboard() const {
+        return index_.leaderboard();
+    }
+
+private:
+    AdaptiveIndex index_;
+    AutoTunePolicy policy_;
+    OptimizeOptions options_;
+    AutoTuneDecision decision_;
+    double last_attempt_weight_ = 0.0;
+    std::size_t values_size_ = 0;
+
+    static std::vector<double> to_double(const std::vector<T>& values) {
+        if (
+            values.size()
+            > static_cast<std::size_t>(std::numeric_limits<int>::max())
+        ) {
+            throw std::length_error("adaptive_array exceeds key range");
+        }
+        std::vector<double> result;
+        result.reserve(values.size());
+        for (const T value : values) result.push_back(static_cast<double>(value));
+        return result;
+    }
+
+    void validate_policy() {
+        if (
+            policy_.warmup_operations == 0 || policy_.check_interval == 0
+            || !std::isfinite(policy_.minimum_tv_drift)
+            || policy_.minimum_tv_drift < 0.0
+            || policy_.minimum_tv_drift > 1.0
+            || !std::isfinite(policy_.minimum_relative_improvement)
+            || policy_.minimum_relative_improvement < 0.0
+        ) {
+            throw std::invalid_argument("invalid auto-tune policy");
+        }
+    }
+
+    int internal_key(int position) const {
+        if (position < 0 || static_cast<std::size_t>(position) >= values_size_) {
+            throw std::out_of_range("adaptive_array position out of range");
+        }
+        return position + 1;
+    }
+
+    void validate_half_open_range(int first, int last) const {
+        if (
+            first < 0 || last <= first
+            || static_cast<std::size_t>(last) > values_size_
+        ) {
+            throw std::out_of_range("invalid adaptive_array range");
+        }
+    }
+
+    void automatic_maintenance() {
+        if (policy_.automatic_maintenance) maintenance();
+    }
+
+    void persist_after_decision() const {
+        if (!policy_.profile_path.empty()) {
+            index_.save_profile(policy_.profile_path);
+        }
+    }
+};
+
+template <class T = double>
+using AdaptiveArray = adaptive_array<T>;
 
 }  // namespace certigap

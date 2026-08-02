@@ -75,6 +75,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "martingale_null_monte_carlo.csv": 1,
         "compiler_integration_validation.csv": 24,
         "adaptive_header_validation.csv": 24,
+        "adaptive_array_validation.csv": 6,
         "synthesis_validation.csv": 24,
         "hybrid_validation.csv": 24,
         "synthesis_native_latency.csv": 110,
@@ -105,6 +106,27 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         != {"key_eq", "key_ge_key_le"}
     ):
         raise ValueError("SQLite virtual-table validation is incomplete")
+
+    adaptive_array_rows = csv_records("adaptive_array_validation.csv")
+    if (
+        {row["scenario"] for row in adaptive_array_rows}
+        != {
+            "automatic_range_warmup",
+            "automatic_point_warmup",
+            "deployment_threshold_rejection",
+            "explicit_maintenance",
+            "profile_writer",
+            "profile_reader",
+        }
+        or any(row["passed"] != "true" for row in adaptive_array_rows)
+        or {
+            row["selected"]
+            for row in adaptive_array_rows
+            if row["scenario"] in {"profile_writer", "profile_reader"}
+        }
+        != {"fenwick"}
+    ):
+        raise ValueError("adaptive_array validation is incomplete")
 
     scaling_text = (RESULTS / "scaling_benchmark.md").read_text(encoding="utf-8")
     match = re.search(r"- Rows: `(\d+)`", scaling_text)

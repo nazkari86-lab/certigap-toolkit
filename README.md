@@ -47,6 +47,21 @@ auto answer = index.range_query(1, 10);
 It runs in any C++17 environment without Python. See
 [`docs/ADAPTIVE_CPP.md`](docs/ADAPTIVE_CPP.md).
 
+The lowest-friction adaptive mode needs no manual observations or selection:
+
+```cpp
+certigap::AutoTunePolicy policy;
+policy.profile_path = "catalog.profile";
+certigap::adaptive_array<double> data(values, policy);
+
+auto answer = data.range_sum(10, 40); // Zero-based [10,40).
+std::cout << data.explain() << '\n';
+```
+
+Profiles survive restarts, weak modeled migrations fail closed, and automatic
+maintenance can be disabled for latency-critical paths. See
+[`docs/ADAPTIVE_ARRAY.md`](docs/ADAPTIVE_ARRAY.md).
+
 Representation-aware Python compilation:
 
 ```python
@@ -98,6 +113,8 @@ It ships with:
   portfolio, with fail-closed conventional fallback.
 - Adapted-data e-process deployment plus post-deployment harm revocation with
   separately controlled false-decision risks.
+- Zero-based `adaptive_array<T>` with automatic warmup, deployment threshold,
+  explicit-maintenance mode, cross-run profiles, and one-line explanations.
 - SQLite `sqlite3_load_extension` integration for SQL build/get/range/update/
   optimize lifecycle operations.
 - Planner-native `certigap_vtab` with equality/range `xBestIndex` strategies,

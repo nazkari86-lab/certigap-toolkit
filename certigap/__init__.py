@@ -113,6 +113,10 @@ from .sqlite_extension import (
     extension_source_path,
     virtual_table_source_path,
 )
+from .adaptive_profile import (
+    parse_adaptive_profile,
+    parse_adaptive_profile_text,
+)
 from .synthesis import (
     HardwareProfile,
     SynthesisConstraints,
@@ -179,6 +183,8 @@ __all__ = [
     "benchmark_case",
     "brute_force_best",
     "build_sqlite_extension",
+    "parse_adaptive_profile",
+    "parse_adaptive_profile_text",
     "virtual_table_source_path",
     "CertiGapToolkit",
     "CompiledAutoIndex",

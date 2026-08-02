@@ -179,6 +179,21 @@ not the external performance-evidence gap. Official YCSB, disk-page-aware
 layouts, high-contention evaluation, RocksDB integration, and independent
 production traces remain external or future systems work.
 
+## Phase 17: Zero-Friction Adaptive Container
+
+- zero-based `adaptive_array<T>` and half-open range semantics;
+- automatic operation profiling without explicit `observe_*` calls;
+- warmup and drift-based maintenance policy;
+- fail-closed minimum modeled-improvement deployment threshold;
+- strict versioned workload-profile import/export across runs;
+- one-line human-readable decision explanation;
+- explicit-maintenance mode for latency-sensitive applications;
+- six-scenario native validation and clean C++17 single-header compilation.
+
+Completed on `main`. The gate controls modeled structural score, not measured
+latency risk. Language bindings, package-manager distribution, official YCSB,
+and external users remain adoption work rather than established evidence.
+
 ## External Closure
 
 - independent proof review and broader recurrence/verifier formalization

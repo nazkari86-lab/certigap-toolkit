@@ -58,6 +58,8 @@ def build_abstract_ru(summary_text: str) -> str:
     непосредственно из SQL без Python runtime.
 14. planner-native SQLite virtual table с `xBestIndex`, durable shadow storage,
     транзакционным rollback и проверкой двух WAL writers.
+15. zero-based `adaptive_array<T>` с автоматическим профилированием,
+    переносом workload-профиля между запусками и fail-closed score gate.
 
 Текущее состояние прототипа подтверждается следующими результатами:
 
@@ -151,6 +153,8 @@ CertiGap не строит полное поисковое дерево на в�
 - SQLite ABI integration загружается командой `.load`; virtual table передаёт
   equality/range constraints через `xBestIndex`, сохраняет данные между
   подключениями и прошёл 6 из 6 planner/durability сценариев.
+- `adaptive_array<T>` прошёл 6 из 6 native-сценариев: automatic warmup,
+  отказ слабой миграции, explicit maintenance и восстановление профиля.
 
 ## 8. Примеры сертификатов
 
@@ -185,7 +189,9 @@ def build_theses_ru() -> str:
     систему управления данными без Python-посредника.
 12. Planner-native virtual table проверяет equality/range pushdown,
     транзакции, durable reconnect и сериализацию двух WAL writers.
-13. Проект хорошо подходит для РКНП как теоретико-алгоритмическая работа с воспроизводимым результатом.
+13. `adaptive_array<T>` автоматически собирает workload-профиль и сохраняет
+    прежний backend, если модельный выигрыш ниже заданного порога.
+14. Проект хорошо подходит для РКНП как теоретико-алгоритмическая работа с воспроизводимым результатом.
 """
 
 

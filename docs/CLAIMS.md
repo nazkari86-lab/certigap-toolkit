@@ -44,6 +44,7 @@ latency is measured separately and is never certified by a structural score.
 | SQLite virtual table exposes planner-visible and durable CertiGap operations | Cross-process systems integration | `cpp/certigap_sqlite_vtab.cpp`, `results/sqlite_vtab_validation.csv`, and real SQLite CLI tests | Equality/bounded-range `xBestIndex`, inclusive range-sum pushdown, shadow durability, basic mutations, rollback/savepoints, and serialized two-process WAL writes; not an official YCSB or performance claim |
 | Temporal shift can break train-only selection | Empirical failure case | `219.69%` regret in the declared shift scenario | One deterministic stress case; not a drift frequency estimate |
 | Generated C++ implements the selected semantics | Cross-language differential | compiler integration and native runtime oracle tests | Supported get/range/update/snapshot operations and generated backends |
+| `adaptive_array` automatically profiles and applies a fail-closed score gate | Native behavioral and persistence validation | `results/adaptive_array_validation.csv` and C++ compile/run tests | Five-candidate structural model, zero-based API, synchronous maintenance, and strict workload-profile persistence; not a statistical or wall-clock no-regression guarantee |
 
 ## Statements That Are Not Established
 
