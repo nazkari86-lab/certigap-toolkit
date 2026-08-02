@@ -661,9 +661,21 @@ Run the large-instance heuristic scaling benchmark (not part of fast CI):
 PYTHONPATH=. python3 generate_scaling_benchmark.py --mode max --datasets all
 ```
 
+Fetch and checksum every registered real-frequency source and the four official
+SOSD 200M key distributions:
+
+```bash
+PYTHONPATH=. python3 download_all_datasets.py --class all
+```
+
+Raw files remain ignored by Git. Their URLs, licenses, sizes, retrieval times,
+and SHA-256 digests are recorded in `data/external/manifest.json`.
+The committed summary is [`external_dataset_inventory.md`](results/external_dataset_inventory.md).
+
 This runs deterministic stress distributions and public observed-popularity
-workloads from MovieLens, UCI Online Retail, and Wikimedia. Raw data is cached
-locally; every result records URL, SHA-256, aggregation rule, and key ordering.
+workloads from MovieLens, UCI Online Retail I/II, HetRec, and Wikimedia. SOSD
+remains a separate sorted-key class. Raw data is cached locally; every result
+records URL, SHA-256, aggregation rule, and key ordering.
 See [`docs/BENCHMARK_PROTOCOL.md`](docs/BENCHMARK_PROTOCOL.md) for limitations.
 
 Build the C++ core:

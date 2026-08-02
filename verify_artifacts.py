@@ -22,6 +22,7 @@ from certigap import (
     verify_sequential_safe_autoindex_certificate,
     verify_tracking_autoindex_certificate,
 )
+from certigap.benchmark_datasets import MANIFEST_PATH, SOSD_SOURCES, SOURCES
 
 
 ROOT = Path(__file__).resolve().parent
@@ -1191,6 +1192,28 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
     )
     if not verify_range_optimizer_artifact(optimizer_artifact)["verified"]:
         raise ValueError("range optimizer artifact did not replay")
+
+    dataset_manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    dataset_inventory = json.loads(
+        (RESULTS / "external_dataset_inventory.json").read_text(encoding="utf-8")
+    )
+    expected_datasets = set(SOURCES) | set(SOSD_SOURCES)
+    if set(dataset_manifest) != expected_datasets:
+        raise ValueError("external dataset manifest does not cover the registry")
+    if (
+        dataset_inventory.get("schema") != "certigap-external-datasets-v1"
+        or dataset_inventory.get("dataset_count") != len(expected_datasets)
+        or dataset_inventory.get("datasets") != dataset_manifest
+        or dataset_inventory.get("total_compressed_bytes")
+        != sum(record["bytes"] for record in dataset_manifest.values())
+    ):
+        raise ValueError("external dataset inventory does not match the manifest")
+    if any(
+        record["bytes"] <= 0
+        or not re.fullmatch(r"[0-9a-f]{64}", record["sha256"])
+        for record in dataset_manifest.values()
+    ):
+        raise ValueError("external dataset provenance has an invalid size or SHA-256")
     return observed
 
 

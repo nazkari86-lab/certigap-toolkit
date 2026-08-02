@@ -1,0 +1,204 @@
+{
+  "dataset_count": 18,
+  "datasets": {
+    "hetrec_delicious_2k": {
+      "bytes": 13911839,
+      "description": "HetRec Delicious distinct user-bookmark events aggregated by numeric bookmark identifier.",
+      "filename": "hetrec2011_delicious_2k.zip",
+      "key_order": "ascending numeric bookmark id",
+      "license": "HetRec 2011 terms in the archive readme",
+      "retrieved_utc": "2026-08-02T15:19:47.991554+00:00",
+      "sha256": "45b3ebb054ec6c089619ef4650e8360ef9ed0ef3ea8df5e52684b92bd8267c01",
+      "url": "https://files.grouplens.org/datasets/hetrec2011/hetrec2011-delicious-2k.zip"
+    },
+    "hetrec_lastfm_2k": {
+      "bytes": 2589075,
+      "description": "HetRec Last.fm artist listening weights aggregated by numeric artist identifier.",
+      "filename": "hetrec2011_lastfm_2k.zip",
+      "key_order": "ascending numeric artist id",
+      "license": "HetRec 2011 terms in the archive readme",
+      "retrieved_utc": "2026-08-02T15:19:47.956803+00:00",
+      "sha256": "6738f48195667ff03caaab4d32ca9a3133d8cc026b7c3cdaf6ce1010e913c59c",
+      "url": "https://files.grouplens.org/datasets/hetrec2011/hetrec2011-lastfm-2k.zip"
+    },
+    "movielens_100k": {
+      "bytes": 1979173,
+      "description": "MovieLens 100K ratings aggregated by numeric movie identifier.",
+      "filename": "movielens_100k_u.data",
+      "key_order": "ascending numeric movie id",
+      "license": "See the source dataset terms",
+      "retrieved_utc": "2026-07-25T03:45:28.387013+00:00",
+      "sha256": "06416e597f82b7342361e41163890c81036900f418ad91315590814211dca490",
+      "url": "https://files.grouplens.org/datasets/movielens/ml-100k/u.data"
+    },
+    "movielens_32m": {
+      "bytes": 238950008,
+      "description": "MovieLens 32M ratings aggregated by numeric movie identifier.",
+      "filename": "movielens_32m.zip",
+      "key_order": "ascending numeric movie id",
+      "license": "GroupLens dataset terms in ml-32m-README.html",
+      "retrieved_utc": "2026-08-02T15:19:27.987402+00:00",
+      "sha256": "e4a68655d7386b8f95f2f2424b2ff975dfdd15ffd59e0d864a14dca43e99d6ee",
+      "source_md5": "d472be332d4daa821edc399621853b57",
+      "url": "https://files.grouplens.org/datasets/movielens/ml-32m.zip"
+    },
+    "sosd_books_200m": {
+      "bytes": 580452341,
+      "compression": "zstd",
+      "dataset_class": "sorted_key_distribution",
+      "description": "Official SOSD sorted real-world key distribution.",
+      "elements": 200000000,
+      "filename": "sosd_books_200M_uint32.zst",
+      "license": "SOSD/Harvard Dataverse source terms; DOI 10.7910/DVN/JGVF9A",
+      "md5": "2f5e8b7931f5240ebe5447edea96d431",
+      "retrieved_utc": "2026-08-02T15:29:28.219486+00:00",
+      "sha256": "496c7c0dbada8d49b027a1aeb2fa005e58cc996b4208b8d8e991b7b156097ebb",
+      "url": "https://dataverse.harvard.edu/api/access/datafile/3811099",
+      "value_type": "uint32"
+    },
+    "sosd_fb_200m": {
+      "bytes": 313994338,
+      "compression": "zstd",
+      "dataset_class": "sorted_key_distribution",
+      "description": "Official SOSD sorted real-world key distribution.",
+      "elements": 200000000,
+      "filename": "sosd_fb_200M_uint64.zst",
+      "license": "SOSD/Harvard Dataverse source terms; DOI 10.7910/DVN/JGVF9A",
+      "md5": "fec241e8b021b198b0849fbd5564c05f",
+      "retrieved_utc": "2026-08-02T15:33:40.217421+00:00",
+      "sha256": "cbff2be264ad89bdbbda455a62882d3de3bb2a29dfd01ad5e661c134696c9036",
+      "url": "https://dataverse.harvard.edu/api/access/datafile/3811100",
+      "value_type": "uint64"
+    },
+    "sosd_osm_200m": {
+      "bytes": 1205063374,
+      "compression": "zstd",
+      "dataset_class": "sorted_key_distribution",
+      "description": "Official SOSD sorted real-world key distribution.",
+      "elements": 200000000,
+      "filename": "sosd_osm_cellids_200M_uint64.zst",
+      "license": "SOSD/Harvard Dataverse source terms; DOI 10.7910/DVN/JGVF9A",
+      "md5": "42575cb58f24bb7ea0a623d422d4c9a6",
+      "retrieved_utc": "2026-08-02T15:54:57.954190+00:00",
+      "sha256": "06c42a0aa1ea45eb53914560b50833f5f1cb2852f28b4fce05e9a704912b610b",
+      "url": "https://dataverse.harvard.edu/api/access/datafile/3821004",
+      "value_type": "uint64"
+    },
+    "sosd_wiki_200m": {
+      "bytes": 116483593,
+      "compression": "zstd",
+      "dataset_class": "sorted_key_distribution",
+      "description": "Official SOSD sorted real-world key distribution.",
+      "elements": 200000000,
+      "filename": "sosd_wiki_ts_200M_uint64.zst",
+      "license": "SOSD/Harvard Dataverse source terms; DOI 10.7910/DVN/JGVF9A",
+      "md5": "6a2b17020959084ce2640177ee4afd5e",
+      "retrieved_utc": "2026-08-02T15:55:26.037983+00:00",
+      "sha256": "47bab046b0eb739388f4818711de6437fe99566d32ffde24a7b2d27e79094aa2",
+      "url": "https://dataverse.harvard.edu/api/access/datafile/3860043",
+      "value_type": "uint64"
+    },
+    "uci_online_retail": {
+      "bytes": 23715344,
+      "description": "UCI Online Retail completed purchase rows aggregated by lexical StockCode.",
+      "filename": "uci_online_retail.xlsx",
+      "key_order": "ascending lexical StockCode",
+      "license": "See the source dataset terms",
+      "retrieved_utc": "2026-07-25T03:46:09.625226+00:00",
+      "sha256": "43465a06f2ccf7c8b5bd2892bc7defb52f97487934fe93b16ae4c3936424676d",
+      "url": "https://archive.ics.uci.edu/ml/machine-learning-databases/00352/Online%20Retail.xlsx"
+    },
+    "uci_online_retail_ii": {
+      "bytes": 45622278,
+      "description": "UCI Online Retail II completed purchase rows from both years aggregated by lexical StockCode.",
+      "filename": "uci_online_retail_ii.xlsx",
+      "key_order": "ascending lexical StockCode",
+      "license": "CC BY 4.0; DOI 10.24432/C5CG6D",
+      "retrieved_utc": "2026-08-02T15:19:37.884148+00:00",
+      "sha256": "bcbe73b35f5b7babf197fb0cb983a11f5d9ff929078d4aa53d171b1f2df2e980",
+      "url": "https://archive.ics.uci.edu/ml/machine-learning-databases/00502/online_retail_II.xlsx"
+    },
+    "wikimedia_de_2025-07-01": {
+      "bytes": 54976,
+      "description": "de Wikipedia all-access top pages for 2025-07-01.",
+      "filename": "wikimedia_top_de_2025-07-01.json",
+      "key_order": "API top-pages rank (descending observed views)",
+      "license": "Wikimedia REST API terms; aggregate pageview statistics",
+      "retrieved_utc": "2026-08-02T15:21:18.640367+00:00",
+      "sha256": "1a70e0348f1a551741906672bb2805f3cae75292a17af750586c681c239fa72f",
+      "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/de.wikipedia/all-access/2025/07/01"
+    },
+    "wikimedia_en_2025-02-01": {
+      "bytes": 55853,
+      "description": "en Wikipedia all-access top pages for 2025-02-01.",
+      "filename": "wikimedia_top_en_2025-02-01.json",
+      "key_order": "API top-pages rank (descending observed views)",
+      "license": "Wikimedia REST API terms; aggregate pageview statistics",
+      "retrieved_utc": "2026-08-02T15:21:15.671886+00:00",
+      "sha256": "4e8a7e92cb77650d62b7f8b9af0f57d2abb2878f00cb380d6b294ad7f36de953",
+      "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2025/02/01"
+    },
+    "wikimedia_en_2025-04-01": {
+      "bytes": 56397,
+      "description": "en Wikipedia all-access top pages for 2025-04-01.",
+      "filename": "wikimedia_top_en_2025-04-01.json",
+      "key_order": "API top-pages rank (descending observed views)",
+      "license": "Wikimedia REST API terms; aggregate pageview statistics",
+      "retrieved_utc": "2026-08-02T15:21:16.730723+00:00",
+      "sha256": "af54b1f660977301d20393ce8b6d7de0da15cf6f658f0637ee46f4925b4ca240",
+      "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2025/04/01"
+    },
+    "wikimedia_en_2025-10-01": {
+      "bytes": 56241,
+      "description": "en Wikipedia all-access top pages for 2025-10-01.",
+      "filename": "wikimedia_top_en_2025-10-01.json",
+      "key_order": "API top-pages rank (descending observed views)",
+      "license": "Wikimedia REST API terms; aggregate pageview statistics",
+      "retrieved_utc": "2026-08-02T15:21:17.711829+00:00",
+      "sha256": "5bb252b40a71d5d3fbefbf405a7512d6ef56e67115c9c13f1bc3f71e7e7d9980",
+      "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2025/10/01"
+    },
+    "wikimedia_es_2025-07-01": {
+      "bytes": 56953,
+      "description": "es Wikipedia all-access top pages for 2025-07-01.",
+      "filename": "wikimedia_top_es_2025-07-01.json",
+      "key_order": "API top-pages rank (descending observed views)",
+      "license": "Wikimedia REST API terms; aggregate pageview statistics",
+      "retrieved_utc": "2026-08-02T15:21:20.593215+00:00",
+      "sha256": "666faf9f07059e64a76f76d79e5286596194453eb120523c52ff393c867408b1",
+      "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/es.wikipedia/all-access/2025/07/01"
+    },
+    "wikimedia_kk_2025-07-01": {
+      "bytes": 62022,
+      "description": "kk Wikipedia all-access top pages for 2025-07-01.",
+      "filename": "wikimedia_top_kk_2025-07-01.json",
+      "key_order": "API top-pages rank (descending observed views)",
+      "license": "Wikimedia REST API terms; aggregate pageview statistics",
+      "retrieved_utc": "2026-08-02T15:21:25.803014+00:00",
+      "sha256": "8b434748cda86cdffdb3a41f47759264b84a1d1fa82d8199496e5cde1678bec1",
+      "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/kk.wikipedia/all-access/2025/07/01"
+    },
+    "wikimedia_pageviews": {
+      "bytes": 55903,
+      "description": "English Wikipedia all-access top pages for a pinned day, aggregated by API article count.",
+      "filename": "wikimedia_top_en_2025-07-01.json",
+      "key_order": "API top-pages rank (descending observed views)",
+      "license": "See the source dataset terms",
+      "retrieved_utc": "2026-07-25T03:46:19.893417+00:00",
+      "sha256": "6d51c39dfbd4d4cdaa6f0c669f0e396b522bb9ceacd8477af704fe87725d237d",
+      "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2025/07/01"
+    },
+    "wikimedia_ru_2025-07-01": {
+      "bytes": 74046,
+      "description": "ru Wikipedia all-access top pages for 2025-07-01.",
+      "filename": "wikimedia_top_ru_2025-07-01.json",
+      "key_order": "API top-pages rank (descending observed views)",
+      "license": "Wikimedia REST API terms; aggregate pageview statistics",
+      "retrieved_utc": "2026-08-02T15:21:24.314215+00:00",
+      "sha256": "c6e30e6bfd03bd2e7599a38a7f12f3528e670ec20193a156611df819674d226b",
+      "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/top/ru.wikipedia/all-access/2025/07/01"
+    }
+  },
+  "schema": "certigap-external-datasets-v1",
+  "total_compressed_bytes": 2543233754
+}

@@ -27,6 +27,17 @@ time, byte size, SHA-256, aggregation rule, and key order.
 | MovieLens 100K | ratings | ascending numeric movie id | movie id is an identifier order, not content similarity |
 | UCI Online Retail | non-cancelled positive-quantity order rows | ascending lexical `StockCode` | transactions are a historical UK retailer sample |
 | Wikimedia Pageviews | one pinned day of English Wikipedia page views | API top-pages rank | rank order is already popularity-oriented, so it is a locality-favourable sensitivity case |
+| MovieLens 32M | ratings | ascending observed numeric movie id | identifier order is not content similarity; GroupLens terms restrict redistribution |
+| UCI Online Retail II | completed positive-quantity rows across both years | ascending lexical `StockCode` | CC BY 4.0; cancellations and returns are excluded |
+| HetRec Last.fm 2K | reported artist play weight | ascending observed numeric artist id | an older, small recommender-system sample |
+| HetRec Delicious 2K | distinct user-bookmark events | ascending observed numeric bookmark id | multiple tags on one bookmark event are deduplicated |
+| Wikimedia temporal/language matrix | pinned top-page snapshots | API rank within each language/day | top-1000 sensitivity workloads, not complete request logs |
+
+Four official SOSD real-world key distributions (`books`, `fb`, `osm`, and
+`wiki`, 200 million sorted keys each) are cached as a separate dataset class.
+They are suitable for search-layout and learned-index experiments, but are not
+silently converted into request frequencies. This distinction prevents a key
+spacing distribution from being misreported as an observed access trace.
 
 For every source, a large workload is converted to `n` keys by contiguous
 aggregation. No source is shuffled, sorted by frequency, or otherwise changed
@@ -56,6 +67,7 @@ next engineering requirement before making large-n throughput claims.
 
 ```bash
 PYTHONPATH=. python3 generate_scaling_benchmark.py --mode max --datasets all
+PYTHONPATH=. python3 download_all_datasets.py --class all
 ```
 
 Use `--datasets real` to fail closed when any real source cannot be fetched.
