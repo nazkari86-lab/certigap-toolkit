@@ -114,6 +114,27 @@ auto answers = index.run_batch({
 });
 ```
 
+For low-overhead deployment without full per-operation WFA accounting, use the
+sampled controller. It keeps an always-current Fenwick shadow for sums (segment
+tree for min/max), evaluates candidates once per 32 operations, and enters a
+4096-operation lease after four stable decisions. An update that invalidates a
+static prefix/sparse view falls back to the robust shadow immediately.
+
+```cpp
+certigap::FastTrackingAutoIndex fast(values, certigap::Aggregate::Sum);
+double total = fast.range_query(1, 4096);
+fast.point_update(10, 7.0);
+fast.flush();  // process a partial sampling epoch before inspection
+auto explanation = fast.explain();
+```
+
+`FastTrackingAutoIndex` guarantees the same query/update semantics, validates
+its policy fail-closed, and is covered by randomized ASan/UBSan differential
+tests. It deliberately does not claim WFA competitiveness: sampling, leases,
+directed rebuild costs, and robust fallback are runtime engineering choices.
+Use `TrackingAutoIndex` when full trajectories, exact offline comparators, or
+the metrical-task-system theorem are required.
+
 The rebuild helper uses `max(build(i), build(j))` off the diagonal. This is a
 positive symmetric metric satisfying the triangle inequality, unlike a raw
 directed conversion table. General non-negative directed matrices are allowed,
@@ -185,16 +206,26 @@ export. Therefore the present Python path is a research reference, not a
 low-latency replacement for Fenwick or prefix sums.
 
 The native matching benchmark adds four phased workloads at `n=64,256,4096`.
-Rebuild-aware production runs at `55.57-126.47 ns/op` on the recorded machine
-and uniform native mode is `113.2x-13053.2x` faster than the matching Python
-reference. It still costs `13.1x` median versus the fastest fixed C++ backend,
+Rebuild-aware production runs at `52.32-109.84 ns/op` on the recorded machine
+and uniform native mode is `106.0x-15919.5x` faster than the matching Python
+reference. It still costs `10.9x` median versus the fastest fixed C++ backend,
 so tracking is useful when the best representation changes or is unknown, not
-as a universal Fenwick replacement. Full audit history adds `1.89x` median.
+as a universal Fenwick replacement. Full audit history adds `1.82x` median.
 On larger read-mostly streams, rebuild-aware migration cuts switches by
-`360x-394x` and improves runtime by `3.5x-11.5x` over naive uniform migration.
+`360x-394x` and improves runtime by `3.6x-14.8x` over naive uniform migration.
+
+The separate Fast matrix covers 64 configurations: four sizes, eight stationary
+or adversarial workloads, and 5,000/50,000-operation horizons. All implementation
+checksums agree. Relative to Fenwick, Fast is `1.82x` median, `3.58x` p95, and
+`3.89x` worst-case. Relative to the fastest fixed backend selected with hindsight,
+the same figures are `2.08x` median and `8.16x` worst-case. The second comparator
+can choose an O(1)-update array after seeing that no future range query arrives;
+a causal online system cannot safely make that assumption.
 
 See `results/tracking_autoindex_comparison.md` for the complete outcome tables,
 `tracking_autoindex_comparison.csv` for policy rows,
 `tracking_autoindex_candidates.csv` for every fixed backend, and
 `tracking_autoindex_runtime.csv` for Python timing. Native raw rows and
 provenance are in `tracking_autoindex_native_runtime.csv` and its metadata JSON.
+Fast-mode rows and provenance are in `tracking_autoindex_fast_runtime.csv` and
+`tracking_autoindex_fast_runtime.metadata.json`.

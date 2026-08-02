@@ -7,11 +7,11 @@ Construction is excluded, while in-stream migrations and WFA accounting are incl
 ## Results
 
 - Correctness checksum agreement across every implementation/configuration: `True`.
-- Native rebuild-aware production latency: `55.57` to `126.47` ns/op.
-- Native uniform-metric production is `113.2x` to `13053.2x` faster than the full Python uniform-metric research reference on the matching streams.
-- Against the fastest fixed C++ backend, online tracking costs `13.1x` median and `21.4x` worst-case. Tracking is therefore not a drop-in latency winner when the best backend is known in advance.
-- Recording the full audit trajectory costs `1.89x` median over production mode.
-- On `read_mostly` at `n=256,4096`, rebuild-aware migration reduces switching by `360x` to `394x` and improves runtime by `3.5x` to `11.5x` versus the naive uniform migration model.
+- Native rebuild-aware production latency: `52.32` to `109.84` ns/op.
+- Native uniform-metric production is `106.0x` to `15919.5x` faster than the full Python uniform-metric research reference on the matching streams.
+- Against the fastest fixed C++ backend, online tracking costs `10.9x` median and `18.7x` worst-case. Tracking is therefore not a drop-in latency winner when the best backend is known in advance.
+- Recording the full audit trajectory costs `1.82x` median over production mode.
+- On `read_mostly` at `n=256,4096`, rebuild-aware migration reduces switching by `360x` to `394x` and improves runtime by `3.6x` to `14.8x` versus the naive uniform migration model.
 
 ## Interpretation
 

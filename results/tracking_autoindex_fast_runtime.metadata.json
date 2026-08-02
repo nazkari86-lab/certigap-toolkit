@@ -12,15 +12,17 @@
     "-I/Users/dulatnurlanuly/Downloads/certigap-prototype/cpp",
     "/Users/dulatnurlanuly/Downloads/certigap-prototype/cpp/tracking_autoindex_benchmark.cpp",
     "-o",
-    "/var/folders/z3/pz40jzcn5qq8qssmy__cw2jm0000gn/T/tmpt2hb7ux1/tracking_benchmark"
+    "/var/folders/z3/pz40jzcn5qq8qssmy__cw2jm0000gn/T/tmppvrempdl/tracking_benchmark"
   ],
   "compiler": "Apple clang version 17.0.0 (clang-1700.6.3.2)",
-  "csv_sha256": "e816c027d3859cbdbc6c1321ab4fad7adadf925c0cab19066dfba200ba700c42",
+  "configurations": 64,
+  "csv_sha256": "f2b90b5ca7bc00c9e464b4eeb484cf7cdf4597873ebba346811c2d8e5e1b794d",
+  "horizons": [
+    5000,
+    50000
+  ],
   "native_repetitions": 5,
-  "operations_per_configuration": 5000,
   "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
-  "python": "3.14.5",
-  "python_repetitions": 3,
-  "schema": "certigap-native-tracking-benchmark-v1",
+  "schema": "certigap-fast-tracking-benchmark-v1",
   "source_sha256": "3609aa7f783edbb8c63fb69285d0f230a4ccb413d7732e092a8afa7dfdfaa220"
 }

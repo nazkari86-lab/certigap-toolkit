@@ -60,6 +60,67 @@ void randomized_correctness(certigap::Aggregate aggregate, int seed) {
         == 2 * static_cast<int>(index.candidates().size()) - 1);
 }
 
+void randomized_fast_correctness(certigap::Aggregate aggregate, int seed) {
+    std::mt19937 generator(seed);
+    std::uniform_int_distribution<int> value_distribution(-100, 100);
+    constexpr int n = 37;
+    std::vector<double> values(n);
+    for (double& value : values) value = value_distribution(generator);
+    certigap::FastTrackingPolicy policy;
+    policy.decision_interval = 32;
+    policy.sample_interval = 4;
+    policy.minimum_residence_operations_per_key = 1;
+    policy.stable_decisions_before_lease = 2;
+    policy.lease_operations = 64;
+    policy.record_decisions = true;
+    certigap::FastTrackingAutoIndex index(values, aggregate, policy);
+    for (int operation = 0; operation < 1000; ++operation) {
+        const int kind = static_cast<int>(generator() % 3);
+        const int left = 1 + static_cast<int>(generator() % n);
+        if (kind == 0) {
+            assert(index.get(left) == values[left - 1]);
+        } else if (kind == 1) {
+            const int right = left + static_cast<int>(generator() % (n - left + 1));
+            assert(index.range_query(left, right)
+                == aggregate_range(values, left, right, aggregate));
+        } else {
+            const double value = value_distribution(generator);
+            index.point_update(left, value);
+            values[left - 1] = value;
+        }
+    }
+    index.flush();
+    const auto explanation = index.explain();
+    assert(explanation.operations == 1000);
+    assert(explanation.sampled_operations == index.sampled_operations());
+    assert(explanation.decisions == index.decision_count());
+    assert(explanation.fallbacks == index.fallback_count());
+    assert(index.decision_history().size() == index.decision_count());
+}
+
+void verify_fast_phase_fallback() {
+    certigap::FastTrackingPolicy policy;
+    policy.decision_interval = 16;
+    policy.sample_interval = 1;
+    policy.minimum_residence_operations_per_key = 1;
+    policy.stable_decisions_before_lease = 2;
+    policy.lease_operations = 32;
+    policy.automatic_initial_backend = false;
+    policy.initial_backend = certigap::Backend::PrefixSum;
+    policy.costs.prefix_unit_cost = 1e-9;
+    certigap::FastTrackingAutoIndex index(
+        std::vector<double>(16, 1.0), certigap::Aggregate::Sum, policy);
+    for (int operation = 0; operation < 64; ++operation) {
+        assert(index.range_query(1, 16) == 16.0);
+    }
+    assert(index.selected_backend() == certigap::Backend::PrefixSum);
+    index.point_update(7, 9.0);
+    assert(index.get(7) == 9.0);
+    assert(index.range_query(1, 16) == 24.0);
+    assert(index.selected_backend() == certigap::Backend::Fenwick);
+    assert(index.fallback_count() == 1);
+}
+
 void verify_structural_costs() {
     certigap::TrackingPolicyCpp policy;
     policy.migration_cost_units = 1000.0;
@@ -155,6 +216,22 @@ void verify_fail_closed_inputs() {
             {1.0, std::numeric_limits<double>::quiet_NaN()});
     } catch (const std::invalid_argument&) { rejected = true; }
     assert(rejected);
+    rejected = false;
+    try {
+        certigap::FastTrackingPolicy policy;
+        policy.sample_interval = 3;
+        certigap::FastTrackingAutoIndex invalid(
+            std::vector<double>(8, 1.0), certigap::Aggregate::Sum, policy);
+    } catch (const std::invalid_argument&) { rejected = true; }
+    assert(rejected);
+    rejected = false;
+    try {
+        certigap::FastTrackingPolicy policy;
+        policy.backends = {certigap::Backend::PrefixSum};
+        certigap::FastTrackingAutoIndex invalid(
+            std::vector<double>(8, 1.0), certigap::Aggregate::Sum, policy);
+    } catch (const std::invalid_argument&) { rejected = true; }
+    assert(rejected);
 }
 
 }  // namespace
@@ -163,11 +240,15 @@ int main() {
     verify_structural_costs();
     verify_oracle_against_enumeration();
     verify_matrix_boundary_and_batch();
+    verify_fast_phase_fallback();
     verify_fail_closed_inputs();
     for (int seed = 1; seed <= 8; ++seed) {
         randomized_correctness(certigap::Aggregate::Sum, 1000 + seed);
         randomized_correctness(certigap::Aggregate::Min, 2000 + seed);
         randomized_correctness(certigap::Aggregate::Max, 3000 + seed);
+        randomized_fast_correctness(certigap::Aggregate::Sum, 4000 + seed);
+        randomized_fast_correctness(certigap::Aggregate::Min, 5000 + seed);
+        randomized_fast_correctness(certigap::Aggregate::Max, 6000 + seed);
     }
-    std::cout << "native_tracking_validation,passed,24000_random_operations\n";
+    std::cout << "native_tracking_validation,passed,48000_random_operations\n";
 }

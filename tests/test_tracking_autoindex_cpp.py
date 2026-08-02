@@ -65,7 +65,7 @@ class TrackingAutoIndexCppTests(unittest.TestCase):
             ROOT / "cpp",
             sanitize=True,
         )
-        self.assertIn("24000_random_operations", output)
+        self.assertIn("48000_random_operations", output)
 
     def test_single_header_compiles_and_executes_tracking_api(self) -> None:
         self.assertEqual(
@@ -85,7 +85,12 @@ int main() {
     assert(index.range_query(1, 4) == 10.0);
     index.point_update(2, 10.0);
     assert(index.get(2) == 10.0);
-    return index.migration_is_metric() ? 0 : 1;
+    certigap::FastTrackingAutoIndex fast({1, 2, 3, 4});
+    assert(fast.range_query(1, 4) == 10.0);
+    fast.point_update(2, 10.0);
+    assert(fast.get(2) == 10.0);
+    fast.flush();
+    return index.migration_is_metric() && fast.explain().operations == 3 ? 0 : 1;
 }
 """,
                 encoding="utf-8",

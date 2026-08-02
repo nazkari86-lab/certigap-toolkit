@@ -74,6 +74,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "tracking_autoindex_candidates.csv": 882 if require_max_scaling else 70,
         "tracking_autoindex_runtime.csv": 90 if require_max_scaling else 45,
         "tracking_autoindex_native_runtime.csv": 108,
+        "tracking_autoindex_fast_runtime.csv": 384,
         "safe_autoindex_validation.csv": 16,
         "sequential_safe_validation.csv": 4,
         "optional_stopping_monte_carlo.csv": 1,
@@ -230,6 +231,50 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         != file_sha256(RESULTS / "tracking_autoindex_native_runtime.csv")
     ):
         raise ValueError("native tracking benchmark provenance is invalid")
+
+    fast_tracking = csv_records("tracking_autoindex_fast_runtime.csv")
+    fast_groups: dict[tuple[str, str, str], list[dict[str, str]]] = {}
+    for row in fast_tracking:
+        fast_groups.setdefault(
+            (row["horizon"], row["n"], row["workload"]), []
+        ).append(row)
+    fast_implementations = {
+        "sorted_array", "prefix_sum", "fenwick", "sqrt_decomposition",
+        "segment_tree", "tracking_native_fast_sampled",
+    }
+    if (
+        len(fast_groups) != 64
+        or any(
+            {row["implementation"] for row in group} != fast_implementations
+            or {row["operations"] for row in group} != {group[0]["horizon"]}
+            or any(float(row["ns_per_operation"]) <= 0.0 for row in group)
+            or any(
+                not math.isclose(
+                    float(group[0]["checksum"]), float(row["checksum"]),
+                    rel_tol=1e-12, abs_tol=1e-9,
+                )
+                for row in group[1:]
+            )
+            for group in fast_groups.values()
+        )
+    ):
+        raise ValueError("fast tracking runtime comparison is incomplete")
+    fast_metadata = json.loads(
+        (RESULTS / "tracking_autoindex_fast_runtime.metadata.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if (
+        fast_metadata.get("schema") != "certigap-fast-tracking-benchmark-v1"
+        or fast_metadata.get("horizons") != [5000, 50000]
+        or fast_metadata.get("native_repetitions") != 5
+        or fast_metadata.get("configurations") != 64
+        or fast_metadata.get("source_sha256")
+        != file_sha256(ROOT / "cpp" / "tracking_autoindex_benchmark.cpp")
+        or fast_metadata.get("csv_sha256")
+        != file_sha256(RESULTS / "tracking_autoindex_fast_runtime.csv")
+    ):
+        raise ValueError("fast tracking benchmark provenance is invalid")
 
     sqlite_vtab_rows = csv_records("sqlite_vtab_validation.csv")
     if (

@@ -119,7 +119,16 @@ def main() -> None:
             text=True,
             capture_output=True,
         )
-    native = list(csv.DictReader(completed.stdout.splitlines()))
+    legacy_sizes = {"64", "256", "4096"}
+    legacy_workloads = {
+        "range_to_update", "update_to_range", "alternating", "read_mostly",
+    }
+    native = [
+        row for row in csv.DictReader(completed.stdout.splitlines())
+        if row["n"] in legacy_sizes
+        and row["workload"] in legacy_workloads
+        and row["implementation"] != "tracking_native_fast_sampled"
+    ]
     rows = native + python_rows(args.operations)
     csv_path = RESULTS / "tracking_autoindex_native_runtime.csv"
     fields = [

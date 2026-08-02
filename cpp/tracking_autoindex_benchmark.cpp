@@ -42,12 +42,23 @@ std::vector<certigap::TrackingOperation> workload(
     std::vector<certigap::TrackingOperation> result;
     result.reserve(count);
     for (int index = 0; index < count; ++index) {
+        const int key = 1 + (index * 17) % n;
+        if (name == "stable_points") {
+            result.push_back(certigap::TrackingOperation::get(key));
+            continue;
+        }
+        if (name == "stable_updates") {
+            result.push_back(certigap::TrackingOperation::update(
+                key, static_cast<double>((index % 101) - 50)));
+            continue;
+        }
         bool range = false;
-        if (name == "range_to_update") range = index < count / 2;
+        if (name == "stable_ranges") range = true;
+        else if (name == "range_to_update") range = index < count / 2;
         else if (name == "update_to_range") range = index >= count / 2;
         else if (name == "alternating") range = index % 2 == 0;
+        else if (name == "short_phases") range = (index / 64) % 2 == 0;
         else range = index % 10 < 7;
-        const int key = 1 + (index * 17) % n;
         if (range) {
             const int left = 1 + (index * 7) % std::max(1, n / 4);
             result.push_back(certigap::TrackingOperation::range(left, n));
@@ -158,6 +169,45 @@ void benchmark_tracking(
               << ',' << switches << ',' << final_checksum << '\n';
 }
 
+void benchmark_fast(
+    int n,
+    const std::string& workload_name,
+    const std::vector<certigap::TrackingOperation>& operations
+) {
+    std::vector<double> samples;
+    std::size_t switches = 0;
+    double final_checksum = 0.0;
+    for (int repeat = 0; repeat < 5; ++repeat) {
+        std::vector<double> values(n);
+        std::iota(values.begin(), values.end(), 1.0);
+        certigap::FastTrackingAutoIndex index(values);
+        double checksum = 0.0;
+        const auto start = Clock::now();
+        for (const auto& operation : operations) {
+            if (operation.kind == certigap::TrackingOperationKind::Get) {
+                checksum += index.get(operation.left);
+            } else if (operation.kind == certigap::TrackingOperationKind::Range) {
+                checksum += index.range_query(operation.left, operation.right);
+            } else {
+                index.point_update(operation.left, operation.value);
+            }
+        }
+        index.flush();
+        const auto stop = Clock::now();
+        samples.push_back(
+            std::chrono::duration<double, std::nano>(stop - start).count()
+                / operations.size()
+        );
+        switches = index.switch_count();
+        final_checksum = checksum;
+        sink += checksum;
+    }
+    std::cout << n << ',' << workload_name
+              << ",tracking_native_fast_sampled," << operations.size()
+              << ',' << std::setprecision(12) << median(samples)
+              << ',' << switches << ',' << final_checksum << '\n';
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -170,9 +220,11 @@ int main(int argc, char** argv) {
         certigap::Backend::SqrtDecomposition,
         certigap::Backend::SegmentTree,
     };
-    for (int n : {64, 256, 4096}) {
+    for (int n : {16, 64, 256, 4096}) {
         for (const std::string name : {
-            "range_to_update", "update_to_range", "alternating", "read_mostly"
+            "stable_points", "stable_ranges", "stable_updates",
+            "range_to_update", "update_to_range", "alternating",
+            "short_phases", "read_mostly"
         }) {
             const auto operations = workload(n, count, name);
             for (auto backend : backends) {
@@ -181,6 +233,7 @@ int main(int argc, char** argv) {
             benchmark_tracking(n, name, operations, false, false);
             benchmark_tracking(n, name, operations, false, true);
             benchmark_tracking(n, name, operations, true, true);
+            benchmark_fast(n, name, operations);
         }
     }
     return sink == std::numeric_limits<double>::infinity();
