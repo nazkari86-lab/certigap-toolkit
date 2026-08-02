@@ -12,6 +12,7 @@ recursive-include examples *.cpp *.json *.py CMakeLists.txt
 recursive-include formal *.lean
 recursive-include paper *.bib *.tex
 recursive-include results *.csv *.json *.md
+recursive-include schemas *.json
 include rust-verifier/Cargo.lock
 include rust-verifier/Cargo.toml
 include rust-verifier/src/main.rs

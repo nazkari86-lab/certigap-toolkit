@@ -23,6 +23,7 @@ from .compiler import (
     generate_cpp_header,
 )
 from .dynamic_range_verifier import verify_dynamic_range_certificate
+from .dsl_verifier import verify_dsl_certificate
 from .hardware import calibrate_hardware
 from .hybrid_verifier import verify_hybrid_certificate
 from .martingale_safe_autoindex_verifier import (
@@ -53,6 +54,7 @@ Verifier = Callable[[dict], dict]
 _SCHEMA_VERIFIERS: dict[str, Verifier] = {
     "certigap-autoindex-v2": verify_autoindex_artifact,
     "certigap-dynamic-range-v1": verify_dynamic_range_certificate,
+    "certigap-proof-carrying-dsl-v1": verify_dsl_certificate,
     "certigap-hybrid-v1": verify_hybrid_certificate,
     "certigap-martingale-safe-autoindex-v1": (
         verify_martingale_safe_autoindex_certificate
@@ -156,6 +158,27 @@ def explain_artifact(kind: str, artifact: dict, verification: dict) -> dict:
                         ),
                     )
                 ],
+            }
+        )
+    elif kind == "certigap-proof-carrying-dsl-v1":
+        explanation.update(
+            {
+                "selected": artifact["selected_design"],
+                "selected_backend": verification["selected_backend"],
+                "algebra": artifact["contract"]["algebra"],
+                "operations": artifact["contract"]["operations"],
+                "design_count": verification["design_count"],
+                "feasible_design_count": verification[
+                    "feasible_design_count"
+                ],
+                "typed_capabilities_verified": verification[
+                    "typed_capabilities_verified"
+                ],
+                "grammar_completeness_verified": verification[
+                    "grammar_completeness_verified"
+                ],
+                "selected_score": verification["train_score"],
+                "scope": artifact["claim_boundary"],
             }
         )
     elif kind == "certigap-tracking-autoindex-v1":

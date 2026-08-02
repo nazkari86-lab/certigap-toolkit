@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "certigap-toolkit"
-version = "1.14.0"
+version = "1.15.0"
 description = "Certified workload-adaptive index compilation and robust partial search"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -25,6 +25,7 @@ dev = [
 [project.scripts]
 certigap = "certigap.cli:main"
 certigap-compile = "certigap.compiler:main"
+certigap-dsl = "certigap.dsl_compiler:main"
 certigap-calibrate = "certigap.hardware:main"
 certigap-sqlite-build = "certigap.sqlite_extension:main"
 
@@ -42,6 +43,7 @@ include = ["certigap*"]
 ]
 "share/certigap/schemas" = [
   "schemas/certigap_compile_input_v1.schema.json",
+  "schemas/certigap_dsl_input_v1.schema.json",
   "schemas/certigap_safe_compile_input_v1.schema.json",
   "schemas/certigap_sequential_safe_compile_input_v1.schema.json",
   "schemas/certigap_martingale_safe_compile_input_v1.schema.json",

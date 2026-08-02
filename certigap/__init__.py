@@ -134,6 +134,12 @@ from .sqlite_extension import (
     virtual_table_source_path,
 )
 from .spec import AdaptiveSpec, compile_from_spec
+from .dsl import (
+    ProofCarryingIndex,
+    ProofCarryingSpec,
+    compile_proof_carrying_index,
+)
+from .dsl_verifier import DSLVerificationError, verify_dsl_certificate
 from .adaptive_profile import (
     parse_adaptive_profile,
     parse_adaptive_profile_text,
@@ -211,6 +217,10 @@ __all__ = [
     "AdaptiveArray",
     "AdaptiveArrayPolicy",
     "AdaptiveSpec",
+    "ProofCarryingIndex",
+    "ProofCarryingSpec",
+    "DSLVerificationError",
+    "verify_dsl_certificate",
     "virtual_table_source_path",
     "CertiGapToolkit",
     "CompiledAutoIndex",
@@ -221,6 +231,7 @@ __all__ = [
     "counterexample_search",
     "compile_autoindex",
     "compile_from_spec",
+    "compile_proof_carrying_index",
     "compile_martingale_safe_autoindex",
     "compile_measured_autoindex",
     "compile_martingale_safe_spec",

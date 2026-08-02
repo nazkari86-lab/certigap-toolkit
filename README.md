@@ -361,6 +361,41 @@ per-backend unit costs can be calibrated from target measurements. See
 [`docs/AUTOINDEX.md`](docs/AUTOINDEX.md) and the objective
 [`portfolio expansion policy`](docs/PORTFOLIO_EXPANSION.md).
 
+## Proof-Carrying Data-Structure DSL
+
+The typed DSL connects an operation contract and canonical algebra to the
+complete eight-design grammar, selected runtime, independently replayable
+certificate, and generated C++17 header:
+
+```python
+from certigap import ProofCarryingSpec, compile_proof_carrying_index
+
+compiled = compile_proof_carrying_index(
+    values,
+    training_trace,
+    ProofCarryingSpec(
+        operations=("get", "range", "update"),
+        algebra="sum",
+        memory_limit_slots=4096,
+    ),
+)
+
+compiled.range_query(1, 8)
+certificate = compiled.export_certificate()
+header = compiled.render_cpp_header("my_index")
+```
+
+`sum` requires commutative-group capabilities for Prefix/Fenwick; `min` and
+`max` enable the idempotent sparse-table design. Every ineligible design remains
+in the manifest with its reason. Use `certigap-dsl compile` for one-command JSON
+to certificate/header generation. See
+[`docs/PROOF_CARRYING_DSL.md`](docs/PROOF_CARRYING_DSL.md).
+
+```bash
+certigap-dsl compile examples/proof_carrying_dsl.json \
+  --artifact certificate.json --header generated.hpp
+```
+
 ## Online Representation Tracking
 
 Track a changing workload causally while charging for backend migration:
@@ -733,6 +768,7 @@ Generated artifacts live in [`results/`](results):
 - [`tracking_autoindex_fast_runtime.md`](results/tracking_autoindex_fast_runtime.md): sampled runtime overhead against robust and hindsight baselines
 - [`tracking_hot_path_runtime.md`](results/tracking_hot_path_runtime.md): paired direct, adaptive, detached, dynamic-freeze, and static-freeze overhead
 - [`concurrent_tracking_runtime.md`](results/concurrent_tracking_runtime.md): one/four-reader Prefix snapshot, Fenwick fallback, and batched-view comparison
+- [`dsl_validation.md`](results/dsl_validation.md): typed-grammar completeness and runtime-oracle validation across 36 contracts
 
 Figures live in [`figures/`](figures):
 

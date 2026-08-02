@@ -88,6 +88,15 @@ fallback range reads are `O(log n)` and point updates are `O(log n)`. A
 `SnapshotReadView` pays one epoch entry/exit per batch and retains `O(n)`
 snapshot memory until release.
 
+## Proof-Carrying DSL
+
+DSL v1 contains a constant eight-design grammar. Contract and algebra checking
+is `O(1)`. Candidate construction, scoring, and C++ generation have the same
+bounds as Certified AutoIndex above. The DSL verifier independently regenerates
+all typed design rows and then performs full AutoIndex replay, so verification
+does not asymptotically reduce work. The certificate adds `O(1)` grammar rows
+and retains the embedded `O(m+n)` selection artifact.
+
 ## Adaptive Single-Header Runtime
 
 Let `q` be the number of distinct observed ranges. Point and update profiling

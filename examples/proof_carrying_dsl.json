@@ -1,0 +1,21 @@
+{
+  "schema": "certigap-dsl-input-v1",
+  "values": [0, 1, 2, 3, 4, 5, 6, 7],
+  "train_trace": {
+    "n": 8,
+    "operations": [
+      {"kind": "range", "left": 1, "right": 8},
+      {"kind": "range", "left": 2, "right": 7},
+      {"kind": "get", "left": 3},
+      {"kind": "update", "left": 4, "value": 20},
+      {"kind": "range", "left": 3, "right": 6},
+      {"kind": "get", "left": 7}
+    ]
+  },
+  "spec": {
+    "operations": ["get", "range", "update"],
+    "algebra": "sum",
+    "memory_limit_slots": 64,
+    "tail_weight": 0.1
+  }
+}

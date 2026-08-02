@@ -13,6 +13,7 @@ from certigap import (
     verify_autoindex_artifact,
     verify_autodro_selection_artifact,
     verify_dynamic_range_certificate,
+    verify_dsl_certificate,
     verify_hybrid_certificate,
     verify_martingale_safe_autoindex_certificate,
     verify_pruned_beam_certificate,
@@ -77,6 +78,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "tracking_autoindex_fast_runtime.csv": 384,
         "tracking_hot_path_runtime.csv": 448,
         "concurrent_tracking_runtime.csv": 48,
+        "dsl_validation.csv": 36,
         "safe_autoindex_validation.csv": 16,
         "sequential_safe_validation.csv": 4,
         "optional_stopping_monte_carlo.csv": 1,
@@ -383,6 +385,57 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         != file_sha256(RESULTS / "concurrent_tracking_runtime.csv")
     ):
         raise ValueError("concurrent tracking benchmark provenance is invalid")
+
+    dsl_rows = csv_records("dsl_validation.csv")
+    if (
+        len(dsl_rows) != 36
+        or {row["algebra"] for row in dsl_rows} != {"sum", "min", "max"}
+        or {row["operations"] for row in dsl_rows}
+        != {"get", "range", "range+update", "get+range+update"}
+        or {row["profile"] for row in dsl_rows}
+        != {"default", "tight_memory", "persistent_snapshot"}
+        or len(
+            {
+                (row["algebra"], row["operations"], row["profile"])
+                for row in dsl_rows
+            }
+        ) != 36
+        or any(
+            row["design_count"] != "8"
+            or row["typed_capabilities_verified"] != "True"
+            or row["grammar_completeness_verified"] != "True"
+            or row["runtime_matches_oracle"] != "True"
+            or row["runtime_checksum"] != row["oracle_checksum"]
+            or not re.fullmatch(r"[0-9a-f]{64}", row["certificate_sha256"])
+            for row in dsl_rows
+        )
+        or len({row["selected_backend"] for row in dsl_rows}) < 3
+    ):
+        raise ValueError("proof-carrying DSL validation is incomplete")
+    dsl_example_path = RESULTS / "dsl_certificate_example.json"
+    dsl_example = json.loads(dsl_example_path.read_text(encoding="utf-8"))
+    if not verify_dsl_certificate(dsl_example)["verified"]:
+        raise ValueError("proof-carrying DSL example did not verify")
+    dsl_metadata = json.loads(
+        (RESULTS / "dsl_validation.metadata.json").read_text(encoding="utf-8")
+    )
+    if (
+        dsl_metadata.get("schema") != "certigap-dsl-validation-v1"
+        or dsl_metadata.get("configurations") != 36
+        or dsl_metadata.get("algebras") != ["sum", "min", "max"]
+        or dsl_metadata.get("replay_operations") != 160
+        or dsl_metadata.get("dsl_source_sha256")
+        != file_sha256(ROOT / "certigap" / "dsl.py")
+        or dsl_metadata.get("verifier_source_sha256")
+        != file_sha256(ROOT / "certigap" / "dsl_verifier.py")
+        or dsl_metadata.get("generator_source_sha256")
+        != file_sha256(ROOT / "generate_dsl_validation.py")
+        or dsl_metadata.get("csv_sha256")
+        != file_sha256(RESULTS / "dsl_validation.csv")
+        or dsl_metadata.get("example_sha256")
+        != file_sha256(dsl_example_path)
+    ):
+        raise ValueError("proof-carrying DSL provenance is invalid")
 
     sqlite_vtab_rows = csv_records("sqlite_vtab_validation.csv")
     if (

@@ -10,7 +10,8 @@ The project contributes:
 3. structural, entropy-bound, proof-trace, and rational-arithmetic verification layers;
 4. direct finite-support TV-DRO optimization with a complete small-instance search-space proof;
 5. scalable anytime TV-DRO search with replay-verified optimality intervals;
-6. omission-resistant manifests, online drift certificates, and reproducible synthetic, public-workload, temporal, shift, and C++ benchmarks.
+6. omission-resistant manifests, online drift certificates, and reproducible synthetic, public-workload, temporal, shift, and C++ benchmarks;
+7. a proof-carrying typed DSL that binds algebraic capabilities, operation/resource contracts, complete selection, and generated C++.
 
 Current prototype evidence:
 

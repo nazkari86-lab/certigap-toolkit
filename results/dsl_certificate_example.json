@@ -1,0 +1,1210 @@
+{
+  "algebra": {
+    "combine": "addition",
+    "identity": "zero",
+    "laws": {
+      "associative": true,
+      "commutative": true,
+      "has_identity": true,
+      "has_inverse": true,
+      "idempotent": false
+    },
+    "name": "sum",
+    "verification_scope": "mathematical real-addition model; the double runtime is replay-tested but IEEE-754 addition is not associative"
+  },
+  "claim_boundary": "The certificate proves typed capability compatibility and the minimum declared analytical score over the complete DSL v1 grammar. It does not prove portable wall-clock optimality or optimality outside this fixed-size grammar.",
+  "contract": {
+    "algebra": "sum",
+    "constraints": {
+      "aggregate": "sum",
+      "array_unit_cost": 1.0,
+      "budget": 6,
+      "build_weight": 0.0,
+      "certirange_unit_cost": 1.0,
+      "fenwick_unit_cost": 1.0,
+      "max_depth": null,
+      "memory_limit_slots": null,
+      "memory_weight": 0.0,
+      "prefix_unit_cost": 1.0,
+      "range_beam_width": 8,
+      "range_candidate_limit": 12,
+      "require_persistent_snapshots": false,
+      "segment_tree_unit_cost": 1.0,
+      "sparse_unit_cost": 1.0,
+      "sqrt_unit_cost": 1.0,
+      "tail_weight": 0.1
+    },
+    "fixed_size": true,
+    "operations": [
+      "get",
+      "range",
+      "update"
+    ],
+    "rank_semantics": "one_based_inclusive",
+    "schema": "certigap-dsl-contract-v1",
+    "unsupported_operations": [
+      "insert",
+      "erase",
+      "range_add",
+      "range_assign"
+    ]
+  },
+  "grammar": {
+    "designs": [
+      {
+        "algebra_eligible": true,
+        "backend": "sorted_array",
+        "family": "flat",
+        "feasible": true,
+        "id": "flat_fold",
+        "reason": "feasible",
+        "requires": "monoid",
+        "resources": {
+          "build_units": 32,
+          "height": 0,
+          "memory_slots": 32
+        },
+        "train_score": 18.203125
+      },
+      {
+        "algebra_eligible": true,
+        "backend": "prefix_sum",
+        "family": "prefix",
+        "feasible": true,
+        "id": "prefix_group",
+        "reason": "feasible",
+        "requires": "commutative_group",
+        "resources": {
+          "build_units": 32,
+          "height": 1,
+          "memory_slots": 65
+        },
+        "train_score": 8.925
+      },
+      {
+        "algebra_eligible": true,
+        "backend": "fenwick",
+        "family": "tree",
+        "feasible": true,
+        "id": "fenwick_group",
+        "reason": "feasible",
+        "requires": "commutative_group",
+        "resources": {
+          "build_units": 192,
+          "height": 5,
+          "memory_slots": 65
+        },
+        "train_score": 5.775
+      },
+      {
+        "algebra_eligible": true,
+        "backend": "sqrt_decomposition",
+        "family": "blocked",
+        "feasible": true,
+        "id": "sqrt_monoid",
+        "reason": "feasible",
+        "requires": "monoid",
+        "resources": {
+          "build_units": 38,
+          "height": 1,
+          "memory_slots": 38
+        },
+        "train_score": 8.378125
+      },
+      {
+        "algebra_eligible": true,
+        "backend": "segment_tree",
+        "family": "tree",
+        "feasible": true,
+        "id": "segment_monoid",
+        "reason": "feasible",
+        "requires": "monoid",
+        "resources": {
+          "build_units": 64,
+          "height": 5,
+          "memory_slots": 64
+        },
+        "train_score": 5.478125
+      },
+      {
+        "algebra_eligible": false,
+        "backend": "sparse_table",
+        "family": "table",
+        "feasible": false,
+        "id": "sparse_semilattice",
+        "reason": "sparse_table supports idempotent min/max only",
+        "requires": "idempotent_semilattice",
+        "resources": {
+          "build_units": 135,
+          "height": 1,
+          "memory_slots": 167
+        },
+        "train_score": 45.55
+      },
+      {
+        "algebra_eligible": true,
+        "backend": "certirange_point",
+        "family": "synthesized_tree",
+        "feasible": true,
+        "id": "certirange_point_monoid",
+        "reason": "feasible",
+        "requires": "monoid",
+        "resources": {
+          "build_units": 63,
+          "height": 6,
+          "memory_slots": 95
+        },
+        "train_score": 12.471875
+      },
+      {
+        "algebra_eligible": true,
+        "backend": "certirange_range",
+        "family": "synthesized_tree",
+        "feasible": true,
+        "id": "certirange_range_monoid",
+        "reason": "feasible",
+        "requires": "monoid",
+        "resources": {
+          "build_units": 63,
+          "height": 7,
+          "memory_slots": 95
+        },
+        "train_score": 10.8125
+      }
+    ],
+    "schema": "certigap-typed-design-grammar-v1",
+    "sha256": "d37fd66483a23b62de5ec7a95521f8445f769235d51e5d641e7a49c128cb7a74"
+  },
+  "schema": "certigap-proof-carrying-dsl-v1",
+  "selected_design": "segment_monoid",
+  "selection_artifact": {
+    "candidates": [
+      {
+        "capabilities": {
+          "aggregates": [
+            "sum",
+            "min",
+            "max"
+          ],
+          "persistent_snapshots": false
+        },
+        "feasible": true,
+        "holdout": null,
+        "name": "sorted_array",
+        "reason": "feasible",
+        "resources": {
+          "build_units": 32,
+          "height": 0,
+          "memory_slots": 32
+        },
+        "routing_tree": null,
+        "topology_sha256": null,
+        "train": {
+          "build_units": 32,
+          "height": 0,
+          "max_primitive_visits": 31.0,
+          "mean_primitive_visits": 16.78125,
+          "memory_slots": 32,
+          "operation_count": 96,
+          "score": 18.203125,
+          "structural_score": 18.203125
+        }
+      },
+      {
+        "capabilities": {
+          "aggregates": [
+            "sum"
+          ],
+          "persistent_snapshots": false
+        },
+        "feasible": true,
+        "holdout": null,
+        "name": "prefix_sum",
+        "reason": "feasible",
+        "resources": {
+          "build_units": 32,
+          "height": 1,
+          "memory_slots": 65
+        },
+        "routing_tree": null,
+        "topology_sha256": null,
+        "train": {
+          "build_units": 32,
+          "height": 1,
+          "max_primitive_visits": 33.0,
+          "mean_primitive_visits": 6.25,
+          "memory_slots": 65,
+          "operation_count": 96,
+          "score": 8.925,
+          "structural_score": 8.925
+        }
+      },
+      {
+        "capabilities": {
+          "aggregates": [
+            "sum"
+          ],
+          "persistent_snapshots": false
+        },
+        "feasible": true,
+        "holdout": null,
+        "name": "fenwick",
+        "reason": "feasible",
+        "resources": {
+          "build_units": 192,
+          "height": 5,
+          "memory_slots": 65
+        },
+        "routing_tree": null,
+        "topology_sha256": null,
+        "train": {
+          "build_units": 192,
+          "height": 5,
+          "max_primitive_visits": 9.0,
+          "mean_primitive_visits": 5.416666666666667,
+          "memory_slots": 65,
+          "operation_count": 96,
+          "score": 5.775,
+          "structural_score": 5.775
+        }
+      },
+      {
+        "capabilities": {
+          "aggregates": [
+            "sum",
+            "min",
+            "max"
+          ],
+          "persistent_snapshots": false
+        },
+        "feasible": true,
+        "holdout": null,
+        "name": "sqrt_decomposition",
+        "reason": "feasible",
+        "resources": {
+          "build_units": 38,
+          "height": 1,
+          "memory_slots": 38
+        },
+        "routing_tree": null,
+        "topology_sha256": null,
+        "train": {
+          "build_units": 38,
+          "height": 1,
+          "max_primitive_visits": 13.0,
+          "mean_primitive_visits": 7.864583333333333,
+          "memory_slots": 38,
+          "operation_count": 96,
+          "score": 8.378125,
+          "structural_score": 8.378125
+        }
+      },
+      {
+        "capabilities": {
+          "aggregates": [
+            "sum",
+            "min",
+            "max"
+          ],
+          "persistent_snapshots": false
+        },
+        "feasible": true,
+        "holdout": null,
+        "name": "segment_tree",
+        "reason": "feasible",
+        "resources": {
+          "build_units": 64,
+          "height": 5,
+          "memory_slots": 64
+        },
+        "routing_tree": null,
+        "topology_sha256": null,
+        "train": {
+          "build_units": 64,
+          "height": 5,
+          "max_primitive_visits": 8.0,
+          "mean_primitive_visits": 5.197916666666667,
+          "memory_slots": 64,
+          "operation_count": 96,
+          "score": 5.478125,
+          "structural_score": 5.478125
+        }
+      },
+      {
+        "capabilities": {
+          "aggregates": [
+            "min",
+            "max"
+          ],
+          "persistent_snapshots": false
+        },
+        "feasible": false,
+        "holdout": null,
+        "name": "sparse_table",
+        "reason": "sparse_table supports idempotent min/max only",
+        "resources": {
+          "build_units": 135,
+          "height": 1,
+          "memory_slots": 167
+        },
+        "routing_tree": null,
+        "topology_sha256": null,
+        "train": {
+          "build_units": 135,
+          "height": 1,
+          "max_primitive_visits": 136.0,
+          "mean_primitive_visits": 35.5,
+          "memory_slots": 167,
+          "operation_count": 96,
+          "score": 45.55,
+          "structural_score": 45.55
+        }
+      },
+      {
+        "capabilities": {
+          "aggregates": [
+            "sum",
+            "min",
+            "max"
+          ],
+          "persistent_snapshots": true
+        },
+        "feasible": true,
+        "holdout": null,
+        "name": "certirange_point",
+        "reason": "feasible",
+        "resources": {
+          "build_units": 63,
+          "height": 6,
+          "memory_slots": 95
+        },
+        "routing_tree": {
+          "interval": [
+            1,
+            32
+          ],
+          "left": {
+            "interval": [
+              1,
+              16
+            ],
+            "type": "leaf"
+          },
+          "right": {
+            "interval": [
+              17,
+              32
+            ],
+            "left": {
+              "interval": [
+                17,
+                28
+              ],
+              "left": {
+                "interval": [
+                  17,
+                  24
+                ],
+                "type": "leaf"
+              },
+              "right": {
+                "interval": [
+                  25,
+                  28
+                ],
+                "left": {
+                  "interval": [
+                    25,
+                    27
+                  ],
+                  "left": {
+                    "interval": [
+                      25,
+                      25
+                    ],
+                    "type": "leaf"
+                  },
+                  "right": {
+                    "interval": [
+                      26,
+                      27
+                    ],
+                    "type": "leaf"
+                  },
+                  "threshold": 25,
+                  "type": "split"
+                },
+                "right": {
+                  "interval": [
+                    28,
+                    28
+                  ],
+                  "type": "leaf"
+                },
+                "threshold": 27,
+                "type": "split"
+              },
+              "threshold": 24,
+              "type": "split"
+            },
+            "right": {
+              "interval": [
+                29,
+                32
+              ],
+              "type": "leaf"
+            },
+            "threshold": 28,
+            "type": "split"
+          },
+          "threshold": 16,
+          "type": "split"
+        },
+        "topology_sha256": "14c3c34b41340042fa463e92bccf38cb4354a8ce354d9ee72fa31d894a390779",
+        "train": {
+          "build_units": 63,
+          "height": 6,
+          "max_primitive_visits": 17.0,
+          "mean_primitive_visits": 11.96875,
+          "memory_slots": 95,
+          "operation_count": 96,
+          "score": 12.471875,
+          "structural_score": 12.471875
+        }
+      },
+      {
+        "capabilities": {
+          "aggregates": [
+            "sum",
+            "min",
+            "max"
+          ],
+          "persistent_snapshots": true
+        },
+        "feasible": true,
+        "holdout": null,
+        "name": "certirange_range",
+        "reason": "feasible",
+        "resources": {
+          "build_units": 63,
+          "height": 7,
+          "memory_slots": 95
+        },
+        "routing_tree": {
+          "interval": [
+            1,
+            32
+          ],
+          "left": {
+            "interval": [
+              1,
+              11
+            ],
+            "left": {
+              "interval": [
+                1,
+                3
+              ],
+              "left": {
+                "interval": [
+                  1,
+                  1
+                ],
+                "type": "leaf"
+              },
+              "right": {
+                "interval": [
+                  2,
+                  3
+                ],
+                "type": "leaf"
+              },
+              "threshold": 1,
+              "type": "split"
+            },
+            "right": {
+              "interval": [
+                4,
+                11
+              ],
+              "type": "leaf"
+            },
+            "threshold": 3,
+            "type": "split"
+          },
+          "right": {
+            "interval": [
+              12,
+              32
+            ],
+            "left": {
+              "interval": [
+                12,
+                28
+              ],
+              "left": {
+                "interval": [
+                  12,
+                  15
+                ],
+                "type": "leaf"
+              },
+              "right": {
+                "interval": [
+                  16,
+                  28
+                ],
+                "type": "leaf"
+              },
+              "threshold": 15,
+              "type": "split"
+            },
+            "right": {
+              "interval": [
+                29,
+                32
+              ],
+              "type": "leaf"
+            },
+            "threshold": 28,
+            "type": "split"
+          },
+          "threshold": 11,
+          "type": "split"
+        },
+        "topology_sha256": "a9030d0dfb3b9234ab4295cc295e37125f35716374a8aa400e9f0199c048bda9",
+        "train": {
+          "build_units": 63,
+          "height": 7,
+          "max_primitive_visits": 17.0,
+          "mean_primitive_visits": 10.125,
+          "memory_slots": 95,
+          "operation_count": 96,
+          "score": 10.8125,
+          "structural_score": 10.8125
+        }
+      }
+    ],
+    "constraints": {
+      "aggregate": "sum",
+      "array_unit_cost": 1.0,
+      "budget": 6,
+      "build_weight": 0.0,
+      "certirange_unit_cost": 1.0,
+      "fenwick_unit_cost": 1.0,
+      "max_depth": null,
+      "memory_limit_slots": null,
+      "memory_weight": 0.0,
+      "prefix_unit_cost": 1.0,
+      "range_beam_width": 8,
+      "range_candidate_limit": 12,
+      "require_persistent_snapshots": false,
+      "segment_tree_unit_cost": 1.0,
+      "sparse_unit_cost": 1.0,
+      "sqrt_unit_cost": 1.0,
+      "tail_weight": 0.1
+    },
+    "holdout_trace": null,
+    "metric": {
+      "unit": "declared_weighted_primitive_work",
+      "warning": "defaults are uncalibrated structural visits, not nanoseconds; set candidate unit costs from target-system measurements"
+    },
+    "n": 32,
+    "portfolio_order": [
+      "sorted_array",
+      "prefix_sum",
+      "fenwick",
+      "sqrt_decomposition",
+      "segment_tree",
+      "sparse_table",
+      "certirange_point",
+      "certirange_range"
+    ],
+    "schema": "certigap-autoindex-v2",
+    "scope": "minimum declared analytical score over the complete deterministic eight-candidate portfolio; holdout is evaluation-only",
+    "selected": "segment_tree",
+    "sha256": "a845cfaf66a24539088da44a3dc5de7a90cdadd6b4a2c94cee423b4a00858127",
+    "train_trace": {
+      "n": 32,
+      "operations": [
+        {
+          "kind": "update",
+          "left": 1,
+          "right": 1,
+          "value": -50.0
+        },
+        {
+          "kind": "range",
+          "left": 4,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 7,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 10,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 29,
+          "right": 29,
+          "value": 2.0
+        },
+        {
+          "kind": "range",
+          "left": 16,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 3,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 6,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 25,
+          "right": 25,
+          "value": -47.0
+        },
+        {
+          "kind": "range",
+          "left": 12,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 15,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 2,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 21,
+          "right": 21,
+          "value": 5.0
+        },
+        {
+          "kind": "range",
+          "left": 8,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 11,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 14,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 17,
+          "right": 17,
+          "value": -44.0
+        },
+        {
+          "kind": "range",
+          "left": 4,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 7,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 10,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 13,
+          "right": 13,
+          "value": 8.0
+        },
+        {
+          "kind": "range",
+          "left": 16,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 3,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 6,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 9,
+          "right": 9,
+          "value": -41.0
+        },
+        {
+          "kind": "range",
+          "left": 12,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 15,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 2,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 5,
+          "right": 5,
+          "value": 11.0
+        },
+        {
+          "kind": "range",
+          "left": 8,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 11,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 14,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 1,
+          "right": 1,
+          "value": -38.0
+        },
+        {
+          "kind": "range",
+          "left": 4,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 7,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 10,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 29,
+          "right": 29,
+          "value": 14.0
+        },
+        {
+          "kind": "range",
+          "left": 16,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 3,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 6,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 25,
+          "right": 25,
+          "value": -35.0
+        },
+        {
+          "kind": "range",
+          "left": 12,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 15,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 2,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 21,
+          "right": 21,
+          "value": 17.0
+        },
+        {
+          "kind": "range",
+          "left": 8,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 11,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 14,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 17,
+          "right": 17,
+          "value": -32.0
+        },
+        {
+          "kind": "range",
+          "left": 4,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 7,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 10,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 13,
+          "right": 13,
+          "value": 20.0
+        },
+        {
+          "kind": "range",
+          "left": 16,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 3,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 6,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 9,
+          "right": 9,
+          "value": -29.0
+        },
+        {
+          "kind": "range",
+          "left": 12,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 15,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 2,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 5,
+          "right": 5,
+          "value": 23.0
+        },
+        {
+          "kind": "range",
+          "left": 8,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 11,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 14,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 1,
+          "right": 1,
+          "value": -26.0
+        },
+        {
+          "kind": "range",
+          "left": 4,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 7,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 10,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 29,
+          "right": 29,
+          "value": 26.0
+        },
+        {
+          "kind": "range",
+          "left": 16,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 3,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 6,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 25,
+          "right": 25,
+          "value": -23.0
+        },
+        {
+          "kind": "range",
+          "left": 12,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 15,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 2,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 21,
+          "right": 21,
+          "value": 29.0
+        },
+        {
+          "kind": "range",
+          "left": 8,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 11,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 14,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 17,
+          "right": 17,
+          "value": -20.0
+        },
+        {
+          "kind": "range",
+          "left": 4,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 7,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 10,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 13,
+          "right": 13,
+          "value": 32.0
+        },
+        {
+          "kind": "range",
+          "left": 16,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 3,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 6,
+          "right": 30,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 9,
+          "right": 9,
+          "value": -17.0
+        },
+        {
+          "kind": "range",
+          "left": 12,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 15,
+          "right": 32,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 2,
+          "right": 31,
+          "value": 0.0
+        },
+        {
+          "kind": "update",
+          "left": 5,
+          "right": 5,
+          "value": 35.0
+        },
+        {
+          "kind": "range",
+          "left": 8,
+          "right": 29,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 11,
+          "right": 28,
+          "value": 0.0
+        },
+        {
+          "kind": "range",
+          "left": 14,
+          "right": 32,
+          "value": 0.0
+        }
+      ]
+    }
+  },
+  "sha256": "c8b8ad77acda3077ca8de4e46bc455ca8f8a5e5d7a1a05bf59f27e8be385f02f"
+}

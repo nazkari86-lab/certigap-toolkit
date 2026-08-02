@@ -1,0 +1,26 @@
+{
+  "algebras": [
+    "sum",
+    "min",
+    "max"
+  ],
+  "configurations": 36,
+  "contracts": [
+    "get",
+    "range",
+    "range+update",
+    "get+range+update"
+  ],
+  "csv_sha256": "7fc905d04dfaef3b1e9ceee0b0868b25ea0fe8edae54e8b4e172c76cefa77fa1",
+  "dsl_source_sha256": "8016e20b424f0fefa1c1252d1b0a75f0eb9a2c22b70e075ac83edff9fb0600aa",
+  "example_sha256": "1f49d0be1835ae69f51e2d6c31aa203a6531b32875f94e1b1d55d89742167149",
+  "generator_source_sha256": "23394a36880b21a8b681927173220f305555bcfb81c25b793de2b487c1a6b08a",
+  "profiles": [
+    "default",
+    "tight_memory",
+    "persistent_snapshot"
+  ],
+  "replay_operations": 160,
+  "schema": "certigap-dsl-validation-v1",
+  "verifier_source_sha256": "17b7885e1bff21b7c5bc3437aa82361dba11e9817366fdf3f4f24c7350ea8748"
+}

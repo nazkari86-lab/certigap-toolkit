@@ -4,7 +4,7 @@ This register is the source of truth for statements made in the README, paper,
 presentations, and competition material. A result outside the stated scope must
 not be used to strengthen the claim.
 
-Status: CertiGap Toolkit `v1.14.0`.
+Status: CertiGap Toolkit `v1.15.0`.
 
 ## Central Claim
 
@@ -27,6 +27,7 @@ latency is measured separately and is never certified by a structural score.
 | Candidate-pruned C++ beam returns a valid interval | Replay-certified | `certigap-pruned-beam-v1` and scaling artifacts | Feasible heuristic upper bound plus entropy/max-cost lower bound; no approximation ratio |
 | Online mean-cost regret is at most `g + 2 delta R` | Mathematical | Theorem I and `online_regret_certificate` tests | Mean modeled execution cost; excludes unmodeled DB and migration latency |
 | AutoIndex selects the minimum-score feasible candidate | Replay-certified | `results/autoindex_validation.csv` | The complete declared eight-candidate portfolio, not all data structures |
+| ProofCarryingSpec connects algebraic capabilities to complete selection and generated C++ | Typed replay-certified and differential | `results/dsl_validation.csv`, rehashed-tamper tests, generated C++ execution, and compile-fail undeclared-operation test | Canonical `sum/min/max`, fixed-size get/range/update contracts, and the declared eight-design grammar; laws are canonical model declarations, not machine proofs for arbitrary operators or IEEE-754 associativity |
 | TrackingAutoIndex exactly replays its causal trajectory and ex-post K-switch regret | Replay-certified and differential | `results/tracking_autoindex_validation.csv`, exhaustive path tests, and `verify_tracking_autoindex_certificate` | Fixed feasible portfolio, declared structural costs, positive uniform migration metric, and recorded finite trace; not wall-clock or future-workload optimality |
 | TrackingAutoIndex usually improves over its unchanged initial representation in the maximum matrix | Certified empirical | `106/18/2` wins/ties/losses in `results/tracking_autoindex_comparison.csv` | 126 committed structural configurations only; against best fixed hindsight the mixed result is `53/34/39` |
 | Python TrackingAutoIndex has substantial online overhead | Empirical negative result | `results/tracking_autoindex_runtime.csv` | This machine, Python implementation, post-construction operations; `96.42x` to `958.87x` slower than fastest fixed portfolio backend |

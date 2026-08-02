@@ -43,6 +43,10 @@ table, or one of two CertiRange variants under aggregate, memory, depth, and
 snapshot constraints. Its omission-resistant artifact
 proves minimum declared training cost over the complete fixed portfolio while
 keeping chronological holdout evaluation outside the selection path.
+The proof-carrying DSL adds canonical algebraic capability declarations,
+retains every typed design even when ineligible, binds the selected runtime and
+generated C++ to one digest, and independently regenerates the complete typed
+grammar before accepting the embedded AutoIndex proof.
 As a representation-aware synthesis case, CertiGap-H exactly selects
 nonuniform two-level-prefix partitions for range sums and point updates. This
 is exact optimization inside an explicitly programmed representation grammar,
@@ -253,6 +257,32 @@ topologies use depth-safe weighted splits, and reoptimization is an explicit
 TV-drift-triggered call rather than hidden query work. This mode exposes the
 complete leaderboard but deliberately omits the independent artifact replay
 of the build-time compiler.
+
+\section{Proof-Carrying Typed DSL}
+DSL v1 declares a fixed-size operation contract and one canonical algebra from
+sum, minimum, and maximum. Each of the eight AutoIndex designs is paired with
+a required algebraic interface: monoid, commutative group, or idempotent
+semilattice. The compiler records both algebraic eligibility and ordinary
+resource feasibility; an ineligible row is retained rather than removed.
+The Python wrapper fails closed on undeclared methods, while generated C++
+omits those methods so contract violations fail during compilation.
+
+The outer certificate binds the canonical contract, algebra declaration,
+complete typed grammar, embedded AutoIndex artifact, and selected design; its
+digest is emitted into the generated header. A separate verifier reconstructs
+all typed rows and
+then invokes the independently implemented AutoIndex regeneration for costs,
+resources, topologies, and tie-breaking. Therefore verification proves
+completeness and minimum declared score inside DSL v1, not unconstrained
+data-structure discovery.
+
+The 36-case validation crosses three algebras, four operation contracts, and
+three resource regimes. Every case regenerates all eight rows and matches a
+list oracle over 160 replay operations; six backend families are selected.
+The sum capability uses mathematical real-addition laws for structural
+reasoning. Runtime values are doubles, so IEEE-754 addition is not associative
+and the certificate does not machine-prove floating-point equivalence across
+arbitrary evaluation orders.
 
 \section{Causal Representation Tracking}
 Let $S$ be the feasible AutoIndex candidates, $s_0$ the initial backend,

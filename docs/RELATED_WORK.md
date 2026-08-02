@@ -20,6 +20,14 @@ research claim is narrower: it studies the combination of a budgeted set of
 materialized threshold comparisons, contiguous unresolved leaves with binary
 fallback, and a contamination-robust objective.
 
+The proof-carrying DSL must likewise not be described as the first
+self-designing or synthesized data-structure system. Design continuums,
+resource-guided synthesis, learned indexes, and end-to-end structure discovery
+cover broader adjacent spaces. CertiGap DSL v1 contributes a narrower chain:
+canonical algebraic capability declarations, omission-resistant finite-grammar
+selection, independent replay, and digest-bound generated C++ under workload
+and resource constraints.
+
 ## Primary Sources
 
 1. T. C. Hu and A. C. Tucker, *Optimal Computer Search Trees and

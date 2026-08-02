@@ -92,6 +92,23 @@ replay. Range profiles retain one record per distinct interval, snapshots cost
 `O(n+q)`, and reoptimization is explicit to avoid hidden latency. These are
 intentional usability tradeoffs, not certified build-time claims.
 
+## Proof-Carrying Typed DSL
+
+The DSL layer now binds a canonical operation/resource contract, built-in
+algebra declaration, complete typed eight-design grammar, embedded AutoIndex
+proof, selected runtime, and certificate digest embedded in generated C++. Its
+separate verifier regenerates every typed row before invoking the existing
+independent candidate and score regeneration. Rehashed candidate omission and
+algebra-law mutation
+are rejected.
+
+The 36-case matrix covers `sum/min/max`, four operation contracts, and default,
+tight-memory, and persistent-snapshot constraints. All cases pass complete
+grammar replay and 160-operation list-oracle checks. This closes the internal
+contract-to-capability-to-code traceability gap. It does not close arbitrary
+operator verification, IEEE-754 associativity, insert/erase, grammar discovery,
+or global structure optimality.
+
 ## Honest Boundaries
 
 - The C++ pruned beam is empirical: it has no approximation theorem. Its

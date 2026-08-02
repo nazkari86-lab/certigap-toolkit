@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/nazkari86-lab/certigap-toolkit/schemas/certigap_dsl_input_v1.schema.json",
+  "title": "CertiGap proof-carrying DSL input v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "values", "train_trace"],
+  "properties": {
+    "schema": {"const": "certigap-dsl-input-v1"},
+    "values": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "number"}
+    },
+    "train_trace": {"$ref": "#/$defs/trace"},
+    "holdout_trace": {
+      "oneOf": [{"$ref": "#/$defs/trace"}, {"type": "null"}]
+    },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"enum": ["get", "range", "update"]}
+        },
+        "algebra": {"enum": ["sum", "min", "max"]},
+        "memory_limit_slots": {
+          "oneOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]
+        },
+        "max_depth": {
+          "oneOf": [{"type": "integer", "minimum": 0}, {"type": "null"}]
+        },
+        "require_persistent_snapshots": {"type": "boolean"},
+        "budget": {"type": "integer", "minimum": 0},
+        "tail_weight": {"type": "number", "minimum": 0, "maximum": 1},
+        "memory_weight": {"type": "number", "minimum": 0},
+        "build_weight": {"type": "number", "minimum": 0},
+        "array_unit_cost": {"type": "number", "exclusiveMinimum": 0},
+        "prefix_unit_cost": {"type": "number", "exclusiveMinimum": 0},
+        "fenwick_unit_cost": {"type": "number", "exclusiveMinimum": 0},
+        "sqrt_unit_cost": {"type": "number", "exclusiveMinimum": 0},
+        "segment_tree_unit_cost": {"type": "number", "exclusiveMinimum": 0},
+        "sparse_unit_cost": {"type": "number", "exclusiveMinimum": 0},
+        "certirange_unit_cost": {"type": "number", "exclusiveMinimum": 0}
+      }
+    }
+  },
+  "$defs": {
+    "trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["n", "operations"],
+      "properties": {
+        "n": {"type": "integer", "minimum": 1},
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "left"],
+            "properties": {
+              "kind": {"enum": ["get", "range", "update"]},
+              "left": {"type": "integer", "minimum": 1},
+              "right": {"type": "integer", "minimum": 1},
+              "value": {"type": "number"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

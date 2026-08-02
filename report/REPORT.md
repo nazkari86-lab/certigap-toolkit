@@ -1327,6 +1327,135 @@ delay or losses accumulated before crossing.
 
 The Monte Carlo process has history-dependent amplitude and fresh mean-zero signs. It is diagnostic only; the formal claim follows from the e-process supermartingale and Ville inequality under the declared conditional-mean null.
 
+# Proof-Carrying Data-Structure DSL
+
+`ProofCarryingSpec` binds operation semantics, one canonical aggregate algebra,
+resource constraints, a complete typed design grammar, deterministic selection,
+and generated C++ into one digest-protected certificate.
+
+```python
+from certigap import (
+    ProofCarryingSpec,
+    WorkloadTrace,
+    compile_proof_carrying_index,
+    verify_dsl_certificate,
+)
+
+trace = WorkloadTrace(32)
+for _ in range(100):
+    trace.add_range(3, 29)
+
+model = compile_proof_carrying_index(
+    range(32),
+    trace,
+    ProofCarryingSpec(
+        operations=("range",),
+        algebra="sum",
+        memory_limit_slots=96,
+    ),
+)
+certificate = model.export_certificate()
+print(verify_dsl_certificate(certificate))
+header = model.render_cpp_header("my_index")
+```
+
+## Typed Grammar
+
+The compiler enumerates exactly eight declarations:
+
+| Design | Backend | Required laws |
+|---|---|---|
+| `flat_fold` | sorted array | monoid |
+| `prefix_group` | prefix sum | commutative group |
+| `fenwick_group` | Fenwick tree | commutative group |
+| `sqrt_monoid` | square-root decomposition | monoid |
+| `segment_monoid` | segment tree | monoid |
+| `sparse_semilattice` | sparse table | idempotent semilattice |
+| `certirange_point_monoid` | point-trained CertiRange | monoid |
+| `certirange_range_monoid` | range-trained CertiRange | monoid |
+
+The canonical `sum` model supplies a commutative group. Canonical `min` and
+`max` supply idempotent commutative monoids. The artifact records both algebraic
+eligibility and all ordinary memory, depth, and snapshot constraints. A design
+is not silently removed when it is ineligible.
+
+The Python wrapper rejects undeclared operations at runtime. Generated C++ uses
+a contract-specific wrapper and does not expose undeclared methods, so an
+attempted call fails at C++ compilation rather than silently leaving the
+certified interface.
+
+## Independent Verification
+
+`verify_dsl_certificate()` does not trust the compiler summary. It:
+
+1. checks the outer and grammar SHA-256 digests;
+2. reconstructs the canonical algebra declaration;
+3. independently regenerates all eight typed design rows;
+4. verifies operation-contract conformance;
+5. invokes the separate AutoIndex replay verifier for candidate costs,
+   resources, routing trees, tie-breaking, and winner selection;
+6. confirms that the selected DSL design maps to the verified backend.
+
+Removing an infeasible design, changing a law, substituting a trace, or changing
+the selected backend fails verification even if the attacker recomputes the
+outer digest.
+
+## One-Command Compilation
+
+```bash
+certigap-dsl compile input.json \
+  --artifact certificate.json \
+  --header generated.hpp \
+  --namespace my_index
+
+certigap-dsl verify certificate.json
+certigap verify certificate.json
+certigap explain certificate.json
+```
+
+The input schema is
+`schemas/certigap_dsl_input_v1.schema.json`. Package consumers include the
+generated header and link the ordinary `CertiGap::certigap` CMake target.
+A ready input is available at `examples/proof_carrying_dsl.json`; the equivalent
+Python API flow is `examples/proof_carrying_dsl.py`. Install the package first
+with `python3 -m pip install -e .` when running examples from a source checkout.
+
+## Evidence And Boundaries
+
+The committed 36-case matrix covers all three built-in algebras, four operation
+contracts, and default, tight-memory, and persistent-snapshot regimes. Every
+case verifies grammar completeness and replays 160 runtime operations against a
+list oracle.
+
+The algebra declaration is a capability contract, not a machine proof of a
+user-supplied function. In particular, `sum` uses mathematical real-addition
+laws for structural reasoning, while the runtime uses `double`; IEEE-754
+addition is not associative and can vary with evaluation order. DSL v1 does not
+support arbitrary operators, insert/erase, lazy range updates, unbounded design
+discovery, or portable wall-clock optimality.
+
+# Proof-Carrying DSL Validation
+
+The deterministic matrix covers `36` configurations: three canonical
+algebras, four operation contracts, and three resource regimes. Every
+configuration regenerates the complete typed grammar, independently verifies the
+certificate, and replays 160 operations against a list oracle.
+
+## Results
+
+- Typed capability verification: `True`.
+- Grammar completeness verification: `True`.
+- Runtime/oracle checksum agreement: `True`.
+- Selected backend diversity: `6` backends.
+- Selection counts: `{"certirange_point": 3, "certirange_range": 9, "prefix_sum": 1, "segment_tree": 6, "sorted_array": 15, "sparse_table": 2}`.
+
+## Boundary
+
+The matrix validates the fixed-size DSL v1 grammar and built-in `sum`, `min`, and
+`max` semantics. It does not establish portable latency optimality, arbitrary
+user-defined algebra laws, insert/erase support, or global optimality outside the
+declared eight-design grammar.
+
 # SQLite Loadable Extension
 
 CertiGap ships an actual SQLite loadable extension implemented against
@@ -2036,10 +2165,10 @@ prefix sum, Fenwick tree, segment tree, or CertiRange. The current operation
 reveals a non-negative structural service-cost vector over these states.
 
 For state path `s_1,...,s_T`, initial state `s_0`, service costs `c_t`, and
-positive uniform migration cost `d`, total modeled cost is
+positive migration metric `d`, total modeled cost is
 
 ```text
-sum_t c_t(s_t) + d * [s_t != s_(t-1)].
+sum_t c_t(s_t) + d(s_(t-1), s_t).
 ```
 
 This is a finite metrical task system. The implementation uses the
@@ -2110,6 +2239,105 @@ certigap verify tracking.json
 certigap explain tracking.json
 ```
 
+## Native C++ API
+
+`certigap_tracking.hpp` provides a dependency-free C++17 implementation over
+the conventional array, prefix, Fenwick, square-root, segment-tree, and sparse
+table runtimes. Sum portfolios exclude sparse tables; min/max portfolios
+exclude prefix sums and Fenwick trees.
+
+```cpp
+#include <certigap_tracking.hpp>
+
+std::vector<double> values(4096, 1.0);
+certigap::TrackingPolicy policy;
+policy.backends = {
+    certigap::Backend::SortedArray,
+    certigap::Backend::PrefixSum,
+    certigap::Backend::Fenwick,
+    certigap::Backend::SqrtDecomposition,
+    certigap::Backend::SegmentTree,
+};
+policy.migration_matrix = certigap::tracking_rebuild_metric(
+    values.size(), policy.backends);
+policy.record_history = false;
+
+certigap::TrackingAutoIndex index(values, certigap::Aggregate::Sum, policy);
+auto answers = index.run_batch({
+    certigap::TrackingOperation::range(1, 4096),
+    certigap::TrackingOperation::update(10, 7.0),
+    certigap::TrackingOperation::get(10),
+});
+```
+
+For low-overhead deployment without full per-operation WFA accounting, use the
+sampled controller. It keeps an always-current Fenwick shadow for sums (segment
+tree for min/max), evaluates candidates once per 32 operations, and enters a
+4096-operation lease after four stable decisions. An update that invalidates a
+static prefix/sparse view falls back to the robust shadow immediately.
+
+```cpp
+certigap::FastTrackingAutoIndex fast(values, certigap::Aggregate::Sum);
+double total = fast.range_query(1, 4096);
+fast.point_update(10, 7.0);
+fast.flush();  // process a partial sampling epoch before inspection
+auto explanation = fast.explain();
+```
+
+### Detached data and control planes
+
+Applications that already have sampled telemetry can remove observation from
+the request path. `hot_*` methods execute only data-structure work and safe
+fallback; `observe_sample(operation, represented_operations)` updates the
+controller without executing the operation. Samples should represent equal-size
+batches inside an epoch.
+
+```cpp
+double total = fast.hot_range_query(1, 4096);  // valid one-based input required
+fast.observe_sample(certigap::TrackingOperation::range(1, 4096), 4096);
+if (fast.maintenance_pending()) {
+    fast.maintenance();
+}
+```
+
+Set `FastTrackingPolicy::defer_specialist_rebuilds=true` to keep rebuilds out
+of the request that made the decision. `maintenance()` constructs the pending
+specialist from current canonical values. The class is not internally
+thread-safe: call maintenance only when no operation is concurrent, or protect
+the entire index with external synchronization. This is an explicit maintenance
+boundary, not a claimed lock-free RCU implementation.
+
+### Frozen deployment
+
+`freeze()` returns a fixed dynamic backend with no controller, sampling, shadow,
+or switching. When the deployment backend is known at compile time,
+`freeze_static<Backend, Aggregate>()` additionally removes indirect dispatch.
+
+```cpp
+auto dynamic = fast.freeze();
+auto compiled = fast.freeze_static<
+    certigap::Backend::Fenwick,
+    certigap::Aggregate::Sum>();
+double answer = compiled.range_query(1, 4096);
+```
+
+`unchecked_*` and `hot_*` require valid one-based keys, valid inclusive ranges,
+and finite update values. Use checked methods at trust boundaries.
+
+`FastTrackingAutoIndex` guarantees the same query/update semantics, validates
+its policy fail-closed, and is covered by randomized ASan/UBSan differential
+tests. It deliberately does not claim WFA competitiveness: sampling, leases,
+directed rebuild costs, and robust fallback are runtime engineering choices.
+Use `TrackingAutoIndex` when full trajectories, exact offline comparators, or
+the metrical-task-system theorem are required.
+
+The rebuild helper uses `max(build(i), build(j))` off the diagonal. This is a
+positive symmetric metric satisfying the triangle inequality, unlike a raw
+directed conversion table. General non-negative directed matrices are allowed,
+but `wfa_competitive_factor()` returns zero because the classical MTS theorem
+does not apply. Production mode reuses WFA scratch buffers and omits trajectory
+allocation. Exact oracles fail closed unless `record_history=true`.
+
 ## What The Certificate Establishes
 
 - The nested AutoIndex portfolio and every feasible candidate are replayed.
@@ -2133,8 +2361,9 @@ systems](https://doi.org/10.1145/28395.28435), and the
 - Structural units are not portable nanoseconds. Target measurements should
   calibrate candidate unit costs and migration cost.
 - The portfolio and operation grammar remain fixed and explicit.
-- The current migration metric is positive and uniform; measured asymmetric
-  conversion costs are future work.
+- Python certificates currently use a positive uniform metric. Native C++ also
+  accepts a verified rebuild-aware metric or an explicitly non-theorem directed
+  matrix.
 - WFA observes the current operation cost before moving, but never future cost.
 - The K-switch oracle is retrospective and is used for evaluation, not routing.
 - Runtime switching has no statistical no-regression gate. Use measured or
@@ -2170,13 +2399,35 @@ five repetitions, and identical checksum validation. Tracking is `96.42x` to
 gap includes online cost-vector construction, WFA accounting, trace recording,
 and in-trace rebuilds, but excludes initial construction and certificate
 export. Therefore the present Python path is a research reference, not a
-low-latency replacement for Fenwick or prefix sums. A native C++ tracking core
-with batched accounting is the highest-value performance follow-up.
+low-latency replacement for Fenwick or prefix sums.
+
+The native matching benchmark adds four phased workloads at `n=64,256,4096`.
+Rebuild-aware production runs at `61.23-317.23 ns/op` on the recorded machine
+and uniform native mode is `173.2x-15952.7x` faster than the matching Python
+reference. It still costs `11.2x` median versus the fastest fixed C++ backend,
+so tracking is useful when the best representation changes or is unknown, not
+as a universal Fenwick replacement. Full audit history adds `2.04x` median.
+On larger read-mostly streams, rebuild-aware migration cuts switches by
+`360x-394x` and improves runtime by `3.6x-16.4x` over naive uniform migration.
+
+The separate Fast matrix covers 64 configurations: four sizes, eight stationary
+or adversarial workloads, and 5,000/50,000-operation horizons. All implementation
+checksums agree. Relative to Fenwick, Fast is `1.21x` median, `1.59x` p95, and
+`1.90x` worst-case. Relative to the fastest fixed backend selected with hindsight,
+the same figures are `1.35x` median and `5.40x` worst-case. The second comparator
+can choose an O(1)-update array after seeing that no future range query arrives;
+a causal online system cannot safely make that assumption.
 
 See `results/tracking_autoindex_comparison.md` for the complete outcome tables,
 `tracking_autoindex_comparison.csv` for policy rows,
 `tracking_autoindex_candidates.csv` for every fixed backend, and
-`tracking_autoindex_runtime.csv` for machine-specific timing.
+`tracking_autoindex_runtime.csv` for Python timing. Native raw rows and
+provenance are in `tracking_autoindex_native_runtime.csv` and its metadata JSON.
+Fast-mode rows and provenance are in `tracking_autoindex_fast_runtime.csv` and
+`tracking_autoindex_fast_runtime.metadata.json`.
+The paired hot-path matrix is in `tracking_hot_path_runtime.csv`; at the
+50,000-operation horizon checked static Fenwick records `1.01x` median and
+`1.23x` maximum versus a direct Fenwick runtime on this machine.
 
 # TrackingAutoIndex validation
 

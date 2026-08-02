@@ -5,6 +5,15 @@ recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
 
 ## Unreleased
 
+- Add the proof-carrying typed DSL with canonical `sum`, `min`, and `max`
+  capability laws, a complete eight-design grammar, strict operation/resource
+  contracts, deterministic C++17 generation, and independent replay.
+- Add `certigap-dsl compile/verify`, unified CLI verification/explanation, a
+  strict JSON schema, rehashed-tamper tests, and generated-header execution.
+- Add a provenance-checked 36-case matrix over three algebras, four operation
+  contracts, and three resource regimes. All cases verify grammar completeness
+  and match a list oracle over 160 replay operations.
+
 - Add `ConcurrentPrefixIndex` with an authoritative Fenwick core, immutable
   Prefix snapshots, bounded versioned update log, `O(n+u)` catch-up rounds,
   atomic publication/invalidation, epoch-delayed reclamation, and explicit

@@ -241,6 +241,33 @@ migration metric plus a safe measured shadow-execution gate. External closure
 still requires production traces, independent hardware, and a storage-engine
 pilot.
 
+## Phase 21: Concurrent Specialist Publication
+
+- authoritative Fenwick state with immutable Prefix specialist snapshots;
+- bounded versioned update journal and `O(n+u)` catch-up rounds;
+- atomic publication/invalidation and epoch-delayed reclamation;
+- linearizable ordinary reads and versioned batch snapshot isolation;
+- ASan/UBSan, ThreadSanitizer, and native one/four-reader benchmark evidence.
+
+Completed in `v1.14.0`. The implementation covers fixed-size sums and serialized
+writers, not insert/delete, lock-free multi-writer progress, or durability.
+
+## Phase 22: Proof-Carrying Typed DSL
+
+- canonical `sum`, `min`, and `max` algebra declarations;
+- explicit monoid, commutative-group, and idempotent-semilattice requirements;
+- omission-resistant eight-design grammar with infeasible rows retained;
+- digest-bound operation/resource contract, selected runtime, and C++ header;
+- independently implemented typed-grammar regeneration over the existing
+  complete AutoIndex replay verifier;
+- strict JSON schema and `certigap-dsl compile/verify` commands;
+- 36-case algebra/contract/resource matrix with runtime-oracle replay.
+
+Completed in `v1.15.0`. This is proof-carrying selection inside a fixed grammar,
+not arbitrary data-structure discovery. The next grammar expansion should add a
+verified delta layer for insert/erase, followed by generated concurrent views;
+it should not add unsupported candidates without runtime and verifier parity.
+
 ## External Closure
 
 - independent proof review and broader recurrence/verifier formalization
