@@ -90,6 +90,11 @@ int main() {
     fast.point_update(2, 10.0);
     assert(fast.get(2) == 10.0);
     fast.flush();
+    auto frozen = fast.freeze(certigap::Backend::Fenwick);
+    assert(frozen.unchecked_range_query(1, 4) == 18.0);
+    auto compiled = fast.freeze_static<
+        certigap::Backend::Fenwick, certigap::Aggregate::Sum>();
+    assert(compiled.unchecked_range_query(1, 4) == 18.0);
     return index.migration_is_metric() && fast.explain().operations == 3 ? 0 : 1;
 }
 """,

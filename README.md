@@ -423,9 +423,34 @@ auto explanation = index.explain();
 
 Fast mode uses deterministic sampling, stable-workload leases, and an
 always-current robust shadow for immediate fallback. In the committed 64-case
-benchmark it is `1.82x` median and `3.89x` worst-case versus Fenwick. It is not
+benchmark it is `1.21x` median and `1.90x` worst-case versus Fenwick. It is not
 the theorem-bearing mode and does not promise to match a specialized backend
 chosen after observing the future workload.
+
+For a separated data/control plane, execute valid operations through `hot_*`
+and send only representative samples to the controller:
+
+```cpp
+double total = index.hot_range_query(1, 8);  // unchecked data plane
+index.observe_sample(certigap::TrackingOperation::range(1, 8), 4096);
+if (index.maintenance_pending()) {
+    index.maintenance();  // call with no concurrent operations
+}
+```
+
+After the workload stabilizes, freeze the selected design. Dynamic `freeze()`
+keeps runtime convenience; compile-time freezing removes indirect dispatch:
+
+```cpp
+auto compiled = index.freeze_static<
+    certigap::Backend::Fenwick,
+    certigap::Aggregate::Sum>();
+double answer = compiled.range_query(1, 8);
+```
+
+On the paired 50,000-operation matrix, checked static Fenwick is `1.01x`
+median and `1.23x` maximum versus direct Fenwick. The template backend must be
+chosen explicitly, normally from a recorded training/deployment decision.
 
 Keep the default `record_history=true` when exact offline-oracle replay is
 required. A directed migration matrix is accepted for empirical use, but the
@@ -684,6 +709,7 @@ Generated artifacts live in [`results/`](results):
 - [`tracking_autoindex_comparison.md`](results/tracking_autoindex_comparison.md): 126-case policy/backend comparison and Python runtime boundary
 - [`tracking_autoindex_native_runtime.md`](results/tracking_autoindex_native_runtime.md): native production/audit runtime, rebuild-aware migration ablation, and matching Python comparison
 - [`tracking_autoindex_fast_runtime.md`](results/tracking_autoindex_fast_runtime.md): sampled runtime overhead against robust and hindsight baselines
+- [`tracking_hot_path_runtime.md`](results/tracking_hot_path_runtime.md): paired direct, adaptive, detached, dynamic-freeze, and static-freeze overhead
 
 Figures live in [`figures/`](figures):
 

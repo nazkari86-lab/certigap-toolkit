@@ -73,6 +73,13 @@ CertiRange header contains its complete `2n-1` topology and therefore has
 The generated C++ snapshot operation copies runtime vectors and takes `O(n)`
 time and space; it is semantic snapshot isolation, not path-copy persistence.
 
+Tracking freeze construction rebuilds the selected backend and therefore costs
+that backend's normal build time and memory. After construction,
+`StaticTrackingIndex` has the same asymptotic operations as its compile-time
+backend and performs no tracking, sampling, migration, or shadow maintenance.
+Dynamic `FrozenTrackingIndex` adds one indirect dispatch but has the same
+asymptotic bounds. Deferred `maintenance()` performs a full specialist rebuild.
+
 ## Adaptive Single-Header Runtime
 
 Let `q` be the number of distinct observed ranges. Point and update profiling

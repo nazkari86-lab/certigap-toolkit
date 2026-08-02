@@ -128,6 +128,46 @@ fast.flush();  // process a partial sampling epoch before inspection
 auto explanation = fast.explain();
 ```
 
+### Detached data and control planes
+
+Applications that already have sampled telemetry can remove observation from
+the request path. `hot_*` methods execute only data-structure work and safe
+fallback; `observe_sample(operation, represented_operations)` updates the
+controller without executing the operation. Samples should represent equal-size
+batches inside an epoch.
+
+```cpp
+double total = fast.hot_range_query(1, 4096);  // valid one-based input required
+fast.observe_sample(certigap::TrackingOperation::range(1, 4096), 4096);
+if (fast.maintenance_pending()) {
+    fast.maintenance();
+}
+```
+
+Set `FastTrackingPolicy::defer_specialist_rebuilds=true` to keep rebuilds out
+of the request that made the decision. `maintenance()` constructs the pending
+specialist from current canonical values. The class is not internally
+thread-safe: call maintenance only when no operation is concurrent, or protect
+the entire index with external synchronization. This is an explicit maintenance
+boundary, not a claimed lock-free RCU implementation.
+
+### Frozen deployment
+
+`freeze()` returns a fixed dynamic backend with no controller, sampling, shadow,
+or switching. When the deployment backend is known at compile time,
+`freeze_static<Backend, Aggregate>()` additionally removes indirect dispatch.
+
+```cpp
+auto dynamic = fast.freeze();
+auto compiled = fast.freeze_static<
+    certigap::Backend::Fenwick,
+    certigap::Aggregate::Sum>();
+double answer = compiled.range_query(1, 4096);
+```
+
+`unchecked_*` and `hot_*` require valid one-based keys, valid inclusive ranges,
+and finite update values. Use checked methods at trust boundaries.
+
 `FastTrackingAutoIndex` guarantees the same query/update semantics, validates
 its policy fail-closed, and is covered by randomized ASan/UBSan differential
 tests. It deliberately does not claim WFA competitiveness: sampling, leases,
@@ -206,19 +246,19 @@ export. Therefore the present Python path is a research reference, not a
 low-latency replacement for Fenwick or prefix sums.
 
 The native matching benchmark adds four phased workloads at `n=64,256,4096`.
-Rebuild-aware production runs at `52.32-109.84 ns/op` on the recorded machine
-and uniform native mode is `106.0x-15919.5x` faster than the matching Python
-reference. It still costs `10.9x` median versus the fastest fixed C++ backend,
+Rebuild-aware production runs at `61.23-317.23 ns/op` on the recorded machine
+and uniform native mode is `173.2x-15952.7x` faster than the matching Python
+reference. It still costs `11.2x` median versus the fastest fixed C++ backend,
 so tracking is useful when the best representation changes or is unknown, not
-as a universal Fenwick replacement. Full audit history adds `1.82x` median.
+as a universal Fenwick replacement. Full audit history adds `2.04x` median.
 On larger read-mostly streams, rebuild-aware migration cuts switches by
-`360x-394x` and improves runtime by `3.6x-14.8x` over naive uniform migration.
+`360x-394x` and improves runtime by `3.6x-16.4x` over naive uniform migration.
 
 The separate Fast matrix covers 64 configurations: four sizes, eight stationary
 or adversarial workloads, and 5,000/50,000-operation horizons. All implementation
-checksums agree. Relative to Fenwick, Fast is `1.82x` median, `3.58x` p95, and
-`3.89x` worst-case. Relative to the fastest fixed backend selected with hindsight,
-the same figures are `2.08x` median and `8.16x` worst-case. The second comparator
+checksums agree. Relative to Fenwick, Fast is `1.21x` median, `1.59x` p95, and
+`1.90x` worst-case. Relative to the fastest fixed backend selected with hindsight,
+the same figures are `1.35x` median and `5.40x` worst-case. The second comparator
 can choose an O(1)-update array after seeing that no future range query arrives;
 a causal online system cannot safely make that assumption.
 
@@ -229,3 +269,6 @@ See `results/tracking_autoindex_comparison.md` for the complete outcome tables,
 provenance are in `tracking_autoindex_native_runtime.csv` and its metadata JSON.
 Fast-mode rows and provenance are in `tracking_autoindex_fast_runtime.csv` and
 `tracking_autoindex_fast_runtime.metadata.json`.
+The paired hot-path matrix is in `tracking_hot_path_runtime.csv`; at the
+50,000-operation horizon checked static Fenwick records `1.01x` median and
+`1.23x` maximum versus a direct Fenwick runtime on this machine.

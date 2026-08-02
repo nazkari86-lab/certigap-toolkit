@@ -2282,6 +2282,116 @@ private:
     }
 };
 
+using TrackingRuntime = std::variant<
+    ArrayRuntime,
+    PrefixRuntime,
+    FenwickRuntime,
+    SqrtRuntime,
+    SegmentRuntime,
+    SparseRuntime
+>;
+
+struct TrackingRuntimeDispatch {
+    using Get = double (*)(const TrackingRuntime&, int);
+    using Range = double (*)(const TrackingRuntime&, int, int);
+    using Update = void (*)(TrackingRuntime&, int, double);
+
+    Get get = nullptr;
+    Range range = nullptr;
+    Update update = nullptr;
+};
+
+template <class Runtime>
+inline double tracking_direct_get(
+    const TrackingRuntime& runtime, int key
+) {
+    return std::get<Runtime>(runtime).get(key);
+}
+
+template <class Runtime>
+inline double tracking_direct_range(
+    const TrackingRuntime& runtime, int left, int right
+) {
+    return std::get<Runtime>(runtime).range_query(left, right);
+}
+
+template <class Runtime>
+inline void tracking_direct_update(
+    TrackingRuntime& runtime, int key, double value
+) {
+    std::get<Runtime>(runtime).point_update(key, value);
+}
+
+template <class Runtime>
+inline TrackingRuntimeDispatch tracking_dispatch_for() {
+    return {
+        &tracking_direct_get<Runtime>,
+        &tracking_direct_range<Runtime>,
+        &tracking_direct_update<Runtime>,
+    };
+}
+
+inline TrackingRuntimeDispatch tracking_dispatch(Backend backend) {
+    if (backend == Backend::SortedArray) {
+        return tracking_dispatch_for<ArrayRuntime>();
+    }
+    if (backend == Backend::PrefixSum) {
+        return tracking_dispatch_for<PrefixRuntime>();
+    }
+    if (backend == Backend::Fenwick) {
+        return tracking_dispatch_for<FenwickRuntime>();
+    }
+    if (backend == Backend::SqrtDecomposition) {
+        return tracking_dispatch_for<SqrtRuntime>();
+    }
+    if (backend == Backend::SegmentTree) {
+        return tracking_dispatch_for<SegmentRuntime>();
+    }
+    if (backend == Backend::SparseTable) {
+        return tracking_dispatch_for<SparseRuntime>();
+    }
+    throw std::invalid_argument("unsupported tracking dispatch backend");
+}
+
+inline void emplace_tracking_runtime(
+    TrackingRuntime& runtime,
+    Backend backend,
+    const std::vector<double>& values,
+    Aggregate aggregate
+) {
+    if (backend == Backend::SortedArray) {
+        runtime.emplace<ArrayRuntime>(values, aggregate);
+    } else if (backend == Backend::PrefixSum) {
+        runtime.emplace<PrefixRuntime>(values);
+    } else if (backend == Backend::Fenwick) {
+        runtime.emplace<FenwickRuntime>(values);
+    } else if (backend == Backend::SqrtDecomposition) {
+        runtime.emplace<SqrtRuntime>(values, aggregate);
+    } else if (backend == Backend::SegmentTree) {
+        runtime.emplace<SegmentRuntime>(values, aggregate);
+    } else if (backend == Backend::SparseTable) {
+        runtime.emplace<SparseRuntime>(values, aggregate);
+    } else {
+        throw std::invalid_argument("unsupported tracking runtime backend");
+    }
+}
+
+template <Backend backend>
+struct TrackingRuntimeType;
+
+template <>
+struct TrackingRuntimeType<Backend::SortedArray> { using type = ArrayRuntime; };
+template <>
+struct TrackingRuntimeType<Backend::PrefixSum> { using type = PrefixRuntime; };
+template <>
+struct TrackingRuntimeType<Backend::Fenwick> { using type = FenwickRuntime; };
+template <>
+struct TrackingRuntimeType<Backend::SqrtDecomposition> { using type = SqrtRuntime; };
+template <>
+struct TrackingRuntimeType<Backend::SegmentTree> { using type = SegmentRuntime; };
+template <>
+struct TrackingRuntimeType<Backend::SparseTable> { using type = SparseRuntime; };
+
 }  // namespace detail
 
 inline std::vector<std::vector<double>> tracking_rebuild_metric(
@@ -2765,6 +2875,7 @@ struct FastTrackingPolicy {
     std::vector<std::vector<double>> migration_matrix;
     TrackingCostModel costs;
     bool record_decisions = false;
+    bool defer_specialist_rebuilds = false;
 };
 
 struct FastTrackingDecision {
@@ -2784,9 +2895,196 @@ struct FastTrackingExplanation {
     std::size_t switches = 0;
     std::size_t fallbacks = 0;
     std::size_t lease_operations_remaining = 0;
+    bool maintenance_pending = false;
     double estimated_cumulative_cost = 0.0;
     std::string_view guarantee =
         "runtime semantics only; sampled routing has no competitive factor";
+};
+
+template <Backend backend_value, Aggregate aggregate_value>
+class StaticTrackingIndex {
+public:
+    using Runtime = typename detail::TrackingRuntimeType<backend_value>::type;
+
+    explicit StaticTrackingIndex(const std::vector<double>& values)
+        : size_(values.size()), runtime_(make_validated_runtime(values)) {
+        static_assert(
+            aggregate_value == Aggregate::Sum
+                || (backend_value != Backend::PrefixSum
+                    && backend_value != Backend::Fenwick),
+            "prefix sum and Fenwick support sum only"
+        );
+        static_assert(
+            aggregate_value != Aggregate::Sum
+                || backend_value != Backend::SparseTable,
+            "sparse table supports min/max only"
+        );
+    }
+
+    double get(int key) const {
+        validate_key(key);
+        return unchecked_get(key);
+    }
+
+    double range_query(int left, int right) const {
+        validate_range(left, right);
+        return unchecked_range_query(left, right);
+    }
+
+    void point_update(int key, double value) {
+        validate_key(key);
+        if (!std::isfinite(value)) {
+            throw std::invalid_argument("update value must be finite");
+        }
+        unchecked_point_update(key, value);
+    }
+
+    double unchecked_get(int key) const { return runtime_.get(key); }
+    double unchecked_range_query(int left, int right) const {
+        return runtime_.range_query(left, right);
+    }
+    void unchecked_point_update(int key, double value) {
+        runtime_.point_update(key, value);
+    }
+
+    static constexpr Backend backend() { return backend_value; }
+    static constexpr Aggregate aggregate() { return aggregate_value; }
+    std::size_t size() const { return size_; }
+
+private:
+    std::size_t size_ = 0;
+    Runtime runtime_;
+
+    static Runtime make_validated_runtime(const std::vector<double>& values) {
+        validate_values(values);
+        if constexpr (backend_value == Backend::SortedArray) {
+            return Runtime(values, aggregate_value);
+        } else if constexpr (
+            backend_value == Backend::SqrtDecomposition
+            || backend_value == Backend::SegmentTree
+            || backend_value == Backend::SparseTable
+        ) {
+            return Runtime(values, aggregate_value);
+        } else {
+            return Runtime(values);
+        }
+    }
+
+    static void validate_values(const std::vector<double>& values) {
+        if (values.empty()) throw std::invalid_argument("values must not be empty");
+        if (values.size()
+            > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+            throw std::length_error("key universe exceeds int range");
+        }
+        for (double value : values) {
+            if (!std::isfinite(value)) {
+                throw std::invalid_argument("values must be finite");
+            }
+        }
+    }
+
+    void validate_key(int key) const {
+        if (key < 1 || key > static_cast<int>(size_)) {
+            throw std::out_of_range("static tracking key out of range");
+        }
+    }
+
+    void validate_range(int left, int right) const {
+        if (left < 1 || right < left || right > static_cast<int>(size_)) {
+            throw std::out_of_range("invalid static tracking range");
+        }
+    }
+};
+
+class FrozenTrackingIndex {
+public:
+    FrozenTrackingIndex(
+        const std::vector<double>& values,
+        Aggregate aggregate,
+        Backend backend
+    )
+        : size_(values.size()), aggregate_(aggregate), backend_(backend),
+          runtime_(detail::ArrayRuntime(values, aggregate)) {
+        validate_configuration(values);
+        detail::emplace_tracking_runtime(runtime_, backend_, values, aggregate_);
+        dispatch_ = detail::tracking_dispatch(backend_);
+    }
+
+    double get(int key) const {
+        validate_key(key);
+        return unchecked_get(key);
+    }
+
+    double range_query(int left, int right) const {
+        validate_range(left, right);
+        return unchecked_range_query(left, right);
+    }
+
+    void point_update(int key, double value) {
+        validate_key(key);
+        if (!std::isfinite(value)) {
+            throw std::invalid_argument("update value must be finite");
+        }
+        unchecked_point_update(key, value);
+    }
+
+    double unchecked_get(int key) const {
+        return dispatch_.get(runtime_, key);
+    }
+
+    double unchecked_range_query(int left, int right) const {
+        return dispatch_.range(runtime_, left, right);
+    }
+
+    void unchecked_point_update(int key, double value) {
+        dispatch_.update(runtime_, key, value);
+    }
+
+    Backend backend() const { return backend_; }
+    Aggregate aggregate() const { return aggregate_; }
+    std::size_t size() const { return size_; }
+
+private:
+    std::size_t size_ = 0;
+    Aggregate aggregate_ = Aggregate::Sum;
+    Backend backend_ = Backend::SortedArray;
+    detail::TrackingRuntime runtime_;
+    detail::TrackingRuntimeDispatch dispatch_;
+
+    void validate_configuration(const std::vector<double>& values) const {
+        if (values.empty()) throw std::invalid_argument("values must not be empty");
+        if (values.size()
+            > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+            throw std::length_error("key universe exceeds int range");
+        }
+        if (!detail::tracking_supported_backend(backend_)) {
+            throw std::invalid_argument("unsupported frozen tracking backend");
+        }
+        if (
+            aggregate_ != Aggregate::Sum
+            && (backend_ == Backend::PrefixSum || backend_ == Backend::Fenwick)
+        ) throw std::invalid_argument("sum-only frozen backend is infeasible");
+        if (aggregate_ == Aggregate::Sum && backend_ == Backend::SparseTable) {
+            throw std::invalid_argument("sparse table is infeasible for sum");
+        }
+        for (double value : values) {
+            if (!std::isfinite(value)) {
+                throw std::invalid_argument("values must be finite");
+            }
+        }
+    }
+
+    void validate_key(int key) const {
+        if (key < 1 || key > static_cast<int>(size_)) {
+            throw std::out_of_range("frozen tracking key out of range");
+        }
+    }
+
+    void validate_range(int left, int right) const {
+        if (left < 1 || right < left || right > static_cast<int>(size_)) {
+            throw std::out_of_range("invalid frozen tracking range");
+        }
+    }
 };
 
 class FastTrackingAutoIndex {
@@ -2828,35 +3126,12 @@ public:
 
     double get(int key) {
         validate_key(key);
-        const auto operation = TrackingOperation::get(key);
-        const double result = use_robust(operation)
-            ? std::visit(
-                [key](const auto& runtime) { return runtime.get(key); },
-                robust_runtime_
-            )
-            : std::visit(
-                [key](const auto& runtime) { return runtime.get(key); }, runtime_
-            );
-        observe(operation);
-        return result;
+        return unchecked_get(key);
     }
 
     double range_query(int left, int right) {
         validate_range(left, right);
-        const auto operation = TrackingOperation::range(left, right);
-        const double result = use_robust(operation)
-            ? std::visit(
-                [left, right](const auto& runtime) {
-                    return runtime.range_query(left, right);
-                }, robust_runtime_
-            )
-            : std::visit(
-                [left, right](const auto& runtime) {
-                    return runtime.range_query(left, right);
-                }, runtime_
-            );
-        observe(operation);
-        return result;
+        return unchecked_range_query(left, right);
     }
 
     void point_update(int key, double value) {
@@ -2864,11 +3139,56 @@ public:
         if (!std::isfinite(value)) {
             throw std::invalid_argument("update value must be finite");
         }
+        unchecked_point_update(key, value);
+    }
+
+    double unchecked_get(int key) {
+        const double result = hot_get(key);
+        const auto operation = TrackingOperation::get(key);
+        observe(operation);
+        return result;
+    }
+
+    double unchecked_range_query(int left, int right) {
+        const double result = hot_range_query(left, right);
+        const auto operation = TrackingOperation::range(left, right);
+        observe(operation);
+        return result;
+    }
+
+    void unchecked_point_update(int key, double value) {
+        hot_point_update(key, value);
         const auto operation = TrackingOperation::update(key, value);
-        std::visit(
-            [key, value](auto& runtime) { runtime.point_update(key, value); },
-            robust_runtime_
-        );
+        observe(operation);
+    }
+
+    double hot_get(int key) const {
+        if (selected_index_ == robust_index_) {
+            return robust_get(key);
+        }
+        const auto operation = TrackingOperation::get(key);
+        return use_robust(operation)
+            ? robust_get(key)
+            : selected_dispatch_.get(runtime_, key);
+    }
+
+    double hot_range_query(int left, int right) const {
+        if (selected_index_ == robust_index_) {
+            return robust_range(left, right);
+        }
+        const auto operation = TrackingOperation::range(left, right);
+        return use_robust(operation)
+            ? robust_range(left, right)
+            : selected_dispatch_.range(runtime_, left, right);
+    }
+
+    void hot_point_update(int key, double value) {
+        robust_update(key, value);
+        if (selected_index_ == robust_index_) {
+            values_[key - 1] = value;
+            return;
+        }
+        const auto operation = TrackingOperation::update(key, value);
         if (selected_index_ != robust_index_) {
             const Backend selected = candidates_[selected_index_];
             const double robust_cost = cost_evaluator_.cost(
@@ -2880,13 +3200,10 @@ public:
                 ? std::numeric_limits<double>::infinity()
                 : cost_evaluator_.cost(selected, operation);
             if (!static_view && selected_cost <= 2.0 * robust_cost) {
-                std::visit(
-                    [key, value](auto& runtime) {
-                        runtime.point_update(key, value);
-                    }, runtime_
-                );
+                selected_dispatch_.update(runtime_, key, value);
             } else {
                 selected_index_ = robust_index_;
+                pending_index_.reset();
                 residence_operations_ = 0;
                 stable_decisions_ = 0;
                 lease_remaining_ = 0;
@@ -2895,11 +3212,85 @@ public:
             }
         }
         values_[key - 1] = value;
-        observe(operation);
+    }
+
+    void observe_sample(
+        const TrackingOperation& operation,
+        std::size_t represented_operations = 1
+    ) {
+        validate_external_operation(operation);
+        if (represented_operations == 0) {
+            throw std::invalid_argument(
+                "represented operation count must be positive");
+        }
+        if (
+            operations_ > std::numeric_limits<std::size_t>::max()
+                - represented_operations
+            || epoch_operations_ > std::numeric_limits<std::size_t>::max()
+                - represented_operations
+            || residence_operations_ > std::numeric_limits<std::size_t>::max()
+                - represented_operations
+        ) throw std::length_error("external tracking counter overflow");
+        for (std::size_t index = 0; index < candidates_.size(); ++index) {
+            service_sum_[index] += cost_evaluator_.cost(
+                candidates_[index], operation);
+        }
+        operations_ += represented_operations;
+        epoch_operations_ += represented_operations;
+        residence_operations_ += represented_operations;
+        ++epoch_samples_;
+        ++sampled_operations_;
+        if (epoch_operations_ >= policy_.decision_interval) decide();
     }
 
     void flush() {
         if (epoch_operations_ > 0) decide();
+    }
+
+    void maintenance() {
+        if (!pending_index_) return;
+        const std::size_t next = *pending_index_;
+        const std::size_t previous = selected_index_;
+        rebuild_runtime(candidates_[next]);
+        selected_index_ = next;
+        pending_index_.reset();
+        residence_operations_ = 0;
+        stable_decisions_ = 0;
+        lease_remaining_ = 0;
+        estimated_cumulative_cost_ += distance(previous, next);
+        if (previous != next) ++switches_;
+    }
+
+    bool maintenance_pending() const { return pending_index_.has_value(); }
+    Backend pending_backend() const {
+        if (!pending_index_) {
+            throw std::logic_error("no fast tracking maintenance is pending");
+        }
+        return candidates_[*pending_index_];
+    }
+
+    FrozenTrackingIndex freeze() const {
+        return FrozenTrackingIndex(values_, aggregate_, selected_backend());
+    }
+
+    FrozenTrackingIndex freeze(Backend backend) const {
+        if (std::find(candidates_.begin(), candidates_.end(), backend)
+            == candidates_.end()) {
+            throw std::invalid_argument("frozen backend is outside the portfolio");
+        }
+        return FrozenTrackingIndex(values_, aggregate_, backend);
+    }
+
+    template <Backend backend, Aggregate aggregate>
+    StaticTrackingIndex<backend, aggregate> freeze_static() const {
+        if (aggregate_ != aggregate) {
+            throw std::invalid_argument("static aggregate differs from runtime");
+        }
+        if (std::find(candidates_.begin(), candidates_.end(), backend)
+            == candidates_.end()) {
+            throw std::invalid_argument("static backend is outside the portfolio");
+        }
+        return StaticTrackingIndex<backend, aggregate>(values_);
     }
 
     Backend selected_backend() const { return candidates_[selected_index_]; }
@@ -2917,21 +3308,13 @@ public:
     FastTrackingExplanation explain() const {
         return {
             selected_backend(), operations_, sampled_operations_, decisions_,
-            switches_, fallbacks_, lease_remaining_, estimated_cumulative_cost_,
+            switches_, fallbacks_, lease_remaining_, maintenance_pending(),
+            estimated_cumulative_cost_,
             "runtime semantics only; sampled routing has no competitive factor",
         };
     }
 
 private:
-    using Runtime = std::variant<
-        detail::ArrayRuntime,
-        detail::PrefixRuntime,
-        detail::FenwickRuntime,
-        detail::SqrtRuntime,
-        detail::SegmentRuntime,
-        detail::SparseRuntime
-    >;
-
     static constexpr double epsilon_ = 1e-12;
     std::vector<double> values_;
     Aggregate aggregate_;
@@ -2943,11 +3326,13 @@ private:
     std::vector<double> service_sum_;
     std::vector<double> service_scratch_;
     std::vector<double> work_scratch_;
-    Runtime runtime_;
-    Runtime robust_runtime_;
+    detail::TrackingRuntime runtime_;
+    detail::TrackingRuntime robust_runtime_;
+    detail::TrackingRuntimeDispatch selected_dispatch_;
     std::vector<FastTrackingDecision> decision_history_;
     std::size_t selected_index_ = 0;
     std::size_t robust_index_ = 0;
+    std::optional<std::size_t> pending_index_;
     std::size_t sample_mask_ = 0;
     unsigned sample_shift_ = 0;
     std::size_t operations_ = 0;
@@ -3079,20 +3464,20 @@ private:
         ) throw std::out_of_range("invalid fast tracking range");
     }
 
-    void rebuild_runtime(Backend backend) {
-        if (backend == Backend::SortedArray) {
-            runtime_.emplace<detail::ArrayRuntime>(values_, aggregate_);
-        } else if (backend == Backend::PrefixSum) {
-            runtime_.emplace<detail::PrefixRuntime>(values_);
-        } else if (backend == Backend::Fenwick) {
-            runtime_.emplace<detail::FenwickRuntime>(values_);
-        } else if (backend == Backend::SqrtDecomposition) {
-            runtime_.emplace<detail::SqrtRuntime>(values_, aggregate_);
-        } else if (backend == Backend::SegmentTree) {
-            runtime_.emplace<detail::SegmentRuntime>(values_, aggregate_);
-        } else {
-            runtime_.emplace<detail::SparseRuntime>(values_, aggregate_);
+    void validate_external_operation(const TrackingOperation& operation) const {
+        validate_key(operation.left);
+        if (operation.kind == TrackingOperationKind::Range) {
+            validate_range(operation.left, operation.right);
         }
+        if (
+            operation.kind == TrackingOperationKind::Update
+            && !std::isfinite(operation.value)
+        ) throw std::invalid_argument("update value must be finite");
+    }
+
+    void rebuild_runtime(Backend backend) {
+        detail::emplace_tracking_runtime(runtime_, backend, values_, aggregate_);
+        selected_dispatch_ = detail::tracking_dispatch(backend);
     }
 
     void rebuild_robust_runtime() {
@@ -3100,6 +3485,32 @@ private:
             robust_runtime_.emplace<detail::FenwickRuntime>(values_);
         } else {
             robust_runtime_.emplace<detail::SegmentRuntime>(values_, aggregate_);
+        }
+    }
+
+    double robust_get(int key) const {
+        if (aggregate_ == Aggregate::Sum) {
+            return std::get<detail::FenwickRuntime>(robust_runtime_).get(key);
+        }
+        return std::get<detail::SegmentRuntime>(robust_runtime_).get(key);
+    }
+
+    double robust_range(int left, int right) const {
+        if (aggregate_ == Aggregate::Sum) {
+            return std::get<detail::FenwickRuntime>(robust_runtime_)
+                .range_query(left, right);
+        }
+        return std::get<detail::SegmentRuntime>(robust_runtime_)
+            .range_query(left, right);
+    }
+
+    void robust_update(int key, double value) {
+        if (aggregate_ == Aggregate::Sum) {
+            std::get<detail::FenwickRuntime>(robust_runtime_)
+                .point_update(key, value);
+        } else {
+            std::get<detail::SegmentRuntime>(robust_runtime_)
+                .point_update(key, value);
         }
     }
 
@@ -3169,20 +3580,31 @@ private:
             next != previous
             && residence_operations_ < minimum_residence_operations_
         ) next = previous;
-        const double migration = distance(previous, next);
-        estimated_cumulative_cost_ += service_scratch_[previous] + migration;
+        double migration = distance(previous, next);
         if (next != previous) {
-            if (next != robust_index_) rebuild_runtime(candidates_[next]);
-            ++switches_;
-            residence_operations_ = 0;
-            stable_decisions_ = 0;
+            if (
+                next != robust_index_
+                && policy_.defer_specialist_rebuilds
+            ) {
+                pending_index_ = next;
+                next = previous;
+                migration = 0.0;
+            } else {
+                pending_index_.reset();
+                if (next != robust_index_) rebuild_runtime(candidates_[next]);
+                ++switches_;
+                residence_operations_ = 0;
+                stable_decisions_ = 0;
+            }
         } else {
+            pending_index_.reset();
             ++stable_decisions_;
             if (stable_decisions_ >= policy_.stable_decisions_before_lease) {
                 lease_remaining_ = policy_.lease_operations;
                 stable_decisions_ = 0;
             }
         }
+        estimated_cumulative_cost_ += service_scratch_[previous] + migration;
         selected_index_ = next;
         ++decisions_;
         if (policy_.record_decisions) {

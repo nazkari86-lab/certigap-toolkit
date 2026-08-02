@@ -7,8 +7,8 @@ excluded; controller sampling, fallback, leases, and in-stream migrations are in
 ## Results
 
 - Correctness checksum agreement: `True` across all `64` configurations.
-- Versus robust Fenwick: `1.82x` median, `3.58x` p95, `3.89x` maximum.
-- Versus fastest fixed backend chosen with hindsight: `2.08x` median, `5.93x` p95, `8.16x` maximum.
+- Versus robust Fenwick: `1.21x` median, `1.59x` p95, `1.90x` maximum.
+- Versus fastest fixed backend chosen with hindsight: `1.35x` median, `3.76x` p95, `5.40x` maximum.
 
 ## Interpretation
 

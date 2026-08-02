@@ -75,6 +75,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "tracking_autoindex_runtime.csv": 90 if require_max_scaling else 45,
         "tracking_autoindex_native_runtime.csv": 108,
         "tracking_autoindex_fast_runtime.csv": 384,
+        "tracking_hot_path_runtime.csv": 448,
         "safe_autoindex_validation.csv": 16,
         "sequential_safe_validation.csv": 4,
         "optional_stopping_monte_carlo.csv": 1,
@@ -227,6 +228,8 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         or native_tracking_metadata.get("python_repetitions") != 3
         or native_tracking_metadata.get("source_sha256")
         != file_sha256(ROOT / "cpp" / "tracking_autoindex_benchmark.cpp")
+        or native_tracking_metadata.get("header_sha256")
+        != file_sha256(ROOT / "cpp" / "certigap_tracking.hpp")
         or native_tracking_metadata.get("csv_sha256")
         != file_sha256(RESULTS / "tracking_autoindex_native_runtime.csv")
     ):
@@ -271,10 +274,62 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         or fast_metadata.get("configurations") != 64
         or fast_metadata.get("source_sha256")
         != file_sha256(ROOT / "cpp" / "tracking_autoindex_benchmark.cpp")
+        or fast_metadata.get("header_sha256")
+        != file_sha256(ROOT / "cpp" / "certigap_tracking.hpp")
         or fast_metadata.get("csv_sha256")
         != file_sha256(RESULTS / "tracking_autoindex_fast_runtime.csv")
     ):
         raise ValueError("fast tracking benchmark provenance is invalid")
+
+    hot_path = csv_records("tracking_hot_path_runtime.csv")
+    hot_groups: dict[tuple[str, str, str], list[dict[str, str]]] = {}
+    for row in hot_path:
+        hot_groups.setdefault(
+            (row["horizon"], row["n"], row["workload"]), []
+        ).append(row)
+    hot_implementations = {
+        "frozen_fenwick_checked", "frozen_fenwick_unchecked",
+        "static_fenwick_checked", "static_fenwick_unchecked",
+        "fast_checked", "fast_unchecked", "fast_detached_data_plane",
+    }
+    if (
+        len(hot_groups) != 64
+        or len(hot_path) != 448
+        or any(
+            {row["implementation"] for row in group} != hot_implementations
+            or {row["operations"] for row in group} != {group[0]["horizon"]}
+            or any(
+                float(row["ns_per_operation"]) <= 0.0
+                or float(row["baseline_ns_per_operation"]) <= 0.0
+                or float(row["ratio_to_direct"]) <= 0.0
+                or not math.isclose(
+                    float(row["checksum"]), float(row["baseline_checksum"]),
+                    rel_tol=1e-12, abs_tol=1e-9,
+                )
+                for row in group
+            )
+            for group in hot_groups.values()
+        )
+    ):
+        raise ValueError("tracking hot-path comparison is incomplete")
+    hot_metadata = json.loads(
+        (RESULTS / "tracking_hot_path_runtime.metadata.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if (
+        hot_metadata.get("schema") != "certigap-tracking-hot-path-v1"
+        or hot_metadata.get("horizons") != [5000, 50000]
+        or hot_metadata.get("native_repetitions") != 7
+        or hot_metadata.get("configurations") != 64
+        or hot_metadata.get("source_sha256")
+        != file_sha256(ROOT / "cpp" / "tracking_hot_path_benchmark.cpp")
+        or hot_metadata.get("header_sha256")
+        != file_sha256(ROOT / "cpp" / "certigap_tracking.hpp")
+        or hot_metadata.get("csv_sha256")
+        != file_sha256(RESULTS / "tracking_hot_path_runtime.csv")
+    ):
+        raise ValueError("tracking hot-path benchmark provenance is invalid")
 
     sqlite_vtab_rows = csv_records("sqlite_vtab_validation.csv")
     if (

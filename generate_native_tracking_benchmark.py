@@ -225,6 +225,9 @@ Raw data: `tracking_autoindex_native_runtime.csv`.
         ).stdout.splitlines()[0],
         "compile_command": command,
         "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+        "header_sha256": hashlib.sha256(
+            (ROOT / "cpp" / "certigap_tracking.hpp").read_bytes()
+        ).hexdigest(),
         "csv_sha256": hashlib.sha256(csv_path.read_bytes()).hexdigest(),
     }
     (RESULTS / "tracking_autoindex_native_runtime.metadata.json").write_text(

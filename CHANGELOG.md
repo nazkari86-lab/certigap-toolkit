@@ -5,11 +5,23 @@ recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
 
 ## Unreleased
 
+- Add direct native runtime dispatch, checked and unchecked hot paths, separated
+  `hot_*` data-plane operations with externally sampled `observe_sample()`
+  control, and deferred specialist activation through explicit `maintenance()`.
+- Add dynamic `FrozenTrackingIndex` and compile-time
+  `StaticTrackingIndex<Backend, Aggregate>` deployment. In the paired
+  50,000-operation benchmark, checked static Fenwick records `1.01x` median and
+  `1.23x` maximum latency versus direct Fenwick.
+- Add a 448-row paired hot-path benchmark, alternating candidate/baseline order,
+  seven repetitions, checksum validation, source/header hashes, and mandatory
+  artifact auditing. Full automatic Fast tracking now records `1.21x` median,
+  `1.59x` p95, and `1.90x` maximum overhead versus Fenwick.
+
 - Add `FastTrackingAutoIndex`, a sampled epoch controller with precomputed cost
   tables, directed target rebuild costs, minimum residence, stable-workload
   leases, and an always-current Fenwick/segment-tree shadow for immediate safe
-  fallback. The 384-row runtime artifact records `1.82x` median, `3.58x` p95,
-  and `3.89x` maximum overhead versus Fenwick across 64 configurations.
+  fallback. The expanded direct-dispatch implementation and current 384-row
+  runtime artifact supersede the initial overhead measurements.
 - Expand native randomized ASan/UBSan validation from 24,000 to 48,000
   operations, including sum/min/max Fast-mode differential tests, phase
   fallback, policy rejection, generated single-header compilation, and

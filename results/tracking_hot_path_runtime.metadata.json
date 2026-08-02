@@ -10,20 +10,20 @@
     "-Wpedantic",
     "-Werror",
     "-I/Users/dulatnurlanuly/Downloads/certigap-prototype/cpp",
-    "/Users/dulatnurlanuly/Downloads/certigap-prototype/cpp/tracking_autoindex_benchmark.cpp",
+    "/Users/dulatnurlanuly/Downloads/certigap-prototype/cpp/tracking_hot_path_benchmark.cpp",
     "-o",
-    "/var/folders/z3/pz40jzcn5qq8qssmy__cw2jm0000gn/T/tmp_g78_xz_/tracking_benchmark"
+    "/var/folders/z3/pz40jzcn5qq8qssmy__cw2jm0000gn/T/tmp11pye4z_/tracking_hot_path"
   ],
   "compiler": "Apple clang version 17.0.0 (clang-1700.6.3.2)",
   "configurations": 64,
-  "csv_sha256": "6d1ccdf53a543e2b66326fc544a1818eaa064fdcf577e739358e4632db3afdad",
+  "csv_sha256": "273cdbabdb4de019ec9618a142fae1659861cb7604f705ec84e846e137542dfa",
   "header_sha256": "9142f3b61301ba8936da0d0963fc0518cf42f95e76a3f2fd4bdff3f417ecadfb",
   "horizons": [
     5000,
     50000
   ],
-  "native_repetitions": 5,
+  "native_repetitions": 7,
   "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
-  "schema": "certigap-fast-tracking-benchmark-v1",
-  "source_sha256": "3609aa7f783edbb8c63fb69285d0f230a4ccb413d7732e092a8afa7dfdfaa220"
+  "schema": "certigap-tracking-hot-path-v1",
+  "source_sha256": "decd17af89ca2448957f783341c4ece6f0e141fd0a9e87df7fa93cc47340fd12"
 }

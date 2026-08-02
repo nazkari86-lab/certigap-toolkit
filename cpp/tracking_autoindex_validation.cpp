@@ -4,6 +4,7 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <numeric>
 #include <random>
 
 
@@ -119,6 +120,90 @@ void verify_fast_phase_fallback() {
     assert(index.range_query(1, 16) == 24.0);
     assert(index.selected_backend() == certigap::Backend::Fenwick);
     assert(index.fallback_count() == 1);
+}
+
+void verify_unchecked_and_frozen_paths() {
+    std::vector<double> values(32);
+    std::iota(values.begin(), values.end(), 1.0);
+    certigap::FastTrackingAutoIndex fast(values);
+    assert(fast.unchecked_get(5) == 5.0);
+    assert(fast.unchecked_range_query(3, 12) == 75.0);
+    fast.unchecked_point_update(5, 100.0);
+    assert(fast.unchecked_get(5) == 100.0);
+
+    auto frozen = fast.freeze(certigap::Backend::Fenwick);
+    assert(frozen.backend() == certigap::Backend::Fenwick);
+    assert(frozen.size() == values.size());
+    assert(frozen.unchecked_range_query(3, 12) == 170.0);
+    frozen.unchecked_point_update(5, -7.0);
+    assert(frozen.get(5) == -7.0);
+    assert(fast.get(5) == 100.0);
+
+    auto prefix = fast.freeze(certigap::Backend::PrefixSum);
+    assert(prefix.range_query(1, 32) == 623.0);
+    prefix.point_update(1, 10.0);
+    assert(prefix.unchecked_range_query(1, 32) == 632.0);
+
+    auto compiled = fast.freeze_static<
+        certigap::Backend::Fenwick, certigap::Aggregate::Sum>();
+    assert(compiled.unchecked_range_query(3, 12) == 170.0);
+    compiled.unchecked_point_update(5, 8.0);
+    assert(compiled.get(5) == 8.0);
+}
+
+void verify_deferred_maintenance() {
+    certigap::FastTrackingPolicy policy;
+    policy.decision_interval = 16;
+    policy.sample_interval = 1;
+    policy.minimum_residence_operations_per_key = 1;
+    policy.stable_decisions_before_lease = 1024;
+    policy.lease_operations = 32;
+    policy.defer_specialist_rebuilds = true;
+    policy.migration_matrix = {{0.0, 0.0}, {0.0, 0.0}};
+    certigap::FastTrackingAutoIndex index(
+        std::vector<double>(37, 1.0), certigap::Aggregate::Sum, policy);
+    for (int operation = 0; operation < 256; ++operation) {
+        assert(index.range_query(7, 31) == 25.0);
+        if (index.maintenance_pending()) break;
+    }
+    assert(index.maintenance_pending());
+    assert(index.pending_backend() == certigap::Backend::PrefixSum);
+    assert(index.selected_backend() == certigap::Backend::Fenwick);
+    index.maintenance();
+    assert(!index.maintenance_pending());
+    assert(index.selected_backend() == certigap::Backend::PrefixSum);
+    assert(index.range_query(7, 31) == 25.0);
+    index.point_update(10, 9.0);
+    assert(index.selected_backend() == certigap::Backend::Fenwick);
+    assert(index.range_query(7, 31) == 33.0);
+}
+
+void verify_detached_control_plane() {
+    certigap::FastTrackingPolicy policy;
+    policy.decision_interval = 16;
+    policy.sample_interval = 1;
+    policy.minimum_residence_operations_per_key = 1;
+    policy.stable_decisions_before_lease = 1024;
+    policy.lease_operations = 32;
+    policy.defer_specialist_rebuilds = true;
+    policy.migration_matrix = {{0.0, 0.0}, {0.0, 0.0}};
+    certigap::FastTrackingAutoIndex index(
+        std::vector<double>(37, 1.0), certigap::Aggregate::Sum, policy);
+    for (int operation = 0; operation < 16; ++operation) {
+        assert(index.hot_range_query(7, 31) == 25.0);
+    }
+    assert(index.explain().operations == 0);
+    index.observe_sample(certigap::TrackingOperation::range(7, 31), 16);
+    assert(index.explain().operations == 16);
+    assert(index.sampled_operations() == 1);
+    index.hot_point_update(10, 9.0);
+    assert(index.hot_get(10) == 9.0);
+
+    bool rejected = false;
+    try {
+        index.observe_sample(certigap::TrackingOperation::get(1), 0);
+    } catch (const std::invalid_argument&) { rejected = true; }
+    assert(rejected);
 }
 
 void verify_structural_costs() {
@@ -241,6 +326,9 @@ int main() {
     verify_oracle_against_enumeration();
     verify_matrix_boundary_and_batch();
     verify_fast_phase_fallback();
+    verify_unchecked_and_frozen_paths();
+    verify_deferred_maintenance();
+    verify_detached_control_plane();
     verify_fail_closed_inputs();
     for (int seed = 1; seed <= 8; ++seed) {
         randomized_correctness(certigap::Aggregate::Sum, 1000 + seed);
