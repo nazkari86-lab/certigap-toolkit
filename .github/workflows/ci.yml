@@ -62,6 +62,7 @@ jobs:
           python generate_safe_autoindex_validation.py
           python generate_sequential_safe_validation.py
           python generate_martingale_safe_validation.py
+          python generate_sqlite_vtab_validation.py
           python generate_compiler_integration_validation.py
           python generate_adaptive_validation.py
           python generate_synthesis_validation.py
@@ -93,7 +94,10 @@ jobs:
           sqlite3 :memory: \
             ".load /tmp/certigap.so" \
             "select certigap_build('ci','[0,1,2,3,4,5,6,7]');" \
-            "select certigap_range_sum('ci',2,7);"
+            "select certigap_range_sum('ci',2,7);" \
+            "create virtual table items using certigap_vtab;" \
+            "insert into items values(1,10),(2,20),(5,50);" \
+            "select range_sum from items where key=1 and right_key=5;"
 
       - name: Build installable wheel
         run: |

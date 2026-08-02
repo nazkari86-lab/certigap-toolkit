@@ -219,6 +219,7 @@ def main() -> None:
             DOCS_DIR / "MARTINGALE_SAFE_AUTOINDEX.md",
             RESULTS_DIR / "martingale_safe_validation.md",
             DOCS_DIR / "SQLITE_EXTENSION.md",
+            RESULTS_DIR / "sqlite_vtab_validation.md",
             DOCS_DIR / "COMPILER_INTEGRATION.md",
             RESULTS_DIR / "compiler_integration_validation.md",
             DOCS_DIR / "ADAPTIVE_CPP.md",

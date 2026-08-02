@@ -29,7 +29,11 @@ endif()
 
 if(CERTIGAP_BUILD_SQLITE_EXTENSION)
     find_path(SQLITE3EXT_INCLUDE_DIR sqlite3ext.h REQUIRED)
-    add_library(certigap_sqlite MODULE cpp/certigap_sqlite.cpp)
+    add_library(
+        certigap_sqlite MODULE
+        cpp/certigap_sqlite.cpp
+        cpp/certigap_sqlite_vtab.cpp
+    )
     target_compile_features(certigap_sqlite PRIVATE cxx_std_17)
     target_include_directories(
         certigap_sqlite PRIVATE

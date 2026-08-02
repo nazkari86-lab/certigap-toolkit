@@ -23,6 +23,21 @@ def extension_source_path() -> Path:
     raise FileNotFoundError("CertiGap SQLite extension source is missing")
 
 
+def virtual_table_source_path() -> Path:
+    checkout = Path(__file__).resolve().parents[1] / "cpp" / "certigap_sqlite_vtab.cpp"
+    installed = (
+        Path(sys.prefix)
+        / "share"
+        / "certigap"
+        / "tools"
+        / "certigap_sqlite_vtab.cpp"
+    )
+    for candidate in (checkout, installed):
+        if candidate.is_file():
+            return candidate
+    raise FileNotFoundError("CertiGap SQLite virtual-table source is missing")
+
+
 def certigap_include_dir() -> Path:
     checkout = Path(__file__).resolve().parents[1] / "cpp"
     installed = Path(sys.prefix) / "include" / "certigap"
@@ -81,6 +96,7 @@ def build_sqlite_extension(
             "-I",
             str(sqlite_include_dir()),
             str(extension_source_path()),
+            str(virtual_table_source_path()),
             "-o",
             str(target),
         ],

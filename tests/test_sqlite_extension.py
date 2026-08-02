@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import random
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -11,6 +13,7 @@ from certigap.sqlite_extension import (
     build_sqlite_extension,
     extension_source_path,
     sqlite_include_dir,
+    virtual_table_source_path,
 )
 
 
@@ -42,9 +45,14 @@ class SQLiteExtensionTests(unittest.TestCase):
         except FileNotFoundError as exc:
             raise unittest.SkipTest(str(exc)) from exc
 
-    def run_sql(self, extension: Path, sql: str) -> subprocess.CompletedProcess:
+    def run_sql(
+        self,
+        extension: Path,
+        sql: str,
+        database: str = ":memory:",
+    ) -> subprocess.CompletedProcess:
         return subprocess.run(
-            [self.sqlite, ":memory:"],
+            [self.sqlite, database],
             input=f".load {extension}\n{sql}\n",
             text=True,
             capture_output=True,
@@ -122,6 +130,230 @@ class SQLiteExtensionTests(unittest.TestCase):
 
     def test_packaged_source_is_discoverable(self) -> None:
         self.assertTrue(extension_source_path().is_file())
+        self.assertTrue(virtual_table_source_path().is_file())
+
+    def test_virtual_table_planner_and_range_pushdown(self) -> None:
+        suffix = ".dylib" if sys.platform == "darwin" else ".so"
+        with tempfile.TemporaryDirectory() as directory:
+            extension = build_sqlite_extension(
+                Path(directory) / f"certigap{suffix}"
+            )
+            completed = self.run_sql(
+                extension,
+                "\n".join(
+                    [
+                        "CREATE VIRTUAL TABLE items USING certigap_vtab;",
+                        "INSERT INTO items(key,value) "
+                        "VALUES(1,10),(2,20),(3,30),(5,50);",
+                        "SELECT group_concat(key||':'||value,',') FROM "
+                        "(SELECT key,value FROM items WHERE key>=2 AND key<5 "
+                        "ORDER BY key);",
+                        "SELECT range_sum FROM items "
+                        "WHERE key=2 AND right_key=5;",
+                        "EXPLAIN QUERY PLAN SELECT value FROM items WHERE key=3;",
+                    ]
+                ),
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertIn("2:20.0,3:30.0", completed.stdout)
+            self.assertIn("100.0", completed.stdout)
+            self.assertIn("VIRTUAL TABLE INDEX 1:key_eq", completed.stdout)
+
+    def test_virtual_table_is_durable_and_transactional(self) -> None:
+        suffix = ".dylib" if sys.platform == "darwin" else ".so"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            extension = build_sqlite_extension(root / f"certigap{suffix}")
+            database = str(root / "persistent.db")
+            first = self.run_sql(
+                extension,
+                "\n".join(
+                    [
+                        "CREATE VIRTUAL TABLE items USING certigap_vtab;",
+                        "INSERT INTO items VALUES(1,10),(3,30),(5,50);",
+                        "BEGIN;",
+                        "UPDATE items SET value=300 WHERE key=3;",
+                        "INSERT INTO items VALUES(4,40);",
+                        "ROLLBACK;",
+                        "SELECT range_sum FROM items "
+                        "WHERE key=1 AND right_key=5;",
+                    ]
+                ),
+                database,
+            )
+            self.assertEqual(first.returncode, 0, first.stderr)
+            self.assertEqual(first.stdout.strip(), "90.0")
+
+            second = self.run_sql(
+                extension,
+                "\n".join(
+                    [
+                        "SELECT group_concat(key||':'||value,',') FROM items;",
+                        "DELETE FROM items WHERE key=3;",
+                        "UPDATE items SET key=2,value=22 WHERE key=1;",
+                        "SELECT group_concat(key||':'||value,',') FROM items;",
+                        "SELECT range_sum FROM items "
+                        "WHERE key=2 AND right_key=5;",
+                    ]
+                ),
+                database,
+            )
+            self.assertEqual(second.returncode, 0, second.stderr)
+            self.assertEqual(
+                second.stdout.strip().splitlines(),
+                ["1:10.0,3:30.0,5:50.0", "2:22.0,5:50.0", "72.0"],
+            )
+
+    def test_virtual_table_savepoint_rollback_matches_oracle(self) -> None:
+        suffix = ".dylib" if sys.platform == "darwin" else ".so"
+        with tempfile.TemporaryDirectory() as directory:
+            extension = build_sqlite_extension(
+                Path(directory) / f"certigap{suffix}"
+            )
+            completed = self.run_sql(
+                extension,
+                "\n".join(
+                    [
+                        "CREATE VIRTUAL TABLE items USING certigap_vtab;",
+                        "INSERT INTO items VALUES(1,1),(2,2),(3,3);",
+                        "BEGIN;",
+                        "SAVEPOINT before_changes;",
+                        "UPDATE items SET value=200 WHERE key=2;",
+                        "DELETE FROM items WHERE key=3;",
+                        "ROLLBACK TO before_changes;",
+                        "RELEASE before_changes;",
+                        "COMMIT;",
+                        "SELECT range_sum FROM items "
+                        "WHERE key=1 AND right_key=3;",
+                    ]
+                ),
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertEqual(completed.stdout.strip(), "6.0")
+
+    def test_virtual_table_serializes_concurrent_writers(self) -> None:
+        suffix = ".dylib" if sys.platform == "darwin" else ".so"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            extension = build_sqlite_extension(root / f"certigap{suffix}")
+            database = str(root / "concurrent.db")
+            setup = self.run_sql(
+                extension,
+                "PRAGMA journal_mode=WAL;\n"
+                "CREATE VIRTUAL TABLE items USING certigap_vtab;",
+                database,
+            )
+            self.assertEqual(setup.returncode, 0, setup.stderr)
+
+            first = subprocess.Popen(
+                [self.sqlite, database],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            assert first.stdin is not None
+            first.stdin.write(
+                f".load {extension}\n"
+                "PRAGMA busy_timeout=3000;\n"
+                "BEGIN IMMEDIATE;\n"
+                "INSERT INTO items VALUES(1,10);\n"
+                ".shell sleep 1\n"
+                "COMMIT;\n"
+            )
+            first.stdin.close()
+            time.sleep(0.2)
+            second = self.run_sql(
+                extension,
+                "PRAGMA busy_timeout=3000;\n"
+                "INSERT INTO items VALUES(2,20);\n"
+                "SELECT group_concat(key||':'||value,',') FROM items;",
+                database,
+            )
+            first.wait(timeout=5)
+            first_stderr = first.stderr.read() if first.stderr is not None else ""
+            if first.stdout is not None:
+                first.stdout.close()
+            if first.stderr is not None:
+                first.stderr.close()
+
+            self.assertEqual(first.returncode, 0, first_stderr)
+            self.assertEqual(second.returncode, 0, second.stderr)
+            self.assertIn("1:10.0,2:20.0", second.stdout)
+
+    def test_virtual_table_random_mutations_match_map_oracle(self) -> None:
+        suffix = ".dylib" if sys.platform == "darwin" else ".so"
+        generator = random.Random(20260802)
+        values = {key: float(key) for key in range(1, 21)}
+        next_key = 21
+        sql = [
+            "CREATE VIRTUAL TABLE items USING certigap_vtab;",
+            "INSERT INTO items VALUES "
+            + ",".join(f"({key},{value})" for key, value in values.items())
+            + ";",
+        ]
+        expected = []
+        for _ in range(100):
+            choice = generator.random()
+            if choice < 0.55:
+                key = generator.choice(list(values))
+                number = float(generator.randint(-500, 500)) / 10.0
+                values[key] = number
+                sql.append(f"UPDATE items SET value={number} WHERE key={key};")
+            elif choice < 0.75 and len(values) > 5:
+                key = generator.choice(list(values))
+                del values[key]
+                sql.append(f"DELETE FROM items WHERE key={key};")
+            else:
+                number = float(generator.randint(-500, 500)) / 10.0
+                values[next_key] = number
+                sql.append(f"INSERT INTO items VALUES({next_key},{number});")
+                next_key += 1
+            left, right = sorted(generator.sample(list(values), 2))
+            expected.append(sum(
+                number
+                for key, number in values.items()
+                if left <= key <= right
+            ))
+            sql.append(
+                "SELECT printf('%.9f',range_sum) FROM items "
+                f"WHERE key={left} AND right_key={right};"
+            )
+
+        with tempfile.TemporaryDirectory() as directory:
+            extension = build_sqlite_extension(
+                Path(directory) / f"certigap{suffix}"
+            )
+            completed = self.run_sql(extension, "\n".join(sql))
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            observed = [float(line) for line in completed.stdout.splitlines()]
+            self.assertEqual(len(observed), len(expected))
+            for actual, wanted in zip(observed, expected):
+                self.assertAlmostEqual(actual, wanted, places=7)
+
+    def test_virtual_table_rename_and_drop_manage_shadow_table(self) -> None:
+        suffix = ".dylib" if sys.platform == "darwin" else ".so"
+        with tempfile.TemporaryDirectory() as directory:
+            extension = build_sqlite_extension(
+                Path(directory) / f"certigap{suffix}"
+            )
+            completed = self.run_sql(
+                extension,
+                "\n".join(
+                    [
+                        "CREATE VIRTUAL TABLE items USING certigap_vtab;",
+                        "INSERT INTO items VALUES(1,10),(2,20);",
+                        "ALTER TABLE items RENAME TO moved;",
+                        "SELECT range_sum FROM moved "
+                        "WHERE key=1 AND right_key=2;",
+                        "DROP TABLE moved;",
+                        "SELECT count(*) FROM sqlite_master "
+                        "WHERE name IN ('items_data','moved_data');",
+                    ]
+                ),
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertEqual(completed.stdout.strip().splitlines(), ["30.0", "0"])
 
 
 if __name__ == "__main__":

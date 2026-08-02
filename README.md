@@ -28,8 +28,9 @@ alpha-spending Hoeffding crossing; see
 Martingale SafeAutoIndex adds mixture e-process deployment and revocation for
 bounded adapted observations under declared conditional-mean nulls; see
 [`docs/MARTINGALE_SAFE_AUTOINDEX.md`](docs/MARTINGALE_SAFE_AUTOINDEX.md).
-An actual SQLite loadable extension exposes connection-local adaptive C++
-indexes through SQL, with no Python runtime; see
+An actual SQLite loadable extension exposes adaptive C++ indexes through SQL.
+Its `certigap_vtab` module adds planner-visible key constraints, durable shadow
+storage, transactions, and mutations with no Python runtime; see
 [`docs/SQLITE_EXTENSION.md`](docs/SQLITE_EXTENSION.md).
 
 The easiest C++ mode is one header:
@@ -99,6 +100,8 @@ It ships with:
   separately controlled false-decision risks.
 - SQLite `sqlite3_load_extension` integration for SQL build/get/range/update/
   optimize lifecycle operations.
+- Planner-native `certigap_vtab` with equality/range `xBestIndex` strategies,
+  durable reconnect, rollback/savepoint support, and serialized WAL writers.
 - CertiGap-H `O(1)` range sums with exact representation-aware partition
   synthesis and a train-only native backend tuner.
 
@@ -374,8 +377,27 @@ PYTHONPATH=. python3 benchmarks/sqlite_ycsb.py --mode quick
 ```
 
 It is explicitly not presented as the official Java YCSB harness or as a
-SQLite extension. See
+portable performance result. See
 [`results/sqlite_ycsb_pilot.md`](results/sqlite_ycsb_pilot.md).
+
+Build and use the planner-visible virtual table:
+
+```bash
+certigap-sqlite-build --output certigap.so
+sqlite3 catalog.db
+```
+
+```sql
+.load ./certigap.so
+CREATE VIRTUAL TABLE catalog USING certigap_vtab;
+INSERT INTO catalog(key, value) VALUES (1, 10), (2, 20), (5, 50);
+SELECT value FROM catalog WHERE key = 2;
+SELECT range_sum FROM catalog WHERE key = 1 AND right_key = 5;
+```
+
+The virtual table uses inclusive key ranges. Its shadow table is durable and
+SQLite transactions remain the source of truth; see
+[`results/sqlite_vtab_validation.md`](results/sqlite_vtab_validation.md).
 
 The generated `Index` exposes `get`, `range_query`, `point_update`, and
 `snapshot`. Selection is resolved at C++ compile time. A complete buildable
@@ -597,7 +619,7 @@ What is already done:
 Current limits and open research work:
 
 - tighter scalable bounds for strongly skewed large instances.
-- official YCSB plus RocksDB/SQLite integration and independent hardware runs.
+- official YCSB or a RocksDB plugin plus independent hardware runs.
 - external or machine-assisted formal review of the written proofs.
 - approximation guarantees for the candidate-pruned C++ heuristic.
 

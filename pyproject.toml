@@ -47,6 +47,8 @@ include = ["certigap*"]
 "share/certigap/tools" = [
   "cpp/hardware_calibration.cpp",
   "cpp/certigap_sqlite.cpp",
+  "cpp/certigap_sqlite_vtab.cpp",
+  "cpp/certigap_sqlite_vtab.hpp",
 ]
 
 [tool.ruff]

@@ -24,6 +24,8 @@
     revocation при доказанном вреде и bounded adapted-data гарантией.
 13. настоящий SQLite loadable extension, выполняющий C++ CertiGap lifecycle
     непосредственно из SQL без Python runtime.
+14. planner-native SQLite virtual table с `xBestIndex`, durable shadow storage,
+    транзакционным rollback и проверкой двух WAL writers.
 
 Текущее состояние прототипа подтверждается следующими результатами:
 

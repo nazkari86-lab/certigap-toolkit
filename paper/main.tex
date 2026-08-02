@@ -352,6 +352,16 @@ SQLite extension. In this pilot CertiGap-H is slower than Fenwick in all five
 mixes; this negative result bounds the current systems claim and motivates
 native storage-engine integration rather than stronger performance language.
 
+The loadable extension now also registers a planner-visible SQLite virtual
+table. Its \texttt{xBestIndex} advertises equality and bounded key scans, while
+a hidden right endpoint pushes an inclusive range sum into the adaptive C++
+index. A SQLite shadow table remains the durable source of truth. Six
+deterministic ABI scenarios verify planner selection, range pushdown,
+rollback/reconnect, insert/update/delete, and shadow agreement; separate tests
+cover savepoints and two serialized WAL writers in distinct processes. These
+results establish a working storage integration, not superiority over SQLite's
+native B-tree or portability to high-contention production workloads.
+
 Finally, a pinned Lean 4 kernel checks the non-negative fixed-point
 Pareto-dominance lemma and its common-additive-extension corollary. This small
 formal result supports one pruning step only; it is not a formalization of

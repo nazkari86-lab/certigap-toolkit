@@ -1,0 +1,7 @@
+scenario,expected,observed,planner_strategy,passed,scope
+planner_equality,`--SCAN items VIRTUAL TABLE INDEX 1:key_eq,`--SCAN items VIRTUAL TABLE INDEX 1:key_eq,key_eq,True,SQLite ABI result; no portable latency claim
+planner_bounded_range,`--SCAN items VIRTUAL TABLE INDEX 10:key_ge_key_le,`--SCAN items VIRTUAL TABLE INDEX 10:key_ge_key_le,key_ge_key_le,True,SQLite ABI result; no portable latency claim
+range_sum_pushdown,100.0,100.0,range_sum,True,SQLite ABI result; no portable latency claim
+rollback_after_reconnect,90.0,90.0,,True,SQLite ABI result; no portable latency claim
+insert_update_delete,"2:22.0,5:50.0","2:22.0,5:50.0",,True,SQLite ABI result; no portable latency claim
+durable_shadow_consistency,"2:22.0,5:50.0","2:22.0,5:50.0",,True,SQLite ABI result; no portable latency claim

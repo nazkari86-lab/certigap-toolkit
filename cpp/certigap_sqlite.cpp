@@ -2,6 +2,7 @@
 SQLITE_EXTENSION_INIT1
 
 #include "certigap.hpp"
+#include "certigap_sqlite_vtab.hpp"
 
 #include <cerrno>
 #include <cmath>
@@ -310,5 +311,5 @@ extern "C" int sqlite3_certigap_init(
             return result;
         }
     }
-    return SQLITE_OK;
+    return certigap_register_vtab(database, error);
 }

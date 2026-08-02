@@ -163,6 +163,22 @@ Completed on `main` after `v1.10.1`. Remaining storage work is a planner-native
 virtual table or RocksDB plugin, official YCSB, durable synchronization,
 concurrent writers, and independent production traces.
 
+## Phase 16: Planner-Native Durable SQLite
+
+- `certigap_vtab` registered through the SQLite virtual-table ABI;
+- equality, lower/upper, and bounded-range `xBestIndex` strategies;
+- hidden-column inclusive range-sum pushdown into the adaptive C++ index;
+- durable SQLite shadow table with reconnect reconstruction;
+- INSERT, key/value UPDATE, DELETE, rename, and drop lifecycle;
+- rollback, savepoint rollback, and shadow/in-memory consistency;
+- two-process WAL writer serialization and post-lock visibility test;
+- deterministic six-scenario planner/durability validation artifact.
+
+Completed on `main`. This closes the local planner/durability prototype gap,
+not the external performance-evidence gap. Official YCSB, disk-page-aware
+layouts, high-contention evaluation, RocksDB integration, and independent
+production traces remain external or future systems work.
+
 ## External Closure
 
 - independent proof review and broader recurrence/verifier formalization
@@ -171,4 +187,4 @@ concurrent writers, and independent production traces.
 - prospective domain-owner trace and production pilot
 - tighter large-instance bounds and approximation ratios
 - official YCSB integration with RocksDB or SQLite
-- insert/delete, lazy range updates, disk pages, and concurrent-writer protocol
+- lazy range updates, disk-page layouts, and high-contention writer evaluation

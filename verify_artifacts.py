@@ -80,6 +80,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "synthesis_native_latency.csv": 110,
         "sqlite_ycsb_raw.csv": 375,
         "sqlite_ycsb_summary.csv": 15,
+        "sqlite_vtab_validation.csv": 6,
     }
     observed: dict[str, int] = {}
     for name, minimum in minimum_rows.items():
@@ -87,6 +88,23 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         if count < minimum:
             raise ValueError(f"{name} has {count} rows; expected at least {minimum}")
         observed[name] = count
+
+    sqlite_vtab_rows = csv_records("sqlite_vtab_validation.csv")
+    if (
+        {row["scenario"] for row in sqlite_vtab_rows}
+        != {
+            "planner_equality",
+            "planner_bounded_range",
+            "range_sum_pushdown",
+            "rollback_after_reconnect",
+            "insert_update_delete",
+            "durable_shadow_consistency",
+        }
+        or any(row["passed"] != "True" for row in sqlite_vtab_rows)
+        or {row["planner_strategy"] for row in sqlite_vtab_rows[:2]}
+        != {"key_eq", "key_ge_key_le"}
+    ):
+        raise ValueError("SQLite virtual-table validation is incomplete")
 
     scaling_text = (RESULTS / "scaling_benchmark.md").read_text(encoding="utf-8")
     match = re.search(r"- Rows: `(\d+)`", scaling_text)

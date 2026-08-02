@@ -76,9 +76,9 @@ CertiGap не строит полное поисковое дерево на в�
 - martingale lifecycle прошёл 4 из 4 сценариев: стабильный поток развёрнут,
   а update-heavy shift вернул классический baseline; adapted-null диагностика
   дала 101 ложное решение из 5000 при номинальном alpha 0.05.
-- SQLite ABI integration загружается командой `.load`, выполняет build,
-  profile, optimize, get, range sum и update с checksum-проверкой; это пока
-  function extension, а не planner-native virtual table.
+- SQLite ABI integration загружается командой `.load`; virtual table передаёт
+  equality/range constraints через `xBestIndex`, сохраняет данные между
+  подключениями и прошёл 6 из 6 planner/durability сценариев.
 
 ## 8. Примеры сертификатов
 

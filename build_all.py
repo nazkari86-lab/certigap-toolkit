@@ -42,6 +42,7 @@ def main() -> None:
     run([python, "generate_safe_autoindex_validation.py"])
     run([python, "generate_sequential_safe_validation.py"])
     run([python, "generate_martingale_safe_validation.py"])
+    run([python, "generate_sqlite_vtab_validation.py"])
     run([python, "generate_compiler_integration_validation.py"])
     run([python, "generate_autodro_benchmark.py"])
     run([python, "generate_direct_tv_validation.py"])

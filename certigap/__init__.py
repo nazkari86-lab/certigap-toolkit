@@ -108,7 +108,11 @@ from .sequential_safe_compiler import (
     generate_sequential_safe_cpp_header,
     load_sequential_safe_compile_spec,
 )
-from .sqlite_extension import build_sqlite_extension, extension_source_path
+from .sqlite_extension import (
+    build_sqlite_extension,
+    extension_source_path,
+    virtual_table_source_path,
+)
 from .synthesis import (
     HardwareProfile,
     SynthesisConstraints,
@@ -175,6 +179,7 @@ __all__ = [
     "benchmark_case",
     "brute_force_best",
     "build_sqlite_extension",
+    "virtual_table_source_path",
     "CertiGapToolkit",
     "CompiledAutoIndex",
     "CertiRangeWorkload",

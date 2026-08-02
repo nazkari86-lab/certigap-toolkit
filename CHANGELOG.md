@@ -25,6 +25,9 @@ recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
 - Add a Python-free SQLite loadable C++ extension, installed build command,
   connection-local lifecycle registry, strict SQL validation, CMake option,
   and real SQLite CLI integration tests.
+- Add the `certigap_vtab` SQLite virtual table with planner-visible equality
+  and range strategies, inclusive range-sum pushdown, durable shadow storage,
+  mutations, rollback/savepoints, reconnect, and two-process WAL validation.
 
 ## 1.10.1 - 2026-07-30
 

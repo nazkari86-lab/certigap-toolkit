@@ -41,6 +41,7 @@ latency is measured separately and is never certified by a structural score.
 | AutoIndex has low stationary three-backend regret | Empirical | `1.02%` mean, `6.42%` maximum over ten stationary scenarios | Same machine and three-candidate holdout oracle |
 | SQLite pilot executes real SQL operations | Empirical systems pilot | 375 raw repetitions, checksums, and bootstrap intervals | In-memory Python application integration with YCSB-compatible mixes; not official YCSB or a SQLite extension |
 | SQLite loadable extension executes CertiGap C++ operations from SQL | Cross-language systems integration | `cpp/certigap_sqlite.cpp` and `tests/test_sqlite_extension.py` | Connection-local SQL functions loaded through SQLite extension ABI; not a virtual table, planner integration, durability layer, or performance claim |
+| SQLite virtual table exposes planner-visible and durable CertiGap operations | Cross-process systems integration | `cpp/certigap_sqlite_vtab.cpp`, `results/sqlite_vtab_validation.csv`, and real SQLite CLI tests | Equality/bounded-range `xBestIndex`, inclusive range-sum pushdown, shadow durability, basic mutations, rollback/savepoints, and serialized two-process WAL writes; not an official YCSB or performance claim |
 | Temporal shift can break train-only selection | Empirical failure case | `219.69%` regret in the declared shift scenario | One deterministic stress case; not a drift frequency estimate |
 | Generated C++ implements the selected semantics | Cross-language differential | compiler integration and native runtime oracle tests | Supported get/range/update/snapshot operations and generated backends |
 
@@ -66,8 +67,8 @@ The following statements must not appear as project conclusions:
 1. Independent reproduction on separate Intel, AMD, and ARM Linux machines.
 2. External learned-index and robust-BST implementations under matched
    operation semantics, memory budgets, and hardware.
-3. Official YCSB plus planner-visible SQLite virtual-table or RocksDB plugin
-   integration with real operation traces.
+3. Official YCSB or a RocksDB plugin with real operation traces and matched
+   native SQLite B-tree measurements.
 4. A non-trivial approximation theorem or tighter certified gaps for the
    candidate-pruned scalable path.
 5. Exact or machine-assisted checking of proof-critical arithmetic and
