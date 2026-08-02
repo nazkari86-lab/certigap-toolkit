@@ -4,7 +4,7 @@ This register is the source of truth for statements made in the README, paper,
 presentations, and competition material. A result outside the stated scope must
 not be used to strengthen the claim.
 
-Status: CertiGap Toolkit `v1.15.0`.
+Status: CertiGap Toolkit `v1.16.0`.
 
 ## Central Claim
 
@@ -28,6 +28,8 @@ latency is measured separately and is never certified by a structural score.
 | Online mean-cost regret is at most `g + 2 delta R` | Mathematical | Theorem I and `online_regret_certificate` tests | Mean modeled execution cost; excludes unmodeled DB and migration latency |
 | AutoIndex selects the minimum-score feasible candidate | Replay-certified | `results/autoindex_validation.csv` | The complete declared eight-candidate portfolio, not all data structures |
 | ProofCarryingSpec connects algebraic capabilities to complete selection and generated C++ | Typed replay-certified and differential | `results/dsl_validation.csv`, rehashed-tamper tests, generated C++ execution, and compile-fail undeclared-operation test | Canonical `sum/min/max`, fixed-size get/range/update contracts, and the declared eight-design grammar; laws are canonical model declarations, not machine proofs for arbitrary operators or IEEE-754 associativity |
+| ProofCarryingDeltaIndex replays dynamic ordered-map state and mandatory compactions | Replay-certified and differential | `results/delta_validation.csv`, independent verifier, and rehashed semantic-tamper tests | Unique integer keys, insert/update/erase/get/inclusive range, canonical sum/min/max, and serialized Python reference runtime; not latency optimality, durability, or concurrency |
+| CertiGap partial routing improves over STL binary search on several SOSD-derived samples but not specialized indexes | Empirical negative and positive result | `results/sosd_streaming.csv` and pinned official SOSD RadixSpline | Apple M4, 20k even-rank samples from four fully streamed 200M distributions and synthetic query workloads: CertiGap beats `std::lower_bound` in `10/16`; RadixSpline/Eytzinger are fastest in `9/7`, so no learned-index superiority is claimed |
 | TrackingAutoIndex exactly replays its causal trajectory and ex-post K-switch regret | Replay-certified and differential | `results/tracking_autoindex_validation.csv`, exhaustive path tests, and `verify_tracking_autoindex_certificate` | Fixed feasible portfolio, declared structural costs, positive uniform migration metric, and recorded finite trace; not wall-clock or future-workload optimality |
 | TrackingAutoIndex usually improves over its unchanged initial representation in the maximum matrix | Certified empirical | `106/18/2` wins/ties/losses in `results/tracking_autoindex_comparison.csv` | 126 committed structural configurations only; against best fixed hindsight the mixed result is `53/34/39` |
 | Python TrackingAutoIndex has substantial online overhead | Empirical negative result | `results/tracking_autoindex_runtime.csv` | This machine, Python implementation, post-construction operations; `96.42x` to `958.87x` slower than fastest fixed portfolio backend |
@@ -72,6 +74,8 @@ The following statements must not appear as project conclusions:
 - The current replay verifiers are machine-checked formal proofs.
 - The current project discovers arbitrary new data structures from operation
   specifications.
+- The current SOSD-derived sample run is the official SOSD harness or proves
+  superiority over learned indexes.
 - TrackingAutoIndex predicts future workload phases or always beats the best
   retrospective switching path.
 - Results from one Apple M4 machine transfer to other processors.

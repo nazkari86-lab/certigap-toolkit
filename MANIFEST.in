@@ -6,6 +6,9 @@ include requirements-dev.txt
 include lean-toolchain
 prune rust-verifier/target
 recursive-include benchmarks *.py
+include benchmarks/official_ycsb_rocksdb.sh
+include benchmarks/ycsb/Dockerfile
+include cpp/sosd_streaming_benchmark.cpp
 recursive-include cmake *.cmake.in *.pc.in
 recursive-include docs *.md
 recursive-include examples *.cpp *.json *.py CMakeLists.txt

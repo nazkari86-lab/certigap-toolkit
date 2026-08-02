@@ -40,8 +40,8 @@ artifacts before running the integrity verifier.
 ## Container
 
 ```bash
-docker build -t certigap-toolkit:1.10.1 .
-docker run --rm certigap-toolkit:1.10.1
+docker build -t certigap-toolkit:1.16.0 .
+docker run --rm certigap-toolkit:1.16.0
 ```
 
 The default container command runs the complete test suite. Native timings

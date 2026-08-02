@@ -268,6 +268,19 @@ not arbitrary data-structure discovery. The next grammar expansion should add a
 verified delta layer for insert/erase, followed by generated concurrent views;
 it should not add unsupported candidates without runtime and verifier parity.
 
+## Phase 23: Dynamic Delta And External Baseline Bridge
+
+- immutable sorted base with bounded insert/update/erase overlay;
+- deterministic threshold compaction and complete mutation/read replay;
+- independent verifier and rehashed semantic-tamper rejection;
+- 12-case algebra/threshold validation matrix;
+- full-stream SOSD-derived comparison with official pinned RadixSpline;
+- pinned official YCSB/RocksDB container protocol.
+
+Completed in `v1.16.0` for the Python reference delta runtime and SOSD-derived
+local evidence. Native indexed delta reads, an actually executed official YCSB
+run, a CertiGap RocksDB plugin, durability, and concurrent writers remain open.
+
 ## External Closure
 
 - independent proof review and broader recurrence/verifier formalization

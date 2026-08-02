@@ -164,6 +164,10 @@ It ships with:
   durable reconnect, rollback/savepoint support, and serialized WAL writers.
 - CertiGap-H `O(1)` range sums with exact representation-aware partition
   synthesis and a train-only native backend tuner.
+- A proof-carrying ordered-map delta layer for insert/update/erase with
+  deterministic compaction and independent full-history replay.
+- A full-stream SOSD-derived benchmark against STL, Eytzinger, guarded
+  interpolation, and official pinned RadixSpline.
 
 License:
 
@@ -182,6 +186,11 @@ they are faster.
 Native evidence is workload-specific: CertiGap-H beats Fenwick in `9/11`
 committed scenarios, while Fenwick wins the `30%` and `50%` update cases and a
 global prefix array is usually strongest when reads dominate.
+
+On the committed SOSD-derived run, partial routing beats `std::lower_bound` in
+`10/16` dataset/workload cases, but is never the fastest tested method:
+RadixSpline wins `9` and Eytzinger `7`. See
+[`docs/SOSD_STREAMING.md`](docs/SOSD_STREAMING.md).
 
 Good fits:
 
@@ -677,6 +686,14 @@ workloads from MovieLens, UCI Online Retail I/II, HetRec, and Wikimedia. SOSD
 remains a separate sorted-key class. Raw data is cached locally; every result
 records URL, SHA-256, aggregation rule, and key ordering.
 See [`docs/BENCHMARK_PROTOCOL.md`](docs/BENCHMARK_PROTOCOL.md) for limitations.
+
+Run the full-stream SOSD-derived native comparison without writing decompressed
+200M-key files:
+
+```bash
+PYTHONPATH=. python3 benchmarks/sosd_streaming.py \
+  --sample-keys 20000 --queries 100000 --repeats 7 --budget 16
+```
 
 Build the C++ core:
 

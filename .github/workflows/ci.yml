@@ -87,6 +87,7 @@ jobs:
           python examples/read_heavy_embedded_index.py
           python examples/autodro_catalog.py
           python examples/certified_autoindex.py
+          python examples/proof_carrying_delta.py
           python examples/safe_autoindex.py
           python examples/sequential_safe_autoindex.py
           python examples/martingale_safe_autoindex.py

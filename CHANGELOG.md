@@ -5,6 +5,23 @@ recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
 
 ## Unreleased
 
+## 1.16.0 - 2026-08-03
+
+- Add the proof-carrying ordered-map delta layer with insert, update, erase,
+  inclusive key ranges, deterministic compaction, strict mutation
+  preconditions, and an independently implemented full-history replay verifier.
+- Add a 12-case `sum/min/max` delta matrix over four compaction thresholds,
+  rehashed semantic-tamper rejection, and a committed example certificate.
+- Add an 80-row SOSD-derived native benchmark over all four downloaded 200M
+  distributions, deterministic rank sampling, correctness checks, build and
+  memory fields, STL/Eytzinger/guarded-interpolation baselines, and official
+  pinned SOSD RadixSpline. CertiGap beats `std::lower_bound` in `10/16` cases,
+  while RadixSpline and Eytzinger are fastest in `9` and `7` cases.
+- Add a pinned one-command official YCSB/RocksDB container protocol. No YCSB
+  result is claimed because the local Docker daemon was unavailable.
+
+## 1.15.0 - 2026-08-01
+
 - Add the proof-carrying typed DSL with canonical `sum`, `min`, and `max`
   capability laws, a complete eight-design grammar, strict operation/resource
   contracts, deterministic C++17 generation, and independent replay.

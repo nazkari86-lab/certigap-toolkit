@@ -1,0 +1,1150 @@
+{
+  "claim_boundary": "The certificate replays ordered-map semantics and every deterministic delta compaction. It does not certify wall-clock optimality, durability, or concurrent progress.",
+  "contract": {
+    "algebra": "sum",
+    "key_semantics": "unique_signed_integer_keys",
+    "operations": [
+      "get",
+      "range",
+      "insert",
+      "update",
+      "erase"
+    ],
+    "range_semantics": "inclusive_key_interval",
+    "rebuild_rule": "after_mutation_when_distinct_delta_keys_reach_threshold",
+    "rebuild_threshold": 16,
+    "schema": "certigap-delta-contract-v1"
+  },
+  "events": [
+    {
+      "key": 1,
+      "operation": "insert",
+      "sequence": 0,
+      "value": -1.0
+    },
+    {
+      "key": 0,
+      "operation": "update",
+      "sequence": 1,
+      "value": 10.0
+    },
+    {
+      "key": 64,
+      "operation": "erase",
+      "sequence": 2
+    },
+    {
+      "left": 0,
+      "operation": "range",
+      "result": 29.0,
+      "right": 9,
+      "sequence": 3
+    },
+    {
+      "key": 3,
+      "operation": "insert",
+      "sequence": 4,
+      "value": -3.0
+    },
+    {
+      "left": 0,
+      "operation": "range",
+      "result": 36.0,
+      "right": 11,
+      "sequence": 5
+    },
+    {
+      "key": 5,
+      "operation": "insert",
+      "sequence": 6,
+      "value": -5.0
+    },
+    {
+      "left": 0,
+      "operation": "range",
+      "result": 43.0,
+      "right": 13,
+      "sequence": 7
+    },
+    {
+      "key": 7,
+      "operation": "insert",
+      "sequence": 8,
+      "value": -7.0
+    },
+    {
+      "left": 0,
+      "operation": "range",
+      "result": 50.0,
+      "right": 15,
+      "sequence": 9
+    },
+    {
+      "key": 9,
+      "operation": "insert",
+      "sequence": 10,
+      "value": -9.0
+    },
+    {
+      "left": 1,
+      "operation": "range",
+      "result": 47.0,
+      "right": 17,
+      "sequence": 11
+    },
+    {
+      "key": 11,
+      "operation": "insert",
+      "sequence": 12,
+      "value": -11.0
+    },
+    {
+      "key": 10,
+      "operation": "update",
+      "sequence": 13,
+      "value": 110.0
+    },
+    {
+      "left": 3,
+      "operation": "range",
+      "result": 153.0,
+      "right": 19,
+      "sequence": 14
+    },
+    {
+      "key": 13,
+      "operation": "insert",
+      "sequence": 15,
+      "value": -13.0
+    },
+    {
+      "left": 5,
+      "operation": "range",
+      "result": 159.0,
+      "right": 21,
+      "sequence": 16
+    },
+    {
+      "key": 15,
+      "operation": "insert",
+      "sequence": 17,
+      "value": -15.0
+    },
+    {
+      "key": 78,
+      "operation": "erase",
+      "sequence": 18
+    },
+    {
+      "left": 7,
+      "operation": "range",
+      "result": 165.0,
+      "right": 23,
+      "sequence": 19
+    },
+    {
+      "key": 17,
+      "operation": "insert",
+      "sequence": 20,
+      "value": -17.0
+    },
+    {
+      "left": 9,
+      "operation": "range",
+      "result": 171.0,
+      "right": 25,
+      "sequence": 21
+    },
+    {
+      "key": 19,
+      "operation": "insert",
+      "sequence": 22,
+      "value": -19.0
+    },
+    {
+      "left": 11,
+      "operation": "range",
+      "result": 77.0,
+      "right": 27,
+      "sequence": 23
+    },
+    {
+      "key": 21,
+      "operation": "insert",
+      "sequence": 24,
+      "value": -21.0
+    },
+    {
+      "key": 20,
+      "operation": "update",
+      "sequence": 25,
+      "value": 210.0
+    },
+    {
+      "compacted_delta_keys": 16,
+      "entry_count": 73,
+      "operation": "rebuild",
+      "sequence": 26,
+      "state_sha256": "8bf5b7922d7016a72cb3e80e447717f4605d5e73dfe0a4035ddd9e250b33284d"
+    },
+    {
+      "left": 13,
+      "operation": "range",
+      "result": 273.0,
+      "right": 29,
+      "sequence": 27
+    },
+    {
+      "key": 23,
+      "operation": "insert",
+      "sequence": 28,
+      "value": -23.0
+    },
+    {
+      "left": 15,
+      "operation": "range",
+      "result": 279.0,
+      "right": 31,
+      "sequence": 29
+    },
+    {
+      "key": 25,
+      "operation": "insert",
+      "sequence": 30,
+      "value": -25.0
+    },
+    {
+      "left": 17,
+      "operation": "range",
+      "result": 285.0,
+      "right": 33,
+      "sequence": 31
+    },
+    {
+      "key": 27,
+      "operation": "insert",
+      "sequence": 32,
+      "value": -27.0
+    },
+    {
+      "left": 19,
+      "operation": "range",
+      "result": 291.0,
+      "right": 35,
+      "sequence": 33
+    },
+    {
+      "key": 29,
+      "operation": "insert",
+      "sequence": 34,
+      "value": -29.0
+    },
+    {
+      "key": 92,
+      "operation": "erase",
+      "sequence": 35
+    },
+    {
+      "left": 21,
+      "operation": "range",
+      "result": 107.0,
+      "right": 37,
+      "sequence": 36
+    },
+    {
+      "key": 31,
+      "operation": "insert",
+      "sequence": 37,
+      "value": -31.0
+    },
+    {
+      "key": 30,
+      "operation": "update",
+      "sequence": 38,
+      "value": 310.0
+    },
+    {
+      "left": 23,
+      "operation": "range",
+      "result": 393.0,
+      "right": 39,
+      "sequence": 39
+    },
+    {
+      "key": 33,
+      "operation": "insert",
+      "sequence": 40,
+      "value": -33.0
+    },
+    {
+      "left": 25,
+      "operation": "range",
+      "result": 399.0,
+      "right": 41,
+      "sequence": 41
+    },
+    {
+      "key": 35,
+      "operation": "insert",
+      "sequence": 42,
+      "value": -35.0
+    },
+    {
+      "left": 27,
+      "operation": "range",
+      "result": 405.0,
+      "right": 43,
+      "sequence": 43
+    },
+    {
+      "key": 37,
+      "operation": "insert",
+      "sequence": 44,
+      "value": -37.0
+    },
+    {
+      "left": 29,
+      "operation": "range",
+      "result": 411.0,
+      "right": 45,
+      "sequence": 45
+    },
+    {
+      "key": 39,
+      "operation": "insert",
+      "sequence": 46,
+      "value": -39.0
+    },
+    {
+      "left": 31,
+      "operation": "range",
+      "result": 137.0,
+      "right": 47,
+      "sequence": 47
+    },
+    {
+      "key": 41,
+      "operation": "insert",
+      "sequence": 48,
+      "value": -41.0
+    },
+    {
+      "key": 40,
+      "operation": "update",
+      "sequence": 49,
+      "value": 410.0
+    },
+    {
+      "left": 33,
+      "operation": "range",
+      "result": 513.0,
+      "right": 49,
+      "sequence": 50
+    },
+    {
+      "key": 43,
+      "operation": "insert",
+      "sequence": 51,
+      "value": -43.0
+    },
+    {
+      "key": 106,
+      "operation": "erase",
+      "sequence": 52
+    },
+    {
+      "left": 35,
+      "operation": "range",
+      "result": 519.0,
+      "right": 51,
+      "sequence": 53
+    },
+    {
+      "key": 45,
+      "operation": "insert",
+      "sequence": 54,
+      "value": -45.0
+    },
+    {
+      "compacted_delta_keys": 16,
+      "entry_count": 83,
+      "operation": "rebuild",
+      "sequence": 55,
+      "state_sha256": "a2465ec662476b788ca7a760108e8e044fa8082e685291bcf0b76db8a1637dec"
+    },
+    {
+      "left": 37,
+      "operation": "range",
+      "result": 525.0,
+      "right": 53,
+      "sequence": 56
+    },
+    {
+      "key": 47,
+      "operation": "insert",
+      "sequence": 57,
+      "value": -47.0
+    },
+    {
+      "left": 39,
+      "operation": "range",
+      "result": 531.0,
+      "right": 55,
+      "sequence": 58
+    },
+    {
+      "key": 49,
+      "operation": "insert",
+      "sequence": 59,
+      "value": -49.0
+    },
+    {
+      "left": 41,
+      "operation": "range",
+      "result": 167.0,
+      "right": 57,
+      "sequence": 60
+    },
+    {
+      "key": 51,
+      "operation": "insert",
+      "sequence": 61,
+      "value": -51.0
+    },
+    {
+      "key": 50,
+      "operation": "update",
+      "sequence": 62,
+      "value": 510.0
+    },
+    {
+      "left": 43,
+      "operation": "range",
+      "result": 633.0,
+      "right": 59,
+      "sequence": 63
+    },
+    {
+      "key": 53,
+      "operation": "insert",
+      "sequence": 64,
+      "value": -53.0
+    },
+    {
+      "left": 45,
+      "operation": "range",
+      "result": 639.0,
+      "right": 61,
+      "sequence": 65
+    },
+    {
+      "key": 55,
+      "operation": "insert",
+      "sequence": 66,
+      "value": -55.0
+    },
+    {
+      "left": 47,
+      "operation": "range",
+      "result": 645.0,
+      "right": 63,
+      "sequence": 67
+    },
+    {
+      "key": 57,
+      "operation": "insert",
+      "sequence": 68,
+      "value": -57.0
+    },
+    {
+      "key": 120,
+      "operation": "erase",
+      "sequence": 69
+    },
+    {
+      "left": 49,
+      "operation": "range",
+      "result": 587.0,
+      "right": 65,
+      "sequence": 70
+    },
+    {
+      "key": 59,
+      "operation": "insert",
+      "sequence": 71,
+      "value": -59.0
+    },
+    {
+      "left": 51,
+      "operation": "range",
+      "result": 133.0,
+      "right": 67,
+      "sequence": 72
+    },
+    {
+      "key": 61,
+      "operation": "insert",
+      "sequence": 73,
+      "value": -61.0
+    },
+    {
+      "key": 60,
+      "operation": "update",
+      "sequence": 74,
+      "value": 610.0
+    },
+    {
+      "left": 53,
+      "operation": "range",
+      "result": 689.0,
+      "right": 69,
+      "sequence": 75
+    },
+    {
+      "key": 63,
+      "operation": "insert",
+      "sequence": 76,
+      "value": -63.0
+    },
+    {
+      "left": 55,
+      "operation": "range",
+      "result": 695.0,
+      "right": 71,
+      "sequence": 77
+    }
+  ],
+  "final_entries": [
+    [
+      0,
+      10.0
+    ],
+    [
+      1,
+      -1.0
+    ],
+    [
+      2,
+      2.0
+    ],
+    [
+      3,
+      -3.0
+    ],
+    [
+      4,
+      4.0
+    ],
+    [
+      5,
+      -5.0
+    ],
+    [
+      6,
+      6.0
+    ],
+    [
+      7,
+      -7.0
+    ],
+    [
+      8,
+      8.0
+    ],
+    [
+      9,
+      -9.0
+    ],
+    [
+      10,
+      110.0
+    ],
+    [
+      11,
+      -11.0
+    ],
+    [
+      12,
+      12.0
+    ],
+    [
+      13,
+      -13.0
+    ],
+    [
+      14,
+      14.0
+    ],
+    [
+      15,
+      -15.0
+    ],
+    [
+      16,
+      16.0
+    ],
+    [
+      17,
+      -17.0
+    ],
+    [
+      18,
+      18.0
+    ],
+    [
+      19,
+      -19.0
+    ],
+    [
+      20,
+      210.0
+    ],
+    [
+      21,
+      -21.0
+    ],
+    [
+      22,
+      22.0
+    ],
+    [
+      23,
+      -23.0
+    ],
+    [
+      24,
+      24.0
+    ],
+    [
+      25,
+      -25.0
+    ],
+    [
+      26,
+      26.0
+    ],
+    [
+      27,
+      -27.0
+    ],
+    [
+      28,
+      28.0
+    ],
+    [
+      29,
+      -29.0
+    ],
+    [
+      30,
+      310.0
+    ],
+    [
+      31,
+      -31.0
+    ],
+    [
+      32,
+      32.0
+    ],
+    [
+      33,
+      -33.0
+    ],
+    [
+      34,
+      34.0
+    ],
+    [
+      35,
+      -35.0
+    ],
+    [
+      36,
+      36.0
+    ],
+    [
+      37,
+      -37.0
+    ],
+    [
+      38,
+      38.0
+    ],
+    [
+      39,
+      -39.0
+    ],
+    [
+      40,
+      410.0
+    ],
+    [
+      41,
+      -41.0
+    ],
+    [
+      42,
+      42.0
+    ],
+    [
+      43,
+      -43.0
+    ],
+    [
+      44,
+      44.0
+    ],
+    [
+      45,
+      -45.0
+    ],
+    [
+      46,
+      46.0
+    ],
+    [
+      47,
+      -47.0
+    ],
+    [
+      48,
+      48.0
+    ],
+    [
+      49,
+      -49.0
+    ],
+    [
+      50,
+      510.0
+    ],
+    [
+      51,
+      -51.0
+    ],
+    [
+      52,
+      52.0
+    ],
+    [
+      53,
+      -53.0
+    ],
+    [
+      54,
+      54.0
+    ],
+    [
+      55,
+      -55.0
+    ],
+    [
+      56,
+      56.0
+    ],
+    [
+      57,
+      -57.0
+    ],
+    [
+      58,
+      58.0
+    ],
+    [
+      59,
+      -59.0
+    ],
+    [
+      60,
+      610.0
+    ],
+    [
+      61,
+      -61.0
+    ],
+    [
+      62,
+      62.0
+    ],
+    [
+      63,
+      -63.0
+    ],
+    [
+      66,
+      66.0
+    ],
+    [
+      68,
+      68.0
+    ],
+    [
+      70,
+      70.0
+    ],
+    [
+      72,
+      72.0
+    ],
+    [
+      74,
+      74.0
+    ],
+    [
+      76,
+      76.0
+    ],
+    [
+      80,
+      80.0
+    ],
+    [
+      82,
+      82.0
+    ],
+    [
+      84,
+      84.0
+    ],
+    [
+      86,
+      86.0
+    ],
+    [
+      88,
+      88.0
+    ],
+    [
+      90,
+      90.0
+    ],
+    [
+      94,
+      94.0
+    ],
+    [
+      96,
+      96.0
+    ],
+    [
+      98,
+      98.0
+    ],
+    [
+      100,
+      100.0
+    ],
+    [
+      102,
+      102.0
+    ],
+    [
+      104,
+      104.0
+    ],
+    [
+      108,
+      108.0
+    ],
+    [
+      110,
+      110.0
+    ],
+    [
+      112,
+      112.0
+    ],
+    [
+      114,
+      114.0
+    ],
+    [
+      116,
+      116.0
+    ],
+    [
+      118,
+      118.0
+    ],
+    [
+      122,
+      122.0
+    ],
+    [
+      124,
+      124.0
+    ],
+    [
+      126,
+      126.0
+    ]
+  ],
+  "final_sha256": "82d641dac117330ab39a085498f01f0cd6c39599a432be39e3f94bc0f6b9a239",
+  "initial_entries": [
+    [
+      0,
+      0.0
+    ],
+    [
+      2,
+      2.0
+    ],
+    [
+      4,
+      4.0
+    ],
+    [
+      6,
+      6.0
+    ],
+    [
+      8,
+      8.0
+    ],
+    [
+      10,
+      10.0
+    ],
+    [
+      12,
+      12.0
+    ],
+    [
+      14,
+      14.0
+    ],
+    [
+      16,
+      16.0
+    ],
+    [
+      18,
+      18.0
+    ],
+    [
+      20,
+      20.0
+    ],
+    [
+      22,
+      22.0
+    ],
+    [
+      24,
+      24.0
+    ],
+    [
+      26,
+      26.0
+    ],
+    [
+      28,
+      28.0
+    ],
+    [
+      30,
+      30.0
+    ],
+    [
+      32,
+      32.0
+    ],
+    [
+      34,
+      34.0
+    ],
+    [
+      36,
+      36.0
+    ],
+    [
+      38,
+      38.0
+    ],
+    [
+      40,
+      40.0
+    ],
+    [
+      42,
+      42.0
+    ],
+    [
+      44,
+      44.0
+    ],
+    [
+      46,
+      46.0
+    ],
+    [
+      48,
+      48.0
+    ],
+    [
+      50,
+      50.0
+    ],
+    [
+      52,
+      52.0
+    ],
+    [
+      54,
+      54.0
+    ],
+    [
+      56,
+      56.0
+    ],
+    [
+      58,
+      58.0
+    ],
+    [
+      60,
+      60.0
+    ],
+    [
+      62,
+      62.0
+    ],
+    [
+      64,
+      64.0
+    ],
+    [
+      66,
+      66.0
+    ],
+    [
+      68,
+      68.0
+    ],
+    [
+      70,
+      70.0
+    ],
+    [
+      72,
+      72.0
+    ],
+    [
+      74,
+      74.0
+    ],
+    [
+      76,
+      76.0
+    ],
+    [
+      78,
+      78.0
+    ],
+    [
+      80,
+      80.0
+    ],
+    [
+      82,
+      82.0
+    ],
+    [
+      84,
+      84.0
+    ],
+    [
+      86,
+      86.0
+    ],
+    [
+      88,
+      88.0
+    ],
+    [
+      90,
+      90.0
+    ],
+    [
+      92,
+      92.0
+    ],
+    [
+      94,
+      94.0
+    ],
+    [
+      96,
+      96.0
+    ],
+    [
+      98,
+      98.0
+    ],
+    [
+      100,
+      100.0
+    ],
+    [
+      102,
+      102.0
+    ],
+    [
+      104,
+      104.0
+    ],
+    [
+      106,
+      106.0
+    ],
+    [
+      108,
+      108.0
+    ],
+    [
+      110,
+      110.0
+    ],
+    [
+      112,
+      112.0
+    ],
+    [
+      114,
+      114.0
+    ],
+    [
+      116,
+      116.0
+    ],
+    [
+      118,
+      118.0
+    ],
+    [
+      120,
+      120.0
+    ],
+    [
+      122,
+      122.0
+    ],
+    [
+      124,
+      124.0
+    ],
+    [
+      126,
+      126.0
+    ]
+  ],
+  "initial_sha256": "d6e01c6c788c3c52bf8ac780d9919f2a295c371fac8894e6f5dff3f14f139f7f",
+  "schema": "certigap-proof-carrying-delta-v1",
+  "sha256": "1f433b0d0f77491b378000b843b6165f26596d5c3ba1d434254057b27c78a584",
+  "summary": {
+    "event_count": 78,
+    "final_entry_count": 91,
+    "rebuild_count": 2
+  }
+}

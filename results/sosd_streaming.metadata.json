@@ -1,0 +1,18 @@
+{
+  "additional_workloads_are_synthetic": true,
+  "budget": 16,
+  "compiler": "Apple clang version 17.0.0 (clang-1700.6.3.2)",
+  "csv_sha256": "333efabf1885a66e5c6c4f3d3e13b61a0ea6d8852081415db3a8e39a2b4a0d62",
+  "machine": "arm64",
+  "methodology": "full zstd stream validation plus deterministic even-rank sample",
+  "official_radix_spline_enabled": true,
+  "official_sosd_dataset_values": true,
+  "official_sosd_harness": false,
+  "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+  "queries_per_workload": 100000,
+  "repeats": 7,
+  "sample_keys": 20000,
+  "schema": "certigap-sosd-streaming-v1",
+  "sosd_commit": "f52f4cba01dfcd37f1574551fccef00198863b88",
+  "source_sha256": "70a89aa5ebc494325087d9895bbb67260ec7eb526c752a44f9f49e80bd1cdfd8"
+}

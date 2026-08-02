@@ -23,6 +23,7 @@ from .compiler import (
     generate_cpp_header,
 )
 from .dynamic_range_verifier import verify_dynamic_range_certificate
+from .delta_verifier import verify_delta_certificate
 from .dsl_verifier import verify_dsl_certificate
 from .hardware import calibrate_hardware
 from .hybrid_verifier import verify_hybrid_certificate
@@ -54,6 +55,7 @@ Verifier = Callable[[dict], dict]
 _SCHEMA_VERIFIERS: dict[str, Verifier] = {
     "certigap-autoindex-v2": verify_autoindex_artifact,
     "certigap-dynamic-range-v1": verify_dynamic_range_certificate,
+    "certigap-proof-carrying-delta-v1": verify_delta_certificate,
     "certigap-proof-carrying-dsl-v1": verify_dsl_certificate,
     "certigap-hybrid-v1": verify_hybrid_certificate,
     "certigap-martingale-safe-autoindex-v1": (
@@ -74,7 +76,7 @@ def _package_version() -> str:
     try:
         return version("certigap-toolkit")
     except PackageNotFoundError:
-        return "1.10.1"
+        return "1.16.0"
 
 
 def verify_artifact(artifact: dict) -> tuple[str, dict]:
@@ -178,6 +180,25 @@ def explain_artifact(kind: str, artifact: dict, verification: dict) -> dict:
                     "grammar_completeness_verified"
                 ],
                 "selected_score": verification["train_score"],
+                "scope": artifact["claim_boundary"],
+            }
+        )
+    elif kind == "certigap-proof-carrying-delta-v1":
+        explanation.update(
+            {
+                "selected": "sorted_base_bounded_delta",
+                "algebra": artifact["contract"]["algebra"],
+                "operations": artifact["contract"]["operations"],
+                "rebuild_threshold": artifact["contract"][
+                    "rebuild_threshold"
+                ],
+                "event_count": verification["event_count"],
+                "rebuild_count": verification["rebuild_count"],
+                "final_entry_count": verification["final_entry_count"],
+                "selection_reason": (
+                    "reference dynamic design with deterministic bounded-delta "
+                    "compaction; no cross-design latency selection is claimed"
+                ),
                 "scope": artifact["claim_boundary"],
             }
         )

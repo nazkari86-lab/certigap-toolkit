@@ -13,6 +13,7 @@ from certigap import (
     verify_autoindex_artifact,
     verify_autodro_selection_artifact,
     verify_dynamic_range_certificate,
+    verify_delta_certificate,
     verify_dsl_certificate,
     verify_hybrid_certificate,
     verify_martingale_safe_autoindex_certificate,
@@ -62,6 +63,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "speed_quality.csv": 1_152,
         "temporal_holdout.csv": 9,
         "cpp_lookup_latency.csv": 40,
+        "sosd_streaming.csv": 80,
         "autodro_shift.csv": 24,
         "direct_tv_validation.csv": 100,
         "uncertainty_validation.csv": 12,
@@ -80,6 +82,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "tracking_hot_path_runtime.csv": 448,
         "concurrent_tracking_runtime.csv": 48,
         "dsl_validation.csv": 36,
+        "delta_validation.csv": 12,
         "safe_autoindex_validation.csv": 16,
         "sequential_safe_validation.csv": 4,
         "optional_stopping_monte_carlo.csv": 1,
@@ -438,6 +441,28 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
     ):
         raise ValueError("proof-carrying DSL provenance is invalid")
 
+    delta_rows = csv_records("delta_validation.csv")
+    expected_delta_cases = {
+        (algebra, str(threshold))
+        for algebra in ("sum", "min", "max")
+        for threshold in (1, 4, 16, 64)
+    }
+    if (
+        {(row["algebra"], row["rebuild_threshold"]) for row in delta_rows}
+        != expected_delta_cases
+        or any(
+            row["verified"] != "True"
+            or row["rehashed_tamper_rejected"] != "True"
+            for row in delta_rows
+        )
+    ):
+        raise ValueError("proof-carrying delta validation is incomplete")
+    delta_artifact = json.loads(
+        (RESULTS / "delta_certificate_example.json").read_text(encoding="utf-8")
+    )
+    if not verify_delta_certificate(delta_artifact)["verified"]:
+        raise ValueError("proof-carrying delta example did not replay")
+
     sqlite_vtab_rows = csv_records("sqlite_vtab_validation.csv")
     if (
         {row["scenario"] for row in sqlite_vtab_rows}
@@ -556,6 +581,37 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
     lookup_metadata = json.loads((RESULTS / "cpp_lookup_metadata.json").read_text(encoding="utf-8"))
     if lookup_metadata.get("measurement_scope") != "post-build lookup; p95 across batch means":
         raise ValueError("lookup benchmark metadata is missing or ambiguous")
+    sosd_rows = csv_records("sosd_streaming.csv")
+    sosd_groups: dict[tuple[str, str], set[str]] = {}
+    for row in sosd_rows:
+        sosd_groups.setdefault((row["dataset"], row["workload"]), set()).add(
+            row["method"]
+        )
+    required_sosd_methods = {
+        "std_lower_bound", "eytzinger", "interpolation_guarded", "certigap_partial",
+        "sosd_radix_spline",
+    }
+    if (
+        len(sosd_groups) != 16
+        or any(methods != required_sosd_methods for methods in sosd_groups.values())
+        or any(row["source_keys"] != "200000000" or row["correct"] != "true" for row in sosd_rows)
+    ):
+        raise ValueError("SOSD-derived benchmark matrix is incomplete")
+    sosd_metadata = json.loads(
+        (RESULTS / "sosd_streaming.metadata.json").read_text(encoding="utf-8")
+    )
+    if (
+        sosd_metadata.get("schema") != "certigap-sosd-streaming-v1"
+        or sosd_metadata.get("official_sosd_harness") is not False
+        or sosd_metadata.get("official_sosd_dataset_values") is not True
+        or sosd_metadata.get("additional_workloads_are_synthetic") is not True
+        or sosd_metadata.get("official_radix_spline_enabled") is not True
+        or sosd_metadata.get("source_sha256")
+        != file_sha256(ROOT / "cpp" / "sosd_streaming_benchmark.cpp")
+        or sosd_metadata.get("csv_sha256")
+        != file_sha256(RESULTS / "sosd_streaming.csv")
+    ):
+        raise ValueError("SOSD-derived benchmark provenance is invalid")
     autodro_artifact = json.loads(
         (RESULTS / "autodro_selection_example.json").read_text(encoding="utf-8")
     )

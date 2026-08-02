@@ -56,6 +56,7 @@ def main() -> None:
     run([python, "generate_tracking_hot_path_benchmark.py"])
     run([python, "generate_concurrent_tracking_benchmark.py"])
     run([python, "generate_dsl_validation.py"])
+    run([python, "generate_delta_validation.py"])
     run(
         [
             python,

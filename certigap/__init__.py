@@ -140,6 +140,12 @@ from .dsl import (
     compile_proof_carrying_index,
 )
 from .dsl_verifier import DSLVerificationError, verify_dsl_certificate
+from .delta import (
+    DeltaSpec,
+    ProofCarryingDeltaIndex,
+    compile_proof_carrying_delta_index,
+)
+from .delta_verifier import DeltaVerificationError, verify_delta_certificate
 from .adaptive_profile import (
     parse_adaptive_profile,
     parse_adaptive_profile_text,
@@ -220,6 +226,9 @@ __all__ = [
     "ProofCarryingIndex",
     "ProofCarryingSpec",
     "DSLVerificationError",
+    "DeltaSpec",
+    "ProofCarryingDeltaIndex",
+    "DeltaVerificationError",
     "verify_dsl_certificate",
     "virtual_table_source_path",
     "CertiGapToolkit",
@@ -232,6 +241,7 @@ __all__ = [
     "compile_autoindex",
     "compile_from_spec",
     "compile_proof_carrying_index",
+    "compile_proof_carrying_delta_index",
     "compile_martingale_safe_autoindex",
     "compile_measured_autoindex",
     "compile_martingale_safe_spec",
@@ -313,6 +323,7 @@ __all__ = [
     "UncertaintyModel",
     "verify_certificate_artifact",
     "verify_dynamic_range_certificate",
+    "verify_delta_certificate",
     "verify_range_optimizer_artifact",
     "verify_branch_and_bound_certificate",
     "verify_autodro_selection_artifact",
