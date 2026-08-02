@@ -70,6 +70,9 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "range_optimizer_validation.csv": 114,
         "autoindex_validation.csv": 120,
         "tracking_autoindex_validation.csv": 15,
+        "tracking_autoindex_comparison.csv": 882 if require_max_scaling else 70,
+        "tracking_autoindex_candidates.csv": 882 if require_max_scaling else 70,
+        "tracking_autoindex_runtime.csv": 90 if require_max_scaling else 45,
         "safe_autoindex_validation.csv": 16,
         "sequential_safe_validation.csv": 4,
         "optional_stopping_monte_carlo.csv": 1,
@@ -113,6 +116,53 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         (RESULTS / "tracking_autoindex_example.json").read_text(encoding="utf-8")
     )
     verify_tracking_autoindex_certificate(tracking_artifact)
+
+    comparison_rows = csv_records("tracking_autoindex_comparison.csv")
+    comparison_policies = {
+        "tracking_wfa",
+        "initial_static",
+        "best_fixed_hindsight",
+        "myopic_current_operation",
+        "cumulative_leader",
+        "exact_k_switch_oracle",
+        "exact_unrestricted_oracle",
+    }
+    comparison_groups: dict[tuple[str, str, str], set[str]] = {}
+    for row in comparison_rows:
+        comparison_groups.setdefault(
+            (row["n"], row["scenario"], row["migration_cost_units"]), set()
+        ).add(row["policy"])
+    expected_groups = 126 if require_max_scaling else 10
+    if (
+        len(comparison_groups) < expected_groups
+        or any(
+            policies != comparison_policies
+            for policies in comparison_groups.values()
+        )
+        or any(row["certificate_verified"] != "True" for row in comparison_rows)
+    ):
+        raise ValueError("tracking policy comparison is incomplete")
+    candidate_rows = csv_records("tracking_autoindex_candidates.csv")
+    if len(candidate_rows) != len(comparison_groups) * 7:
+        raise ValueError("tracking fixed-candidate comparison is incomplete")
+    runtime_rows = csv_records("tracking_autoindex_runtime.csv")
+    runtime_groups: dict[tuple[str, str], set[str]] = {}
+    for row in runtime_rows:
+        runtime_groups.setdefault((row["n"], row["scenario"]), set()).add(
+            row["method"]
+        )
+    if any(len(methods) != 9 for methods in runtime_groups.values()) or any(
+        not math.isfinite(float(row["median_ns_per_operation"]))
+        for row in runtime_rows
+    ):
+        raise ValueError("tracking runtime comparison is incomplete")
+    comparison_metadata = json.loads(
+        (RESULTS / "tracking_autoindex_comparison_metadata.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if require_max_scaling and comparison_metadata.get("mode") != "max":
+        raise ValueError("tracking comparison is not the maximum matrix")
 
     sqlite_vtab_rows = csv_records("sqlite_vtab_validation.csv")
     if (

@@ -9,7 +9,7 @@ from .autoindex import (
     CandidateName,
     TraceOperation,
     WorkloadTrace,
-    _analytical_portfolio_costs_verified,
+    _PreparedAnalyticalPortfolio,
 )
 from .autoindex_verifier import verify_autoindex_artifact
 
@@ -217,6 +217,7 @@ def verify_tracking_autoindex_certificate(artifact: dict) -> dict:
         cumulative = 0.0
         service_rows: list[dict[str, float]] = []
         service_cache: dict[tuple, dict[str, float]] = {}
+        cost_evaluator = _PreparedAnalyticalPortfolio(autoindex)
         for step in artifact["steps"]:
             if set(step) != {
                 "operation",
@@ -248,7 +249,7 @@ def verify_tracking_autoindex_certificate(artifact: dict) -> dict:
             signature = (operation.kind, operation.left, operation.right)
             cached = service_cache.get(signature)
             if cached is None:
-                portfolio = _analytical_portfolio_costs_verified(autoindex, one)
+                portfolio = cost_evaluator.costs(one)
                 cached = {
                     candidate: portfolio[cast(CandidateName, candidate)][0]
                     for candidate in candidates

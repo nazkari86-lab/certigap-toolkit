@@ -11,8 +11,8 @@ from .autoindex import (
     CandidateName,
     TraceOperation,
     WorkloadTrace,
-    _analytical_portfolio_costs_verified,
-    materialize_autoindex_candidate,
+    _PreparedAnalyticalPortfolio,
+    _runtime_for_candidate,
 )
 from .dynamic_range import DynamicCertiRange
 from .spec import AdaptiveSpec, compile_from_spec
@@ -167,10 +167,10 @@ class TrackingAutoIndex:
         if policy.initial_candidate not in self._candidates:
             raise ValueError("initial candidate is infeasible")
         self._selected = policy.initial_candidate
-        self._runtime = materialize_autoindex_candidate(
+        self._runtime = _runtime_for_candidate(
             self._values,
-            self._artifact,
             cast(CandidateName, self._selected),
+            self._artifact,
         )
         self._work = {
             candidate: _distance(
@@ -180,6 +180,7 @@ class TrackingAutoIndex:
         }
         self._steps: list[dict] = []
         self._service_cache: dict[tuple, dict[str, float]] = {}
+        self._cost_evaluator = _PreparedAnalyticalPortfolio(self._artifact)
 
     @property
     def selected_name(self) -> str:
@@ -198,7 +199,7 @@ class TrackingAutoIndex:
         )
         cached = self._service_cache.get(signature)
         if cached is None:
-            portfolio = _analytical_portfolio_costs_verified(self._artifact, one)
+            portfolio = self._cost_evaluator.costs(one)
             cached = {
                 candidate: portfolio[cast(CandidateName, candidate)][0]
                 for candidate in self._candidates
@@ -235,10 +236,10 @@ class TrackingAutoIndex:
             previous, selected, self._policy.migration_cost_units
         )
         if selected != previous:
-            self._runtime = materialize_autoindex_candidate(
+            self._runtime = _runtime_for_candidate(
                 self._values,
-                self._artifact,
                 cast(CandidateName, selected),
+                self._artifact,
             )
         if operation.kind == "get":
             result: float | None = _runtime_get(self._runtime, operation.left)

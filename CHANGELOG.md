@@ -9,6 +9,10 @@ recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
   backend migration, exact K-switch and unrestricted offline oracles,
   independently replayed certificates, CLI support, exhaustive path tests,
   and a 15-scenario phase-shift validation matrix.
+- Add a 126-configuration maximum tracking comparison against four online/static
+  policies, every feasible fixed backend, exact K-switch/unrestricted oracles,
+  and a 90-row checksum-validated Python timing audit; remove repeated manifest
+  verification and topology preparation from the migration hot path.
 
 - Expand Certified AutoIndex from five to eight executable candidates with
   prefix sums, square-root decomposition, and sparse tables.

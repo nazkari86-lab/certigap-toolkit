@@ -122,6 +122,15 @@ uniform metric, and the algorithm has no claim of predicting phase changes.
 The 15-case matrix deliberately records positive regret and a worst observed
 oracle ratio of `2.657534` rather than hiding losses.
 
+The maximum comparison matrix now covers 126 configurations. It establishes a
+strong but mixed structural result: WFA is `106/18/2` against the unchanged
+initial representation and `53/34/39` against best fixed hindsight. Median
+unrestricted-oracle ratio is `1.009222`, but the maximum is `2.068306` and
+quality degrades as migration cost rises. The separate Python timing audit is
+an explicit negative systems result: tracking is `96.42x` to `958.87x` slower
+than the fastest fixed portfolio runtime. Scientific tracking is internally
+closed; low-latency native deployment is not.
+
 ## External Work Required For A Literal 10/10 Claim
 
 These cannot be completed truthfully by local code generation:

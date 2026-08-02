@@ -889,6 +889,37 @@ alternation, and three migration costs. All certificates replay. Maximum exact
 K-switch regret is `121` structural units and maximum observed ratio to the
 unrestricted oracle is `2.657534`; both wins and losses are therefore visible.
 
+## Comprehensive Comparison
+
+The broader maximum matrix adds 126 certified configurations over 14 workload
+families, three key-universe sizes, and migration costs `2`, `8`, and `32`.
+Every policy uses exactly the same per-operation service rows.
+
+- Against the unchanged initial representation, WFA records `106` wins, `18`
+  ties, and `2` losses.
+- Against the best fixed representation selected with hindsight, it records
+  `53` wins, `34` ties, and `39` losses.
+- Against myopic current-operation switching, it records `29/62/35`.
+- Against a cumulative-service leader, it records `55/39/32`.
+- Median ratio to the exact unrestricted oracle is `1.009222`; mean is
+  `1.111103`, and maximum is `2.068306`.
+- At migration cost `2`, mean oracle ratio is `1.003004`. At cost `32`, it is
+  `1.250766`, showing that migration calibration materially changes quality.
+
+The Python wall-clock matrix has 90 method rows, five workloads, two sizes,
+five repetitions, and identical checksum validation. Tracking is `96.42x` to
+`958.87x` slower than the fastest fixed portfolio backend in these runs. The
+gap includes online cost-vector construction, WFA accounting, trace recording,
+and in-trace rebuilds, but excludes initial construction and certificate
+export. Therefore the present Python path is a research reference, not a
+low-latency replacement for Fenwick or prefix sums. A native C++ tracking core
+with batched accounting is the highest-value performance follow-up.
+
+See `results/tracking_autoindex_comparison.md` for the complete outcome tables,
+`tracking_autoindex_comparison.csv` for policy rows,
+`tracking_autoindex_candidates.csv` for every fixed backend, and
+`tracking_autoindex_runtime.csv` for machine-specific timing.
+
 # Compiler And CMake Integration
 
 CertiGap uses a profile-guided build step. It is not a GCC or Clang plugin:

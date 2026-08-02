@@ -4,7 +4,9 @@ import copy
 import hashlib
 import itertools
 import json
+import random
 import unittest
+from unittest import mock
 
 from certigap import (
     AdaptiveSpec,
@@ -14,6 +16,9 @@ from certigap import (
     start_tracking_autoindex,
     verify_tracking_autoindex_certificate,
 )
+from certigap.autoindex_verifier import verify_autoindex_artifact
+from certigap.spec import compile_from_spec
+from certigap.tracking_autoindex import TrackingAutoIndex
 
 
 def redigest(artifact: dict) -> None:
@@ -112,9 +117,7 @@ class TrackingAutoIndexTests(unittest.TestCase):
         self.assertEqual(first_prefix, second.export_certificate()["steps"][:2])
 
     def test_verifier_rejects_redigested_trajectory_tampering(self) -> None:
-        tracker = start_tracking_autoindex(
-            range(8), train_trace(8), AdaptiveSpec()
-        )
+        tracker = start_tracking_autoindex(range(8), train_trace(8), AdaptiveSpec())
         tracker.range_query(1, 8)
         artifact = tracker.export_certificate()
         artifact["steps"][0]["service_cost"] += 1.0
@@ -126,9 +129,7 @@ class TrackingAutoIndexTests(unittest.TestCase):
             verify_tracking_autoindex_certificate(artifact)
 
     def test_verifier_rejects_unknown_fields_even_after_redigest(self) -> None:
-        tracker = start_tracking_autoindex(
-            range(8), train_trace(8), AdaptiveSpec()
-        )
+        tracker = start_tracking_autoindex(range(8), train_trace(8), AdaptiveSpec())
         tracker.get(1)
         artifact = tracker.export_certificate()
         artifact["policy"]["future_hint"] = "range"
@@ -147,11 +148,124 @@ class TrackingAutoIndexTests(unittest.TestCase):
                 AdaptiveSpec(),
                 policy=TrackingPolicy(migration_cost_units=0.0),
             )
-        tracker = start_tracking_autoindex(
-            range(8), train_trace(8), AdaptiveSpec()
-        )
+        tracker = start_tracking_autoindex(range(8), train_trace(8), AdaptiveSpec())
         with self.assertRaisesRegex(RuntimeError, "at least one operation"):
             tracker.export_certificate()
+
+    def test_randomized_streams_match_all_aggregate_oracles(self) -> None:
+        for aggregate in ("sum", "min", "max"):
+            for seed in range(3):
+                with self.subTest(aggregate=aggregate, seed=seed):
+                    rng = random.Random(10_000 + seed)
+                    n = 9 + seed
+                    values = [float(rng.randint(-20, 20)) for _ in range(n)]
+                    tracker = start_tracking_autoindex(
+                        values,
+                        train_trace(n),
+                        AdaptiveSpec(aggregate=aggregate),
+                        policy=TrackingPolicy(
+                            migration_cost_units=1.0 + seed,
+                            max_comparator_switches=seed,
+                        ),
+                    )
+                    oracle = list(values)
+                    for operation_index in range(48):
+                        kind = rng.choice(("get", "range", "update"))
+                        key = rng.randint(1, n)
+                        if kind == "get":
+                            self.assertEqual(tracker.get(key), oracle[key - 1])
+                        elif kind == "update":
+                            value = float(rng.randint(-50, 50))
+                            tracker.point_update(key, value)
+                            oracle[key - 1] = value
+                        else:
+                            right = rng.randint(key, n)
+                            expected = {
+                                "sum": sum,
+                                "min": min,
+                                "max": max,
+                            }[aggregate](oracle[key - 1 : right])
+                            self.assertEqual(tracker.range_query(key, right), expected)
+                    artifact = tracker.export_certificate()
+                    self.assertTrue(
+                        verify_tracking_autoindex_certificate(artifact)["verified"]
+                    )
+                    self.assertAlmostEqual(
+                        sum(step["migration_cost"] for step in artifact["steps"]),
+                        tracker.switch_count
+                        * artifact["policy"]["migration_cost_units"],
+                    )
+
+    def test_zero_switch_comparator_stays_on_initial_candidate(self) -> None:
+        tracker = start_tracking_autoindex(
+            range(16),
+            train_trace(16),
+            AdaptiveSpec(),
+            policy=TrackingPolicy(
+                migration_cost_units=0.5,
+                max_comparator_switches=0,
+            ),
+        )
+        for _ in range(20):
+            tracker.range_query(1, 16)
+        artifact = tracker.export_certificate()
+        oracle = artifact["constrained_oracle"]
+        self.assertEqual(oracle["switches"], 0)
+        self.assertEqual(set(oracle["path"]), {"sorted_array"})
+
+    def test_verifier_rejects_multiple_redigested_mutations(self) -> None:
+        tracker = start_tracking_autoindex(range(8), train_trace(8), AdaptiveSpec())
+        tracker.range_query(1, 8)
+        tracker.point_update(3, 30.0)
+        original = tracker.export_certificate()
+
+        def mutate_candidate(artifact: dict) -> None:
+            artifact["candidates"].reverse()
+
+        def mutate_work(artifact: dict) -> None:
+            artifact["steps"][0]["work_function"]["sorted_array"] += 1.0
+
+        def mutate_oracle(artifact: dict) -> None:
+            artifact["unrestricted_oracle"]["path"][0] = "segment_tree"
+
+        def mutate_regret(artifact: dict) -> None:
+            artifact["dynamic_regret"] += 1.0
+
+        for mutation in (
+            mutate_candidate,
+            mutate_work,
+            mutate_oracle,
+            mutate_regret,
+        ):
+            with self.subTest(mutation=mutation.__name__):
+                artifact = copy.deepcopy(original)
+                mutation(artifact)
+                redigest(artifact)
+                with self.assertRaises(TrackingAutoIndexVerificationError):
+                    verify_tracking_autoindex_certificate(artifact)
+
+    def test_runtime_migrations_do_not_repeat_manifest_verification(self) -> None:
+        n = 16
+        spec = AdaptiveSpec()
+        artifact = compile_from_spec(
+            range(n), train_trace(n), spec
+        ).export_selection_artifact()
+        with mock.patch(
+            "certigap.autoindex_verifier.verify_autoindex_artifact",
+            wraps=verify_autoindex_artifact,
+        ) as verifier:
+            tracker = TrackingAutoIndex(
+                [float(value) for value in range(n)],
+                artifact,
+                spec,
+                TrackingPolicy(migration_cost_units=0.1),
+            )
+            for _ in range(12):
+                tracker.range_query(1, n)
+            for key in range(1, 9):
+                tracker.point_update(key, float(-key))
+        self.assertGreater(tracker.switch_count, 0)
+        self.assertEqual(verifier.call_count, 1)
 
 
 if __name__ == "__main__":

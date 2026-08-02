@@ -1,0 +1,41 @@
+{
+  "horizon": 96,
+  "migration_cost_units": [
+    2.0,
+    8.0,
+    32.0
+  ],
+  "mode": "max",
+  "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+  "processor": "arm",
+  "python": "3.14.5 (v3.14.5:5607950ef23, May 10 2026, 07:38:09) [Clang 21.0.0 (clang-2100.0.123.102)]",
+  "runtime_horizon": 256,
+  "runtime_repetitions": 5,
+  "runtime_scope": "Python end-to-end operations after initial construction; TrackingAutoIndex includes online accounting and rebuilds",
+  "runtime_sizes": [
+    64,
+    256
+  ],
+  "scenarios": [
+    "stable_points",
+    "stable_ranges",
+    "stable_updates",
+    "mixed_read_heavy",
+    "mixed_write_heavy",
+    "point_to_range",
+    "range_to_update",
+    "update_to_range",
+    "three_phase",
+    "alternating_range_update",
+    "short_bursts",
+    "random_iid",
+    "markov_bursty",
+    "varying_ranges"
+  ],
+  "schema": "certigap-tracking-comparison-metadata-v1",
+  "sizes": [
+    16,
+    64,
+    128
+  ]
+}

@@ -232,6 +232,7 @@ def main() -> None:
             RESULTS_DIR / "measured_deployment_validation.md",
             DOCS_DIR / "TRACKING_AUTOINDEX.md",
             RESULTS_DIR / "tracking_autoindex_validation.md",
+            RESULTS_DIR / "tracking_autoindex_comparison.md",
             DOCS_DIR / "SYNTHESIS.md",
             RESULTS_DIR / "synthesis_validation.md",
             DOCS_DIR / "HYBRID.md",

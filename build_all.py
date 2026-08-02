@@ -51,6 +51,14 @@ def main() -> None:
     run([python, "generate_range_optimizer_validation.py"])
     run([python, "generate_autoindex_validation.py"])
     run([python, "generate_tracking_autoindex_validation.py"])
+    run(
+        [
+            python,
+            "generate_tracking_autoindex_comparison.py",
+            "--mode",
+            args.benchmark_mode,
+        ]
+    )
     run([python, "generate_safe_autoindex_validation.py"])
     run([python, "generate_sequential_safe_validation.py"])
     run([python, "generate_martingale_safe_validation.py"])

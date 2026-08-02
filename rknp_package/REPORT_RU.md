@@ -1815,6 +1815,37 @@ alternation, and three migration costs. All certificates replay. Maximum exact
 K-switch regret is `121` structural units and maximum observed ratio to the
 unrestricted oracle is `2.657534`; both wins and losses are therefore visible.
 
+## Comprehensive Comparison
+
+The broader maximum matrix adds 126 certified configurations over 14 workload
+families, three key-universe sizes, and migration costs `2`, `8`, and `32`.
+Every policy uses exactly the same per-operation service rows.
+
+- Against the unchanged initial representation, WFA records `106` wins, `18`
+  ties, and `2` losses.
+- Against the best fixed representation selected with hindsight, it records
+  `53` wins, `34` ties, and `39` losses.
+- Against myopic current-operation switching, it records `29/62/35`.
+- Against a cumulative-service leader, it records `55/39/32`.
+- Median ratio to the exact unrestricted oracle is `1.009222`; mean is
+  `1.111103`, and maximum is `2.068306`.
+- At migration cost `2`, mean oracle ratio is `1.003004`. At cost `32`, it is
+  `1.250766`, showing that migration calibration materially changes quality.
+
+The Python wall-clock matrix has 90 method rows, five workloads, two sizes,
+five repetitions, and identical checksum validation. Tracking is `96.42x` to
+`958.87x` slower than the fastest fixed portfolio backend in these runs. The
+gap includes online cost-vector construction, WFA accounting, trace recording,
+and in-trace rebuilds, but excludes initial construction and certificate
+export. Therefore the present Python path is a research reference, not a
+low-latency replacement for Fenwick or prefix sums. A native C++ tracking core
+with batched accounting is the highest-value performance follow-up.
+
+See `results/tracking_autoindex_comparison.md` for the complete outcome tables,
+`tracking_autoindex_comparison.csv` for policy rows,
+`tracking_autoindex_candidates.csv` for every fixed backend, and
+`tracking_autoindex_runtime.csv` for machine-specific timing.
+
 # TrackingAutoIndex validation
 
 - Scenarios: `15`.
@@ -1824,6 +1855,74 @@ unrestricted oracle is `2.657534`; both wins and losses are therefore visible.
 - Migration costs tested: `2`, `8`, and `32` structural units.
 
 Every row executes the selected backend and independently replays the causal Work Function Algorithm. The comparator is an exact dynamic-programming oracle with at most three switches. Costs are analytical structural work, not portable wall-clock latency.
+
+# TrackingAutoIndex comprehensive comparison
+
+- Certified workload configurations: `126`.
+- Structural policy rows: `882`.
+- Fixed-candidate rows: `882`.
+- Wall-clock method rows: `90`.
+- All runtime methods passed identical checksum validation.
+
+## Structural outcomes
+
+- Versus `initial_static`: WFA wins `106`, ties `18`, loses `2`.
+- Versus `best_fixed_hindsight`: WFA wins `53`, ties `34`, loses `39`.
+- Versus `myopic_current_operation`: WFA wins `29`, ties `62`, loses `35`.
+- Versus `cumulative_leader`: WFA wins `55`, ties `39`, loses `32`.
+- Mean ratio to exact unrestricted oracle: `1.111103`.
+- Median ratio to exact unrestricted oracle: `1.009222`.
+- Maximum ratio to exact unrestricted oracle: `2.068306`.
+- Best fixed candidate frequency: `{'fenwick': 81, 'prefix_sum': 27, 'sorted_array': 18}`.
+
+### Versus best fixed hindsight by workload
+
+| Workload | Wins | Ties | Losses |
+|---|---:|---:|---:|
+| `stable_points` | 0 | 9 | 0 |
+| `stable_ranges` | 0 | 6 | 3 |
+| `stable_updates` | 0 | 9 | 0 |
+| `mixed_read_heavy` | 3 | 1 | 5 |
+| `mixed_write_heavy` | 5 | 0 | 4 |
+| `point_to_range` | 0 | 6 | 3 |
+| `range_to_update` | 9 | 0 | 0 |
+| `update_to_range` | 9 | 0 | 0 |
+| `three_phase` | 8 | 0 | 1 |
+| `alternating_range_update` | 3 | 0 | 6 |
+| `short_bursts` | 7 | 0 | 2 |
+| `random_iid` | 4 | 0 | 5 |
+| `markov_bursty` | 5 | 0 | 4 |
+| `varying_ranges` | 0 | 3 | 6 |
+
+### Migration sensitivity
+
+| Migration units | Mean oracle ratio | Max oracle ratio | Mean switches |
+|---:|---:|---:|---:|
+| 2 | 1.003004 | 1.026316 | 12.571 |
+| 8 | 1.079540 | 1.545946 | 4.333 |
+| 32 | 1.250766 | 2.068306 | 1.714 |
+
+## Runtime boundary
+
+- Median TrackingAutoIndex slowdown versus fastest tested runtime: `288.06x`.
+- Maximum TrackingAutoIndex slowdown versus fastest tested runtime: `1952.02x`.
+- Median slowdown versus fastest fixed portfolio backend: `280.86x`.
+- Maximum slowdown versus fastest fixed portfolio backend: `958.87x`.
+- These Python timings include online WFA accounting and in-trace rebuilds, but exclude initial construction and certificate export.
+- Structural scores and wall-clock nanoseconds are reported separately; neither is substituted for the other.
+
+| n | Workload | Tracking ns/op | Fastest fixed | Fixed ns/op | Slowdown |
+|---:|---|---:|---|---:|---:|
+| 64 | `alternating_range_update` | 34211.9 | `sorted_array` | 354.8 | 96.42x |
+| 64 | `mixed_read_heavy` | 34074.1 | `prefix_sum` | 268.6 | 126.88x |
+| 64 | `point_to_range` | 43244.5 | `prefix_sum` | 167.8 | 257.71x |
+| 64 | `stable_points` | 18025.7 | `sorted_array` | 126.3 | 142.72x |
+| 64 | `stable_ranges` | 47897.9 | `prefix_sum` | 157.6 | 304.01x |
+| 256 | `alternating_range_update` | 132611.0 | `fenwick` | 649.9 | 204.05x |
+| 256 | `mixed_read_heavy` | 131029.0 | `fenwick` | 358.1 | 365.93x |
+| 256 | `point_to_range` | 129876.5 | `prefix_sum` | 143.6 | 904.72x |
+| 256 | `stable_points` | 124540.9 | `prefix_sum` | 129.9 | 958.87x |
+| 256 | `stable_ranges` | 135776.9 | `prefix_sum` | 157.9 | 860.03x |
 
 # Compiler And CMake Integration
 

@@ -637,6 +637,7 @@ Generated artifacts live in [`results/`](results):
 - [`hybrid_validation.md`](results/hybrid_validation.md): exact representation-aware frontier and best-uniform ablation
 - [`hybrid_certificate_example.json`](results/hybrid_certificate_example.json): independently replayable CertiGap-H certificate
 - [`tracking_autoindex_validation.md`](results/tracking_autoindex_validation.md): causal switching and exact K-switch regret
+- [`tracking_autoindex_comparison.md`](results/tracking_autoindex_comparison.md): 126-case policy/backend comparison and Python runtime boundary
 
 Figures live in [`figures/`](figures):
 

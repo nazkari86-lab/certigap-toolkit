@@ -292,6 +292,7 @@ def main() -> None:
             RESULTS_DIR / "autoindex_validation.md",
             DOCS_DIR / "TRACKING_AUTOINDEX.md",
             RESULTS_DIR / "tracking_autoindex_validation.md",
+            RESULTS_DIR / "tracking_autoindex_comparison.md",
             DOCS_DIR / "COMPILER_INTEGRATION.md",
             RESULTS_DIR / "compiler_integration_validation.md",
             DOCS_DIR / "ADAPTIVE_CPP.md",

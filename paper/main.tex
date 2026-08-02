@@ -339,6 +339,15 @@ $K$-switch regret is 121 structural units and the maximum observed ratio to
 the unrestricted oracle is 2.657534. These losses are retained to bound the
 claim; the result does not certify wall-clock latency or future phase
 prediction.
+A broader maximum comparison covers 126 certified combinations of workload,
+key-universe size, and migration cost. WFA records 106 wins, 18 ties, and two
+losses against retaining the initial representation, but a mixed 53/34/39
+against the best fixed representation selected in hindsight. Its median ratio
+to the exact unrestricted oracle is 1.009222, mean is 1.111103, and maximum is
+2.068306. A separate 90-row Python timing audit validates identical checksums
+but finds tracking 96.42--958.87 times slower than the fastest fixed portfolio
+backend. This negative result makes a native batched implementation necessary
+before low-latency deployment.
 Across 24 compiler-integration cases, repeated generation produces
 byte-identical headers and every source artifact independently verifies.
 Cross-language executable tests cover all backend families, all three
