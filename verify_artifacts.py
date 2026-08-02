@@ -73,6 +73,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "tracking_autoindex_comparison.csv": 882 if require_max_scaling else 70,
         "tracking_autoindex_candidates.csv": 882 if require_max_scaling else 70,
         "tracking_autoindex_runtime.csv": 90 if require_max_scaling else 45,
+        "tracking_autoindex_native_runtime.csv": 108,
         "safe_autoindex_validation.csv": 16,
         "sequential_safe_validation.csv": 4,
         "optional_stopping_monte_carlo.csv": 1,
@@ -163,6 +164,72 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
     )
     if require_max_scaling and comparison_metadata.get("mode") != "max":
         raise ValueError("tracking comparison is not the maximum matrix")
+
+    native_tracking = csv_records("tracking_autoindex_native_runtime.csv")
+    native_implementations = {
+        "sorted_array",
+        "prefix_sum",
+        "fenwick",
+        "sqrt_decomposition",
+        "segment_tree",
+        "tracking_native_uniform_production",
+        "tracking_native_rebuild_metric_production",
+        "tracking_native_rebuild_metric_audit",
+        "tracking_python_reference",
+    }
+    native_groups: dict[tuple[str, str], list[dict[str, str]]] = {}
+    for row in native_tracking:
+        native_groups.setdefault((row["n"], row["workload"]), []).append(row)
+    if (
+        set(native_groups)
+        != {
+            (str(n), workload)
+            for n in (64, 256, 4096)
+            for workload in (
+                "range_to_update",
+                "update_to_range",
+                "alternating",
+                "read_mostly",
+            )
+        }
+        or any(
+            {row["implementation"] for row in group} != native_implementations
+            or {row["operations"] for row in group} != {"5000"}
+            or any(
+                not math.isfinite(float(row["ns_per_operation"]))
+                or float(row["ns_per_operation"]) <= 0.0
+                for row in group
+            )
+            or any(
+                not math.isclose(
+                    float(group[0]["checksum"]),
+                    float(row["checksum"]),
+                    rel_tol=1e-12,
+                    abs_tol=1e-9,
+                )
+                for row in group[1:]
+            )
+            for group in native_groups.values()
+        )
+    ):
+        raise ValueError("native tracking runtime comparison is incomplete")
+    native_tracking_metadata = json.loads(
+        (RESULTS / "tracking_autoindex_native_runtime.metadata.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if (
+        native_tracking_metadata.get("schema")
+        != "certigap-native-tracking-benchmark-v1"
+        or native_tracking_metadata.get("operations_per_configuration") != 5000
+        or native_tracking_metadata.get("native_repetitions") != 5
+        or native_tracking_metadata.get("python_repetitions") != 3
+        or native_tracking_metadata.get("source_sha256")
+        != file_sha256(ROOT / "cpp" / "tracking_autoindex_benchmark.cpp")
+        or native_tracking_metadata.get("csv_sha256")
+        != file_sha256(RESULTS / "tracking_autoindex_native_runtime.csv")
+    ):
+        raise ValueError("native tracking benchmark provenance is invalid")
 
     sqlite_vtab_rows = csv_records("sqlite_vtab_validation.csv")
     if (

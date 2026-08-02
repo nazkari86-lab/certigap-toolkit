@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "certigap-toolkit"
-version = "1.10.1"
+version = "1.11.0"
 description = "Certified workload-adaptive index compilation and robust partial search"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -36,6 +36,7 @@ include = ["certigap*"]
   "cpp/certigap.hpp",
   "cpp/certigap_adaptive.hpp",
   "cpp/certigap_autoindex.hpp",
+  "cpp/certigap_tracking.hpp",
   "cpp/certigap_synth.hpp",
 ]
 "share/certigap/schemas" = [

@@ -1,0 +1,26 @@
+{
+  "compile_command": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O3",
+    "-DNDEBUG",
+    "-march=native",
+    "-Wall",
+    "-Wextra",
+    "-Wpedantic",
+    "-Werror",
+    "-I/Users/dulatnurlanuly/Downloads/certigap-prototype/cpp",
+    "/Users/dulatnurlanuly/Downloads/certigap-prototype/cpp/tracking_autoindex_benchmark.cpp",
+    "-o",
+    "/var/folders/z3/pz40jzcn5qq8qssmy__cw2jm0000gn/T/tmpack4dp7r/tracking_benchmark"
+  ],
+  "compiler": "Apple clang version 17.0.0 (clang-1700.6.3.2)",
+  "csv_sha256": "9b31649369dea5c42eab2b95d6af477d2c6c79db3ac6b2b38356618c91b709ef",
+  "native_repetitions": 5,
+  "operations_per_configuration": 5000,
+  "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+  "python": "3.14.5",
+  "python_repetitions": 3,
+  "schema": "certigap-native-tracking-benchmark-v1",
+  "source_sha256": "53809f178717801989840982e669654ae65382d3af6b4d96cd52a474795a8703"
+}

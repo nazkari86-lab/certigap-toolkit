@@ -388,6 +388,34 @@ switch budget. The certificate reports exact ex-post dynamic regret in
 structural units, not future prediction or portable latency. See
 [`docs/TRACKING_AUTOINDEX.md`](docs/TRACKING_AUTOINDEX.md).
 
+The native C++17 hot path uses the same WFA recurrence without Python:
+
+```cpp
+#include <certigap_tracking.hpp>
+
+std::vector<double> values{1, 2, 3, 4, 5, 6, 7, 8};
+certigap::TrackingPolicy policy;
+policy.record_history = false;  // production mode
+policy.backends = {
+    certigap::Backend::SortedArray,
+    certigap::Backend::PrefixSum,
+    certigap::Backend::Fenwick,
+    certigap::Backend::SqrtDecomposition,
+    certigap::Backend::SegmentTree,
+};
+policy.migration_matrix = certigap::tracking_rebuild_metric(
+    values.size(), policy.backends);
+
+certigap::TrackingAutoIndex index(values, certigap::Aggregate::Sum, policy);
+double total = index.range_query(1, 8);  // native API uses one-based keys
+index.point_update(3, 20.0);
+```
+
+Keep the default `record_history=true` when exact offline-oracle replay is
+required. A directed migration matrix is accepted for empirical use, but the
+API exposes a WFA competitive factor only after verifying a positive symmetric
+metric with the triangle inequality.
+
 ## Safe AutoIndex
 
 Add a no-regression deployment gate with separate training, validation, and
@@ -638,6 +666,7 @@ Generated artifacts live in [`results/`](results):
 - [`hybrid_certificate_example.json`](results/hybrid_certificate_example.json): independently replayable CertiGap-H certificate
 - [`tracking_autoindex_validation.md`](results/tracking_autoindex_validation.md): causal switching and exact K-switch regret
 - [`tracking_autoindex_comparison.md`](results/tracking_autoindex_comparison.md): 126-case policy/backend comparison and Python runtime boundary
+- [`tracking_autoindex_native_runtime.md`](results/tracking_autoindex_native_runtime.md): native production/audit runtime, rebuild-aware migration ablation, and matching Python comparison
 
 Figures live in [`figures/`](figures):
 

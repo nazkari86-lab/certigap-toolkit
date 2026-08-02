@@ -117,8 +117,9 @@ independent verifier recomputes every service vector and decision. A separate
 exact DP supplies both K-switch and unrestricted ex-post comparators.
 
 This closes the internal causality and exact-comparator gap. It does not close
-calibration or deployment safety: current costs are structural, migration is a
-uniform metric, and the algorithm has no claim of predicting phase changes.
+calibration or deployment safety: current costs are structural, Python
+certificates use a uniform metric, and the algorithm has no claim of predicting
+phase changes.
 The 15-case matrix deliberately records positive regret and a worst observed
 oracle ratio of `2.657534` rather than hiding losses.
 
@@ -128,8 +129,16 @@ initial representation and `53/34/39` against best fixed hindsight. Median
 unrestricted-oracle ratio is `1.009222`, but the maximum is `2.068306` and
 quality degrades as migration cost rises. The separate Python timing audit is
 an explicit negative systems result: tracking is `96.42x` to `958.87x` slower
-than the fastest fixed portfolio runtime. Scientific tracking is internally
-closed; low-latency native deployment is not.
+than the fastest fixed portfolio runtime.
+
+The C++17 tracking core closes the Python hot-path limitation for conventional
+backends. Its matching benchmark records `55.57-126.47 ns/op` in rebuild-aware
+production mode and a `113.2x-13053.2x` speedup over Python uniform tracking.
+The result is not a universal latency win: native online accounting remains
+`13.1x` slower than the fastest fixed C++ backend in the median measured case.
+The rebuild-aware metric addresses a concrete model/runtime mismatch, reducing
+large read-mostly switching by `360x-394x`. Import of compiled CertiRange
+topologies, external hardware reproduction, and a production pilot remain open.
 
 ## External Work Required For A Literal 10/10 Claim
 

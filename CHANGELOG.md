@@ -5,6 +5,16 @@ recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
 
 ## Unreleased
 
+- Add header-only native C++17 `TrackingAutoIndexCpp` with batched WFA
+  execution, real backend rebuilds, reusable scratch buffers, optional audit
+  history, exact K-switch/unrestricted oracles, metric validation, and explicit
+  fail-closed theorem boundaries for directed migration matrices.
+- Add a rebuild-aware symmetric migration metric, 24,000-operation randomized
+  ASan/UBSan validation, Python/C++ structural-cost differential tests, and a
+  reproducible matching runtime benchmark. Native production is
+  `113.2x-13053.2x` faster than Python tracking on the recorded streams while
+  remaining `13.1x` median slower than the fastest fixed C++ backend.
+
 - Add causal `TrackingAutoIndex` using the Work Function Algorithm, real
   backend migration, exact K-switch and unrestricted offline oracles,
   independently replayed certificates, CLI support, exhaustive path tests,

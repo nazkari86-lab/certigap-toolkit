@@ -9,10 +9,10 @@ prefix sum, Fenwick tree, segment tree, or CertiRange. The current operation
 reveals a non-negative structural service-cost vector over these states.
 
 For state path `s_1,...,s_T`, initial state `s_0`, service costs `c_t`, and
-positive uniform migration cost `d`, total modeled cost is
+positive migration metric `d`, total modeled cost is
 
 ```text
-sum_t c_t(s_t) + d * [s_t != s_(t-1)].
+sum_t c_t(s_t) + d(s_(t-1), s_t).
 ```
 
 This is a finite metrical task system. The implementation uses the
@@ -83,6 +83,44 @@ certigap verify tracking.json
 certigap explain tracking.json
 ```
 
+## Native C++ API
+
+`certigap_tracking.hpp` provides a dependency-free C++17 implementation over
+the conventional array, prefix, Fenwick, square-root, segment-tree, and sparse
+table runtimes. Sum portfolios exclude sparse tables; min/max portfolios
+exclude prefix sums and Fenwick trees.
+
+```cpp
+#include <certigap_tracking.hpp>
+
+std::vector<double> values(4096, 1.0);
+certigap::TrackingPolicy policy;
+policy.backends = {
+    certigap::Backend::SortedArray,
+    certigap::Backend::PrefixSum,
+    certigap::Backend::Fenwick,
+    certigap::Backend::SqrtDecomposition,
+    certigap::Backend::SegmentTree,
+};
+policy.migration_matrix = certigap::tracking_rebuild_metric(
+    values.size(), policy.backends);
+policy.record_history = false;
+
+certigap::TrackingAutoIndex index(values, certigap::Aggregate::Sum, policy);
+auto answers = index.run_batch({
+    certigap::TrackingOperation::range(1, 4096),
+    certigap::TrackingOperation::update(10, 7.0),
+    certigap::TrackingOperation::get(10),
+});
+```
+
+The rebuild helper uses `max(build(i), build(j))` off the diagonal. This is a
+positive symmetric metric satisfying the triangle inequality, unlike a raw
+directed conversion table. General non-negative directed matrices are allowed,
+but `wfa_competitive_factor()` returns zero because the classical MTS theorem
+does not apply. Production mode reuses WFA scratch buffers and omits trajectory
+allocation. Exact oracles fail closed unless `record_history=true`.
+
 ## What The Certificate Establishes
 
 - The nested AutoIndex portfolio and every feasible candidate are replayed.
@@ -106,8 +144,9 @@ systems](https://doi.org/10.1145/28395.28435), and the
 - Structural units are not portable nanoseconds. Target measurements should
   calibrate candidate unit costs and migration cost.
 - The portfolio and operation grammar remain fixed and explicit.
-- The current migration metric is positive and uniform; measured asymmetric
-  conversion costs are future work.
+- Python certificates currently use a positive uniform metric. Native C++ also
+  accepts a verified rebuild-aware metric or an explicitly non-theorem directed
+  matrix.
 - WFA observes the current operation cost before moving, but never future cost.
 - The K-switch oracle is retrospective and is used for evaluation, not routing.
 - Runtime switching has no statistical no-regression gate. Use measured or
@@ -143,10 +182,19 @@ five repetitions, and identical checksum validation. Tracking is `96.42x` to
 gap includes online cost-vector construction, WFA accounting, trace recording,
 and in-trace rebuilds, but excludes initial construction and certificate
 export. Therefore the present Python path is a research reference, not a
-low-latency replacement for Fenwick or prefix sums. A native C++ tracking core
-with batched accounting is the highest-value performance follow-up.
+low-latency replacement for Fenwick or prefix sums.
+
+The native matching benchmark adds four phased workloads at `n=64,256,4096`.
+Rebuild-aware production runs at `55.57-126.47 ns/op` on the recorded machine
+and uniform native mode is `113.2x-13053.2x` faster than the matching Python
+reference. It still costs `13.1x` median versus the fastest fixed C++ backend,
+so tracking is useful when the best representation changes or is unknown, not
+as a universal Fenwick replacement. Full audit history adds `1.89x` median.
+On larger read-mostly streams, rebuild-aware migration cuts switches by
+`360x-394x` and improves runtime by `3.5x-11.5x` over naive uniform migration.
 
 See `results/tracking_autoindex_comparison.md` for the complete outcome tables,
 `tracking_autoindex_comparison.csv` for policy rows,
 `tracking_autoindex_candidates.csv` for every fixed backend, and
-`tracking_autoindex_runtime.csv` for machine-specific timing.
+`tracking_autoindex_runtime.csv` for Python timing. Native raw rows and
+provenance are in `tracking_autoindex_native_runtime.csv` and its metadata JSON.

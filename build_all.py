@@ -51,6 +51,7 @@ def main() -> None:
     run([python, "generate_range_optimizer_validation.py"])
     run([python, "generate_autoindex_validation.py"])
     run([python, "generate_tracking_autoindex_validation.py"])
+    run([python, "generate_native_tracking_benchmark.py"])
     run(
         [
             python,
