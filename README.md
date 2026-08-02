@@ -452,6 +452,28 @@ On the paired 50,000-operation matrix, checked static Fenwick is `1.01x`
 median and `1.23x` maximum versus direct Fenwick. The template backend must be
 chosen explicitly, normally from a recorded training/deployment decision.
 
+For concurrent read-heavy sum workloads, use the versioned Prefix snapshot
+runtime:
+
+```cpp
+#include <certigap_concurrent.hpp>
+
+certigap::ConcurrentPrefixIndex concurrent(values);
+concurrent.request_rebuild();
+concurrent.wait_for_rebuild();
+
+auto view = concurrent.snapshot_view();
+double answer = view.unchecked_range_query(1, 8);
+
+concurrent.point_update(3, 20.0);  // invalidates the published snapshot
+```
+
+Regular calls are linearizable; a `SnapshotReadView` deliberately keeps one
+consistent version for the entire batch. Background catch-up uses a bounded
+versioned update log and publishes only at the current core version. See
+[`docs/CONCURRENT_TRACKING.md`](docs/CONCURRENT_TRACKING.md) for lifetime,
+memory, progress, and concurrency boundaries.
+
 Keep the default `record_history=true` when exact offline-oracle replay is
 required. A directed migration matrix is accepted for empirical use, but the
 API exposes a WFA competitive factor only after verifying a positive symmetric
@@ -710,6 +732,7 @@ Generated artifacts live in [`results/`](results):
 - [`tracking_autoindex_native_runtime.md`](results/tracking_autoindex_native_runtime.md): native production/audit runtime, rebuild-aware migration ablation, and matching Python comparison
 - [`tracking_autoindex_fast_runtime.md`](results/tracking_autoindex_fast_runtime.md): sampled runtime overhead against robust and hindsight baselines
 - [`tracking_hot_path_runtime.md`](results/tracking_hot_path_runtime.md): paired direct, adaptive, detached, dynamic-freeze, and static-freeze overhead
+- [`concurrent_tracking_runtime.md`](results/concurrent_tracking_runtime.md): one/four-reader Prefix snapshot, Fenwick fallback, and batched-view comparison
 
 Figures live in [`figures/`](figures):
 

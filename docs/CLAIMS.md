@@ -4,7 +4,7 @@ This register is the source of truth for statements made in the README, paper,
 presentations, and competition material. A result outside the stated scope must
 not be used to strengthen the claim.
 
-Status: CertiGap Toolkit `v1.13.0`.
+Status: CertiGap Toolkit `v1.14.0`.
 
 ## Central Claim
 
@@ -35,6 +35,8 @@ latency is measured separately and is never certified by a structural score.
 | FastTrackingAutoIndex bounds measured controller overhead to below twice a robust dynamic baseline | Randomized differential and empirical | 48,000-operation ASan/UBSan validation and `results/tracking_autoindex_fast_runtime.csv` | 64 deterministic sum configurations on this machine: `1.21x` median, `1.59x` p95, `1.90x` maximum versus Fenwick; no universal latency theorem |
 | FastTrackingAutoIndex does not match the best specialized backend chosen with future knowledge | Empirical negative result | `results/tracking_autoindex_fast_runtime.csv` | `1.35x` median and `5.40x` maximum versus fastest fixed hindsight; that comparator includes update-only arrays and query-only prefix sums |
 | StaticTrackingIndex can remove nearly all adaptive hot-path overhead | Differential and empirical | `results/tracking_hot_path_runtime.csv` | Paired 50,000-operation sum benchmark on this machine: checked static Fenwick is `1.01x` median and `1.23x` maximum versus direct Fenwick; backend and aggregate are compile-time fixed |
+| ConcurrentPrefixIndex preserves ordinary-call semantics through background build, catch-up, publication, and invalidation | Concurrent differential and sanitizer-verified | `cpp/concurrent_tracking_validation.cpp`, ASan/UBSan, and ThreadSanitizer | Fixed-size sum arrays, point updates, point reads, and inclusive ranges; regular calls are linearizable, while `SnapshotReadView` intentionally provides versioned snapshot isolation |
+| Immutable Prefix publication accelerates the measured concurrent fallback path | Empirical systems result | `results/concurrent_tracking_runtime.csv` | One/four readers on this Apple M4: per-call snapshot is `3.14x` median faster than shared-lock Fenwick fallback; unchecked batched-view overhead is `1.46x` median versus direct Prefix; not portable or multi-writer evidence |
 | Safe AutoIndex deploys specialization only below its validation upper bound | Statistical and replay-certified | `results/safe_autoindex_validation.csv` | One-sided Hoeffding bound conditional on independent IID bounded validation operations and declared structural costs |
 | Sequential Safe AutoIndex permits optional stopping during validation | Mathematical, statistical, and replay-certified | Corollary L.2, `results/sequential_safe_validation.csv`, and `results/optional_stopping_monte_carlo.csv` | Alpha-spending Hoeffding sequence conditional on independent IID bounded validation operations; not a future-drift guarantee |
 | Martingale Safe AutoIndex controls optional-stopping errors for adapted observations | Mathematical, statistical, and replay-certified | Theorem L.3, `results/martingale_safe_validation.csv`, and `results/martingale_null_monte_carlo.csv` | Mixture Hoeffding e-process under the declared bounded conditional-mean deployment/revocation nulls; detection delay and future safety are not guaranteed |
@@ -72,8 +74,8 @@ The following statements must not appear as project conclusions:
 - TrackingAutoIndex predicts future workload phases or always beats the best
   retrospective switching path.
 - Results from one Apple M4 machine transfer to other processors.
-- The toolkit is ready for insert/delete-heavy, concurrent, durable, or
-  disk-resident production use.
+- The toolkit is ready for general insert/delete-heavy, lock-free multi-writer,
+  durable, process-shared, or disk-resident production use.
 
 ## Open Evidence Required
 

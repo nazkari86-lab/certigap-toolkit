@@ -28,6 +28,15 @@ def generated_text() -> str:
         if line != "#pragma once"
         and line != '#include "certigap_adaptive.hpp"'
     ).lstrip()
+    concurrent_lines = (
+        CPP / "certigap_concurrent.hpp"
+    ).read_text(encoding="utf-8").splitlines()
+    concurrent = "\n".join(
+        line
+        for line in concurrent_lines
+        if line != "#pragma once"
+        and line != '#include "certigap_tracking.hpp"'
+    ).lstrip()
     return (
         "// CertiGap single-header distribution. Generated; do not edit.\n"
         + core
@@ -35,6 +44,8 @@ def generated_text() -> str:
         + adaptive
         + "\n"
         + tracking
+        + "\n"
+        + concurrent
         + "\n"
     )
 

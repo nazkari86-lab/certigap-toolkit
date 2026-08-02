@@ -402,7 +402,12 @@ int main() {
     certigap::Index index(std::vector<double>{1, 2, 3});
     index.observe_range(1, 3);
     index.optimize();
-    return index.peek_range(1, 3) == 6 ? 0 : 1;
+    certigap::ConcurrentPrefixIndex concurrent({1, 2, 3});
+    if (!concurrent.rebuild_now()) return 1;
+    return index.peek_range(1, 3) == 6 &&
+                   concurrent.range_query(1, 3) == 6
+        ? 0
+        : 1;
 }
 """,
                 encoding="utf-8",

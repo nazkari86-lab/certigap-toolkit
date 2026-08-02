@@ -5,6 +5,18 @@ recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
 
 ## Unreleased
 
+- Add `ConcurrentPrefixIndex` with an authoritative Fenwick core, immutable
+  Prefix snapshots, bounded versioned update log, `O(n+u)` catch-up rounds,
+  atomic publication/invalidation, epoch-delayed reclamation, and explicit
+  asynchronous rebuild lifecycle.
+- Add `SnapshotReadView` to amortize read-side epoch entry across a versioned
+  batch, platform lock-free-atomic introspection, memory-budget rejection, and
+  fail-closed behavior when a retained view or journal gap prevents publication.
+- Add ASan/UBSan and ThreadSanitizer concurrency validation plus a 48-row native
+  benchmark with checksums and provenance. On this machine, immutable per-call
+  snapshots are `3.14x` median faster than locked Fenwick fallback and unchecked
+  batched views cost `1.46x` median versus direct Prefix.
+
 - Add direct native runtime dispatch, checked and unchecked hot paths, separated
   `hot_*` data-plane operations with externally sampled `observe_sample()`
   control, and deferred specialist activation through explicit `maintenance()`.

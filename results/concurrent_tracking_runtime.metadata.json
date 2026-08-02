@@ -1,0 +1,28 @@
+{
+  "atomics_lock_free": true,
+  "compile_command": [
+    "/usr/bin/c++",
+    "-std=c++17",
+    "-O3",
+    "-DNDEBUG",
+    "-march=native",
+    "-Wall",
+    "-Wextra",
+    "-Wpedantic",
+    "-Werror",
+    "-pthread",
+    "-I/Users/dulatnurlanuly/Downloads/certigap-prototype/cpp",
+    "/Users/dulatnurlanuly/Downloads/certigap-prototype/cpp/concurrent_tracking_benchmark.cpp",
+    "-o",
+    "/var/folders/z3/pz40jzcn5qq8qssmy__cw2jm0000gn/T/tmptgvhsk22/concurrent_tracking_benchmark"
+  ],
+  "compiler": "Apple clang version 17.0.0 (clang-1700.6.3.2)",
+  "configurations": 8,
+  "csv_sha256": "8b3d68ec5021740f4412359bcf78e45e8834967a231b5c3b54e69850b357e7d5",
+  "header_sha256": "fae1b55b2bdfafdb7882cec5c233eb0b1083cfe5038f0d006aecac2215c1c15b",
+  "native_repetitions": 5,
+  "operations_per_configuration": 500000,
+  "platform": "macOS-26.2-arm64-arm-64bit-Mach-O",
+  "schema": "certigap-concurrent-tracking-v1",
+  "source_sha256": "948cc06a71ebeaf3a9a531f4cc246c100b3617667677dbcd2544be76211557e9"
+}

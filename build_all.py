@@ -54,6 +54,7 @@ def main() -> None:
     run([python, "generate_native_tracking_benchmark.py"])
     run([python, "generate_fast_tracking_benchmark.py"])
     run([python, "generate_tracking_hot_path_benchmark.py"])
+    run([python, "generate_concurrent_tracking_benchmark.py"])
     run(
         [
             python,

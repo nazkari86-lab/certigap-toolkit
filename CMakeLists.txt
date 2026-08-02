@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
-project(CertiGap VERSION 1.13.0 LANGUAGES CXX)
+project(CertiGap VERSION 1.14.0 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
+find_package(Threads REQUIRED)
 
 option(CERTIGAP_BUILD_EXAMPLES "Build CertiGap C++ examples" OFF)
 option(CERTIGAP_BUILD_SQLITE_EXTENSION "Build SQLite loadable extension" OFF)
@@ -10,6 +11,7 @@ option(CERTIGAP_BUILD_SQLITE_EXTENSION "Build SQLite loadable extension" OFF)
 add_library(certigap INTERFACE)
 add_library(CertiGap::certigap ALIAS certigap)
 target_compile_features(certigap INTERFACE cxx_std_17)
+target_link_libraries(certigap INTERFACE Threads::Threads)
 target_include_directories(
     certigap
     INTERFACE
@@ -70,6 +72,7 @@ install(
         cpp/certigap_adaptive.hpp
         cpp/certigap_autoindex.hpp
         cpp/certigap_tracking.hpp
+        cpp/certigap_concurrent.hpp
         cpp/certigap_synth.hpp
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/certigap"
 )

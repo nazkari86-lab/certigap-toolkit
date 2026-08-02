@@ -80,6 +80,14 @@ backend and performs no tracking, sampling, migration, or shadow maintenance.
 Dynamic `FrozenTrackingIndex` adds one indirect dispatch but has the same
 asymptotic bounds. Deferred `maintenance()` performs a full specialist rebuild.
 
+`ConcurrentPrefixIndex` keeps `O(n)` canonical/Fenwick state and a bounded
+`O(L)` update journal. Building a Prefix snapshot costs `O(n)`. Each catch-up
+round applies `u` journal entries and rebuilds once in `O(n+u)`, for at most the
+configured `R` rounds. An active Prefix point/range read is `O(1)`; Fenwick
+fallback range reads are `O(log n)` and point updates are `O(log n)`. A
+`SnapshotReadView` pays one epoch entry/exit per batch and retains `O(n)`
+snapshot memory until release.
+
 ## Adaptive Single-Header Runtime
 
 Let `q` be the number of distinct observed ranges. Point and update profiling

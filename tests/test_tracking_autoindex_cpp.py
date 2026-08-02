@@ -34,6 +34,7 @@ class TrackingAutoIndexCppTests(unittest.TestCase):
                 "-Wextra",
                 "-Wpedantic",
                 "-Werror",
+                "-pthread",
                 f"-I{include}",
                 str(source),
                 "-o",
@@ -67,6 +68,14 @@ class TrackingAutoIndexCppTests(unittest.TestCase):
         )
         self.assertIn("48000_random_operations", output)
 
+    def test_concurrent_snapshot_validation_with_sanitizers(self) -> None:
+        output = self.compile_and_run(
+            ROOT / "cpp" / "concurrent_tracking_validation.cpp",
+            ROOT / "cpp",
+            sanitize=True,
+        )
+        self.assertIn("4000_updates,4_readers", output)
+
     def test_single_header_compiles_and_executes_tracking_api(self) -> None:
         self.assertEqual(
             (ROOT / "cpp" / "certigap.hpp").read_text(encoding="utf-8"),
@@ -95,6 +104,9 @@ int main() {
     auto compiled = fast.freeze_static<
         certigap::Backend::Fenwick, certigap::Aggregate::Sum>();
     assert(compiled.unchecked_range_query(1, 4) == 18.0);
+    certigap::ConcurrentPrefixIndex concurrent({1, 2, 3, 4});
+    assert(concurrent.rebuild_now());
+    assert(concurrent.range_query(1, 4) == 10.0);
     return index.migration_is_metric() && fast.explain().operations == 3 ? 0 : 1;
 }
 """,

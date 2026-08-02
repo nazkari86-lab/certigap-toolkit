@@ -76,6 +76,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "tracking_autoindex_native_runtime.csv": 108,
         "tracking_autoindex_fast_runtime.csv": 384,
         "tracking_hot_path_runtime.csv": 448,
+        "concurrent_tracking_runtime.csv": 48,
         "safe_autoindex_validation.csv": 16,
         "sequential_safe_validation.csv": 4,
         "optional_stopping_monte_carlo.csv": 1,
@@ -330,6 +331,58 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         != file_sha256(RESULTS / "tracking_hot_path_runtime.csv")
     ):
         raise ValueError("tracking hot-path benchmark provenance is invalid")
+
+    concurrent_tracking = csv_records("concurrent_tracking_runtime.csv")
+    concurrent_groups: dict[tuple[str, str, str], list[dict[str, str]]] = {}
+    for row in concurrent_tracking:
+        concurrent_groups.setdefault(
+            (row["n"], row["scenario"], row["threads"]), []
+        ).append(row)
+    concurrent_implementations = {
+        "direct_fenwick", "direct_prefix", "concurrent_fallback",
+        "concurrent_snapshot", "concurrent_snapshot_session",
+        "concurrent_snapshot_session_unchecked",
+    }
+    if (
+        len(concurrent_groups) != 8
+        or len(concurrent_tracking) != 48
+        or any(
+            {row["implementation"] for row in group}
+                != concurrent_implementations
+            or {row["operations"] for row in group} != {"500000"}
+            or {row["atomics_lock_free"] for row in group} != {"true"}
+            or any(
+                float(row["ns_per_operation"]) <= 0.0
+                or not math.isclose(
+                    float(group[0]["checksum"]), float(row["checksum"]),
+                    rel_tol=1e-12, abs_tol=1e-9,
+                )
+                for row in group
+            )
+            for group in concurrent_groups.values()
+        )
+    ):
+        raise ValueError("concurrent tracking benchmark is incomplete")
+    concurrent_metadata = json.loads(
+        (RESULTS / "concurrent_tracking_runtime.metadata.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if (
+        concurrent_metadata.get("schema")
+            != "certigap-concurrent-tracking-v1"
+        or concurrent_metadata.get("operations_per_configuration") != 500000
+        or concurrent_metadata.get("native_repetitions") != 5
+        or concurrent_metadata.get("configurations") != 8
+        or concurrent_metadata.get("atomics_lock_free") is not True
+        or concurrent_metadata.get("source_sha256")
+        != file_sha256(ROOT / "cpp" / "concurrent_tracking_benchmark.cpp")
+        or concurrent_metadata.get("header_sha256")
+        != file_sha256(ROOT / "cpp" / "certigap_concurrent.hpp")
+        or concurrent_metadata.get("csv_sha256")
+        != file_sha256(RESULTS / "concurrent_tracking_runtime.csv")
+    ):
+        raise ValueError("concurrent tracking benchmark provenance is invalid")
 
     sqlite_vtab_rows = csv_records("sqlite_vtab_validation.csv")
     if (
