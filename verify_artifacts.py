@@ -76,6 +76,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "compiler_integration_validation.csv": 24,
         "adaptive_header_validation.csv": 24,
         "adaptive_array_validation.csv": 6,
+        "python_adaptive_array_validation.csv": 7,
         "synthesis_validation.csv": 24,
         "hybrid_validation.csv": 24,
         "synthesis_native_latency.csv": 110,
@@ -127,6 +128,34 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         != {"fenwick"}
     ):
         raise ValueError("adaptive_array validation is incomplete")
+
+    python_adaptive_rows = csv_records("python_adaptive_array_validation.csv")
+    if (
+        {row["scenario"] for row in python_adaptive_rows}
+        != {
+            "automatic_range_warmup",
+            "automatic_point_warmup",
+            "mixed_update_workload",
+            "deployment_threshold_rejection",
+            "explicit_maintenance",
+            "profile_writer",
+            "profile_reader",
+        }
+        or any(row["passed"] != "True" for row in python_adaptive_rows)
+        or {
+            row["selected"]
+            for row in python_adaptive_rows
+            if row["scenario"] in {"profile_writer", "profile_reader"}
+        }
+        != {"prefix_sum"}
+        or next(
+            row
+            for row in python_adaptive_rows
+            if row["scenario"] == "deployment_threshold_rejection"
+        )["optimized"]
+        != "False"
+    ):
+        raise ValueError("Python AdaptiveArray validation is incomplete")
 
     scaling_text = (RESULTS / "scaling_benchmark.md").read_text(encoding="utf-8")
     match = re.search(r"- Rows: `(\d+)`", scaling_text)

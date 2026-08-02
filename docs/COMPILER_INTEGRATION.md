@@ -138,6 +138,13 @@ target_include_directories(
 )
 ```
 
+Header-only CMake installs also provide relocatable `pkg-config` metadata for
+non-CMake consumers:
+
+```bash
+c++ -std=c++17 main.cpp $(pkg-config --cflags certigap) -o app
+```
+
 ## Claim Boundary
 
 The artifact certifies selection over the declared fixed portfolio and

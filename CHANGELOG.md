@@ -31,6 +31,9 @@ recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
 - Add zero-based `adaptive_array<T>` with automatic profiling, configurable
   warmup/drift checks, fail-closed modeled-improvement threshold, strict
   cross-run profile persistence, explicit-maintenance mode, and explanations.
+- Add the zero-based Python `AdaptiveArray` over the complete eight-candidate
+  portfolio, bounded profiles, atomic cross-run warm starts, thread-safe public
+  operations, deterministic lifecycle validation, and `pkg-config` metadata.
 
 ## 1.10.1 - 2026-07-30
 

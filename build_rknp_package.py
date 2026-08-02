@@ -60,6 +60,8 @@ def build_abstract_ru(summary_text: str) -> str:
     транзакционным rollback и проверкой двух WAL writers.
 15. zero-based `adaptive_array<T>` с автоматическим профилированием,
     переносом workload-профиля между запусками и fail-closed score gate.
+16. Python `AdaptiveArray` над полным портфелем из восьми структур с bounded
+    профилем, atomic warm start и воспроизводимой проверкой жизненного цикла.
 
 Текущее состояние прототипа подтверждается следующими результатами:
 
@@ -155,6 +157,8 @@ CertiGap не строит полное поисковое дерево на в�
   подключениями и прошёл 6 из 6 planner/durability сценариев.
 - `adaptive_array<T>` прошёл 6 из 6 native-сценариев: automatic warmup,
   отказ слабой миграции, explicit maintenance и восстановление профиля.
+- Python `AdaptiveArray` прошёл 7 из 7 сценариев и list-oracle тесты,
+  включая prefix sum, Fenwick, min-aggregate и отказ слабой миграции.
 
 ## 8. Примеры сертификатов
 

@@ -226,6 +226,8 @@ def main() -> None:
             RESULTS_DIR / "adaptive_header_validation.md",
             DOCS_DIR / "ADAPTIVE_ARRAY.md",
             RESULTS_DIR / "adaptive_array_validation.md",
+            DOCS_DIR / "PYTHON_ADAPTIVE_ARRAY.md",
+            RESULTS_DIR / "python_adaptive_array_validation.md",
             DOCS_DIR / "SYNTHESIS.md",
             RESULTS_DIR / "synthesis_validation.md",
             DOCS_DIR / "HYBRID.md",

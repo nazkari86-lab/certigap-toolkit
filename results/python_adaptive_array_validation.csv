@@ -1,0 +1,8 @@
+scenario,selected,switched,optimized,answer,expected,profile_operations,lifetime_operations,passed
+automatic_range_warmup,prefix_sum,True,True,1769.0,1769,32,32,True
+automatic_point_warmup,sorted_array,False,True,3.0,3.0,32,32,True
+mixed_update_workload,fenwick,True,True,1934.0,1934.0,32,32,True
+deployment_threshold_rejection,sorted_array,False,False,1769.0,1769,32,32,True
+explicit_maintenance,sparse_table,True,True,2.0,2.0,32,32,True
+profile_writer,prefix_sum,True,True,1769.0,1769,32,32,True
+profile_reader,prefix_sum,True,True,1769.0,1769,33,33,True

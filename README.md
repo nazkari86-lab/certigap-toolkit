@@ -62,6 +62,22 @@ Profiles survive restarts, weak modeled migrations fail closed, and automatic
 maintenance can be disabled for latency-critical paths. See
 [`docs/ADAPTIVE_ARRAY.md`](docs/ADAPTIVE_ARRAY.md).
 
+The same zero-configuration path is available in Python over the complete
+eight-candidate portfolio:
+
+```python
+from certigap import AdaptiveArray, AdaptiveArrayPolicy
+
+data = AdaptiveArray(
+    range(1_000),
+    policy=AdaptiveArrayPolicy(warmup_operations=256),
+)
+answer = data.range_sum(10, 40)  # Zero-based [10, 40).
+print(answer, data.explain())
+```
+
+See [`docs/PYTHON_ADAPTIVE_ARRAY.md`](docs/PYTHON_ADAPTIVE_ARRAY.md).
+
 Representation-aware Python compilation:
 
 ```python
@@ -421,6 +437,12 @@ The generated `Index` exposes `get`, `range_query`, `point_update`, and
 CMake project is available in
 [`examples/cmake_autoindex`](examples/cmake_autoindex); see
 [`docs/COMPILER_INTEGRATION.md`](docs/COMPILER_INTEGRATION.md).
+
+Installed header-only builds also expose `pkg-config` metadata:
+
+```bash
+c++ -std=c++17 main.cpp $(pkg-config --cflags certigap) -o app
+```
 
 For simpler runtime selection without generated files, use the standalone
 [`cpp/certigap.hpp`](cpp/certigap.hpp). It profiles normal operations,

@@ -95,3 +95,12 @@ install(
         "${CMAKE_CURRENT_BINARY_DIR}/CertiGapConfigVersion.cmake"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/CertiGap"
 )
+configure_file(
+    cmake/certigap.pc.in
+    "${CMAKE_CURRENT_BINARY_DIR}/certigap.pc"
+    @ONLY
+)
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/certigap.pc"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+)

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -316,6 +318,45 @@ int main(int argc, char** argv) {
                 check=True,
                 capture_output=True,
             )
+            if shutil.which("pkg-config"):
+                pkg_source = root / "pkg-consumer.cpp"
+                pkg_source.write_text(
+                    """
+#include <certigap.hpp>
+#include <vector>
+int main() {
+    certigap::adaptive_array<double> data({1, 2, 3, 4});
+    return data.range_sum(0, 4) == 10 ? 0 : 1;
+}
+""",
+                    encoding="utf-8",
+                )
+                flags = subprocess.run(
+                    ["pkg-config", "--cflags", "certigap"],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    env={
+                        **os.environ,
+                        "PKG_CONFIG_PATH": str(
+                            next(install.glob("lib*/pkgconfig"))
+                        ),
+                    },
+                ).stdout.split()
+                pkg_executable = root / "pkg-consumer"
+                subprocess.run(
+                    [
+                        "c++",
+                        "-std=c++17",
+                        *flags,
+                        str(pkg_source),
+                        "-o",
+                        str(pkg_executable),
+                    ],
+                    check=True,
+                    capture_output=True,
+                )
+                subprocess.run([str(pkg_executable)], check=True)
             downstream = root / "downstream"
             downstream.mkdir()
             (downstream / "CMakeLists.txt").write_text(

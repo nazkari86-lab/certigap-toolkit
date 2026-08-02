@@ -907,6 +907,13 @@ target_include_directories(
 )
 ```
 
+Header-only CMake installs also provide relocatable `pkg-config` metadata for
+non-CMake consumers:
+
+```bash
+c++ -std=c++17 main.cpp $(pkg-config --cflags certigap) -o app
+```
+
 ## Claim Boundary
 
 The artifact certifies selection over the declared fixed portfolio and
@@ -1385,6 +1392,20 @@ Completed on `main`. The gate controls modeled structural score, not measured
 latency risk. Language bindings, package-manager distribution, official YCSB,
 and external users remain adoption work rather than established evidence.
 
+## Phase 18: Python Adoption Surface
+
+- zero-based `AdaptiveArray` over the complete eight-candidate portfolio;
+- automatic warmup, TV-drift checks, and fail-closed score threshold;
+- bounded decayed profiling with O(1) hot-path accounting;
+- strict C++-compatible profile parsing and atomic persistence;
+- serialized operations and deterministic list-oracle testing;
+- seven-scenario reproducible lifecycle artifact;
+- installed CMake package plus relocatable `pkg-config` metadata.
+
+Completed on `main`. Publishing package-manager registry entries, official
+YCSB/storage-engine adapters, independent users, and production traces require
+external infrastructure or third-party adoption and are not claimed.
+
 ## External Closure
 
 - independent proof review and broader recurrence/verifier formalization
@@ -1393,4 +1414,5 @@ and external users remain adoption work rather than established evidence.
 - prospective domain-owner trace and production pilot
 - tighter large-instance bounds and approximation ratios
 - official YCSB integration with RocksDB or SQLite
+- PyPI, Conan/vcpkg registry publication, and independent downstream users
 - lazy range updates, disk-page layouts, and high-contention writer evaluation

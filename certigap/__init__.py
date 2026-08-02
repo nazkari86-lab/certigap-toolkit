@@ -117,6 +117,7 @@ from .adaptive_profile import (
     parse_adaptive_profile,
     parse_adaptive_profile_text,
 )
+from .adaptive_array import AdaptiveArray, AdaptiveArrayPolicy
 from .synthesis import (
     HardwareProfile,
     SynthesisConstraints,
@@ -185,6 +186,8 @@ __all__ = [
     "build_sqlite_extension",
     "parse_adaptive_profile",
     "parse_adaptive_profile_text",
+    "AdaptiveArray",
+    "AdaptiveArrayPolicy",
     "virtual_table_source_path",
     "CertiGapToolkit",
     "CompiledAutoIndex",

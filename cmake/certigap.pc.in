@@ -1,0 +1,7 @@
+prefix=${pcfiledir}/../..
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: CertiGap
+Description: Header-only workload-adaptive ordered indexes
+Version: @PROJECT_VERSION@
+Cflags: -I${includedir}/certigap

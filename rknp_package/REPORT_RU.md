@@ -81,6 +81,8 @@ CertiGap не строит полное поисковое дерево на в�
   подключениями и прошёл 6 из 6 planner/durability сценариев.
 - `adaptive_array<T>` прошёл 6 из 6 native-сценариев: automatic warmup,
   отказ слабой миграции, explicit maintenance и восстановление профиля.
+- Python `AdaptiveArray` прошёл 7 из 7 сценариев и list-oracle тесты,
+  включая prefix sum, Fenwick, min-aggregate и отказ слабой миграции.
 
 ## 8. Примеры сертификатов
 
@@ -1801,6 +1803,13 @@ target_include_directories(
     "${CMAKE_CURRENT_BINARY_DIR}"
     "${CERTIGAP_INCLUDE_DIR}"
 )
+```
+
+Header-only CMake installs also provide relocatable `pkg-config` metadata for
+non-CMake consumers:
+
+```bash
+c++ -std=c++17 main.cpp $(pkg-config --cflags certigap) -o app
 ```
 
 ## Claim Boundary

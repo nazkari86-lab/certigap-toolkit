@@ -45,6 +45,7 @@ latency is measured separately and is never certified by a structural score.
 | Temporal shift can break train-only selection | Empirical failure case | `219.69%` regret in the declared shift scenario | One deterministic stress case; not a drift frequency estimate |
 | Generated C++ implements the selected semantics | Cross-language differential | compiler integration and native runtime oracle tests | Supported get/range/update/snapshot operations and generated backends |
 | `adaptive_array` automatically profiles and applies a fail-closed score gate | Native behavioral and persistence validation | `results/adaptive_array_validation.csv` and C++ compile/run tests | Five-candidate structural model, zero-based API, synchronous maintenance, and strict workload-profile persistence; not a statistical or wall-clock no-regression guarantee |
+| Python `AdaptiveArray` selects from the complete AutoIndex portfolio | Behavioral, differential, and persistence validation | `results/python_adaptive_array_validation.csv` and Python oracle tests | Eight declared candidates, zero-based API, bounded integer profile, serialized public operations, and atomic persistence; not a latency or parallel-throughput guarantee |
 
 ## Statements That Are Not Established
 
