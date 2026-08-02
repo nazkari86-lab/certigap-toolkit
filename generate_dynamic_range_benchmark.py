@@ -389,7 +389,9 @@ def main() -> None:
             print(f"dynamic range: n={n} workload={workload}")
     RESULTS.mkdir(exist_ok=True)
     with CSV_PATH.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(
+            handle, fieldnames=list(rows[0]), lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(rows)
     _write_markdown(rows)

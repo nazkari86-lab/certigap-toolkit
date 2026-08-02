@@ -77,6 +77,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "adaptive_header_validation.csv": 24,
         "adaptive_array_validation.csv": 6,
         "python_adaptive_array_validation.csv": 7,
+        "measured_deployment_validation.csv": 4,
         "synthesis_validation.csv": 24,
         "hybrid_validation.csv": 24,
         "synthesis_native_latency.csv": 110,
@@ -125,7 +126,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
             for row in adaptive_array_rows
             if row["scenario"] in {"profile_writer", "profile_reader"}
         }
-        != {"fenwick"}
+        != {"prefix_sum"}
     ):
         raise ValueError("adaptive_array validation is incomplete")
 
@@ -156,6 +157,20 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         != "False"
     ):
         raise ValueError("Python AdaptiveArray validation is incomplete")
+
+    measured_rows = csv_records("measured_deployment_validation.csv")
+    if (
+        {row["scenario"] for row in measured_rows}
+        != {"strong_win", "weak_win", "parity", "regression"}
+        or any(row["passed"] != "True" for row in measured_rows)
+        or {
+            row["scenario"]
+            for row in measured_rows
+            if row["candidate_deployed"] == "True"
+        }
+        != {"strong_win"}
+    ):
+        raise ValueError("measured deployment validation is incomplete")
 
     scaling_text = (RESULTS / "scaling_benchmark.md").read_text(encoding="utf-8")
     match = re.search(r"- Rows: `(\d+)`", scaling_text)
@@ -524,7 +539,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         len(adaptive_rows) != 24
         or any(
             row["correct"] != "true"
-            or row["candidate_count"] != "5"
+            or row["candidate_count"] != "8"
             or not math.isfinite(float(row["score"]))
             or int(row["memory_slots"]) <= 0
             for row in adaptive_rows

@@ -78,6 +78,33 @@ print(answer, data.explain())
 
 See [`docs/PYTHON_ADAPTIVE_ARRAY.md`](docs/PYTHON_ADAPTIVE_ARRAY.md).
 
+For an explicit operation/resource contract and measured fail-closed rollout:
+
+```python
+from certigap import (
+    AdaptiveSpec,
+    MeasuredDeploymentPolicy,
+    compile_measured_autoindex,
+)
+
+spec = AdaptiveSpec(
+    operations=("get", "range", "update"),
+    memory_limit_slots=50_000,
+)
+index = compile_measured_autoindex(
+    values,
+    training_trace,
+    independent_validation_trace,
+    spec,
+    policy=MeasuredDeploymentPolicy(alpha=0.05, repetitions=64),
+)
+print(index.explain())
+```
+
+The candidate executes only when its paired bounded-harm upper bound passes;
+otherwise the conventional baseline remains active. See
+[`docs/MEASURED_DEPLOYMENT.md`](docs/MEASURED_DEPLOYMENT.md).
+
 Representation-aware Python compilation:
 
 ```python
@@ -446,7 +473,7 @@ c++ -std=c++17 main.cpp $(pkg-config --cflags certigap) -o app
 
 For simpler runtime selection without generated files, use the standalone
 [`cpp/certigap.hpp`](cpp/certigap.hpp). It profiles normal operations,
-supports explicit warmup observations, returns all five candidate reports,
+supports explicit warmup observations, returns all eight candidate reports,
 and performs opt-in TV-drift reoptimization.
 
 ## Quick Start

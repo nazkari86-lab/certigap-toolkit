@@ -12,61 +12,61 @@ This measures only rank lookup after each structure is built. Times are local-ma
 
 | Workload | Solver | n | B | Median batch ns/query | p95 batch ns/query | Nodes | Auxiliary bytes | Total bytes |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| uniform | certigap_pruned | 1000 | 6 | 16.436 | 16.866 | 1 | 48 | 4048 |
-| uniform | balanced_budgeted | 1000 | 6 | 18.527 | 18.749 | 13 | 624 | 4624 |
-| uniform | weighted_budgeted | 1000 | 6 | 18.456 | 18.836 | 13 | 624 | 4624 |
-| uniform | balanced_full_reference | 1000 | 999 | 16.151 | 16.679 | 1999 | 95952 | 99952 |
-| uniform | std_lower_bound | 1000 | 0 | 15.552 | 15.944 | 0 | 0 | 4000 |
-| zipf | certigap_pruned | 1000 | 6 | 25.614 | 26.704 | 11 | 528 | 4528 |
-| zipf | balanced_budgeted | 1000 | 6 | 15.678 | 16.225 | 13 | 624 | 4624 |
-| zipf | weighted_budgeted | 1000 | 6 | 25.186 | 25.917 | 13 | 624 | 4624 |
-| zipf | balanced_full_reference | 1000 | 999 | 15.374 | 16.073 | 1999 | 95952 | 99952 |
-| zipf | std_lower_bound | 1000 | 0 | 15.088 | 15.755 | 0 | 0 | 4000 |
-| hot_tail | certigap_pruned | 1000 | 6 | 21.831 | 22.519 | 13 | 624 | 4624 |
-| hot_tail | balanced_budgeted | 1000 | 6 | 15.522 | 15.876 | 13 | 624 | 4624 |
-| hot_tail | weighted_budgeted | 1000 | 6 | 24.192 | 25.346 | 13 | 624 | 4624 |
-| hot_tail | balanced_full_reference | 1000 | 999 | 16.106 | 16.577 | 1999 | 95952 | 99952 |
-| hot_tail | std_lower_bound | 1000 | 0 | 15.501 | 16.123 | 0 | 0 | 4000 |
-| ycsb_hotspot_80_20 | certigap_pruned | 1000 | 6 | 24.692 | 25.643 | 13 | 624 | 4624 |
-| ycsb_hotspot_80_20 | balanced_budgeted | 1000 | 6 | 16.831 | 17.224 | 13 | 624 | 4624 |
-| ycsb_hotspot_80_20 | weighted_budgeted | 1000 | 6 | 16.219 | 16.466 | 13 | 624 | 4624 |
-| ycsb_hotspot_80_20 | balanced_full_reference | 1000 | 999 | 15.893 | 16.260 | 1999 | 95952 | 99952 |
-| ycsb_hotspot_80_20 | std_lower_bound | 1000 | 0 | 15.374 | 15.742 | 0 | 0 | 4000 |
-| ycsb_latest_biased | certigap_pruned | 1000 | 6 | 28.326 | 29.018 | 13 | 624 | 4624 |
-| ycsb_latest_biased | balanced_budgeted | 1000 | 6 | 14.703 | 15.817 | 13 | 624 | 4624 |
-| ycsb_latest_biased | weighted_budgeted | 1000 | 6 | 26.401 | 26.918 | 13 | 624 | 4624 |
-| ycsb_latest_biased | balanced_full_reference | 1000 | 999 | 18.673 | 26.755 | 1999 | 95952 | 99952 |
-| ycsb_latest_biased | std_lower_bound | 1000 | 0 | 19.996 | 29.051 | 0 | 0 | 4000 |
-| uniform | certigap_pruned | 10000 | 6 | 29.483 | 42.514 | 5 | 240 | 40240 |
-| uniform | balanced_budgeted | 10000 | 6 | 40.318 | 43.050 | 13 | 624 | 40624 |
-| uniform | weighted_budgeted | 10000 | 6 | 27.806 | 29.757 | 13 | 624 | 40624 |
-| uniform | balanced_full_reference | 10000 | 9999 | 56.518 | 64.310 | 19999 | 959952 | 999952 |
-| uniform | std_lower_bound | 10000 | 0 | 40.845 | 46.249 | 0 | 0 | 40000 |
-| zipf | certigap_pruned | 10000 | 6 | 29.593 | 34.589 | 13 | 624 | 40624 |
-| zipf | balanced_budgeted | 10000 | 6 | 24.563 | 28.187 | 13 | 624 | 40624 |
-| zipf | weighted_budgeted | 10000 | 6 | 29.327 | 34.547 | 13 | 624 | 40624 |
-| zipf | balanced_full_reference | 10000 | 9999 | 56.032 | 64.146 | 19999 | 959952 | 999952 |
-| zipf | std_lower_bound | 10000 | 0 | 44.236 | 46.169 | 0 | 0 | 40000 |
-| hot_tail | certigap_pruned | 10000 | 6 | 22.789 | 23.756 | 13 | 624 | 40624 |
-| hot_tail | balanced_budgeted | 10000 | 6 | 24.669 | 25.330 | 13 | 624 | 40624 |
-| hot_tail | weighted_budgeted | 10000 | 6 | 27.071 | 27.659 | 13 | 624 | 40624 |
-| hot_tail | balanced_full_reference | 10000 | 9999 | 48.577 | 50.151 | 19999 | 959952 | 999952 |
-| hot_tail | std_lower_bound | 10000 | 0 | 38.813 | 39.600 | 0 | 0 | 40000 |
-| ycsb_hotspot_80_20 | certigap_pruned | 10000 | 6 | 21.882 | 22.715 | 3 | 144 | 40144 |
-| ycsb_hotspot_80_20 | balanced_budgeted | 10000 | 6 | 25.125 | 25.843 | 13 | 624 | 40624 |
-| ycsb_hotspot_80_20 | weighted_budgeted | 10000 | 6 | 23.972 | 24.977 | 13 | 624 | 40624 |
-| ycsb_hotspot_80_20 | balanced_full_reference | 10000 | 9999 | 50.989 | 52.120 | 19999 | 959952 | 999952 |
-| ycsb_hotspot_80_20 | std_lower_bound | 10000 | 0 | 39.153 | 40.139 | 0 | 0 | 40000 |
-| ycsb_latest_biased | certigap_pruned | 10000 | 6 | 30.556 | 31.370 | 7 | 336 | 40336 |
-| ycsb_latest_biased | balanced_budgeted | 10000 | 6 | 23.978 | 24.734 | 13 | 624 | 40624 |
-| ycsb_latest_biased | weighted_budgeted | 10000 | 6 | 32.435 | 33.242 | 13 | 624 | 40624 |
-| ycsb_latest_biased | balanced_full_reference | 10000 | 9999 | 51.153 | 52.214 | 19999 | 959952 | 999952 |
-| ycsb_latest_biased | std_lower_bound | 10000 | 0 | 38.882 | 39.963 | 0 | 0 | 40000 |
+| uniform | certigap_pruned | 1000 | 6 | 8.949 | 9.259 | 1 | 48 | 4048 |
+| uniform | balanced_budgeted | 1000 | 6 | 10.097 | 10.427 | 13 | 624 | 4624 |
+| uniform | weighted_budgeted | 1000 | 6 | 10.074 | 11.305 | 13 | 624 | 4624 |
+| uniform | balanced_full_reference | 1000 | 999 | 8.934 | 9.365 | 1999 | 95952 | 99952 |
+| uniform | std_lower_bound | 1000 | 0 | 8.541 | 8.830 | 0 | 0 | 4000 |
+| zipf | certigap_pruned | 1000 | 6 | 13.905 | 14.909 | 11 | 528 | 4528 |
+| zipf | balanced_budgeted | 1000 | 6 | 8.629 | 8.844 | 13 | 624 | 4624 |
+| zipf | weighted_budgeted | 1000 | 6 | 13.653 | 14.171 | 13 | 624 | 4624 |
+| zipf | balanced_full_reference | 1000 | 999 | 8.612 | 8.869 | 1999 | 95952 | 99952 |
+| zipf | std_lower_bound | 1000 | 0 | 8.231 | 8.465 | 0 | 0 | 4000 |
+| hot_tail | certigap_pruned | 1000 | 6 | 11.810 | 12.731 | 13 | 624 | 4624 |
+| hot_tail | balanced_budgeted | 1000 | 6 | 8.290 | 9.006 | 13 | 624 | 4624 |
+| hot_tail | weighted_budgeted | 1000 | 6 | 13.040 | 13.756 | 13 | 624 | 4624 |
+| hot_tail | balanced_full_reference | 1000 | 999 | 8.686 | 9.255 | 1999 | 95952 | 99952 |
+| hot_tail | std_lower_bound | 1000 | 0 | 8.444 | 8.849 | 0 | 0 | 4000 |
+| ycsb_hotspot_80_20 | certigap_pruned | 1000 | 6 | 13.404 | 13.803 | 13 | 624 | 4624 |
+| ycsb_hotspot_80_20 | balanced_budgeted | 1000 | 6 | 9.188 | 9.479 | 13 | 624 | 4624 |
+| ycsb_hotspot_80_20 | weighted_budgeted | 1000 | 6 | 8.707 | 8.969 | 13 | 624 | 4624 |
+| ycsb_hotspot_80_20 | balanced_full_reference | 1000 | 999 | 8.677 | 8.950 | 1999 | 95952 | 99952 |
+| ycsb_hotspot_80_20 | std_lower_bound | 1000 | 0 | 8.429 | 8.880 | 0 | 0 | 4000 |
+| ycsb_latest_biased | certigap_pruned | 1000 | 6 | 15.528 | 16.012 | 13 | 624 | 4624 |
+| ycsb_latest_biased | balanced_budgeted | 1000 | 6 | 8.057 | 8.426 | 13 | 624 | 4624 |
+| ycsb_latest_biased | weighted_budgeted | 1000 | 6 | 14.263 | 14.898 | 13 | 624 | 4624 |
+| ycsb_latest_biased | balanced_full_reference | 1000 | 999 | 8.750 | 9.024 | 1999 | 95952 | 99952 |
+| ycsb_latest_biased | std_lower_bound | 1000 | 0 | 8.531 | 8.799 | 0 | 0 | 4000 |
+| uniform | certigap_pruned | 10000 | 6 | 15.239 | 15.827 | 5 | 240 | 40240 |
+| uniform | balanced_budgeted | 10000 | 6 | 14.732 | 15.192 | 13 | 624 | 40624 |
+| uniform | weighted_budgeted | 10000 | 6 | 14.797 | 15.059 | 13 | 624 | 40624 |
+| uniform | balanced_full_reference | 10000 | 9999 | 29.893 | 30.804 | 19999 | 959952 | 999952 |
+| uniform | std_lower_bound | 10000 | 0 | 20.933 | 21.291 | 0 | 0 | 40000 |
+| zipf | certigap_pruned | 10000 | 6 | 15.223 | 15.872 | 13 | 624 | 40624 |
+| zipf | balanced_budgeted | 10000 | 6 | 12.891 | 13.183 | 13 | 624 | 40624 |
+| zipf | weighted_budgeted | 10000 | 6 | 15.512 | 16.038 | 13 | 624 | 40624 |
+| zipf | balanced_full_reference | 10000 | 9999 | 27.974 | 28.412 | 19999 | 959952 | 999952 |
+| zipf | std_lower_bound | 10000 | 0 | 23.908 | 24.221 | 0 | 0 | 40000 |
+| hot_tail | certigap_pruned | 10000 | 6 | 12.259 | 12.674 | 13 | 624 | 40624 |
+| hot_tail | balanced_budgeted | 10000 | 6 | 13.474 | 13.831 | 13 | 624 | 40624 |
+| hot_tail | weighted_budgeted | 10000 | 6 | 14.598 | 14.829 | 13 | 624 | 40624 |
+| hot_tail | balanced_full_reference | 10000 | 9999 | 26.450 | 27.018 | 19999 | 959952 | 999952 |
+| hot_tail | std_lower_bound | 10000 | 0 | 20.885 | 21.177 | 0 | 0 | 40000 |
+| ycsb_hotspot_80_20 | certigap_pruned | 10000 | 6 | 11.807 | 12.105 | 3 | 144 | 40144 |
+| ycsb_hotspot_80_20 | balanced_budgeted | 10000 | 6 | 13.731 | 14.008 | 13 | 624 | 40624 |
+| ycsb_hotspot_80_20 | weighted_budgeted | 10000 | 6 | 12.916 | 13.127 | 13 | 624 | 40624 |
+| ycsb_hotspot_80_20 | balanced_full_reference | 10000 | 9999 | 27.691 | 28.388 | 19999 | 959952 | 999952 |
+| ycsb_hotspot_80_20 | std_lower_bound | 10000 | 0 | 20.964 | 21.316 | 0 | 0 | 40000 |
+| ycsb_latest_biased | certigap_pruned | 10000 | 6 | 16.590 | 17.881 | 7 | 336 | 40336 |
+| ycsb_latest_biased | balanced_budgeted | 10000 | 6 | 13.137 | 13.438 | 13 | 624 | 40624 |
+| ycsb_latest_biased | weighted_budgeted | 10000 | 6 | 17.536 | 18.007 | 13 | 624 | 40624 |
+| ycsb_latest_biased | balanced_full_reference | 10000 | 9999 | 27.387 | 28.099 | 19999 | 959952 | 999952 |
+| ycsb_latest_biased | std_lower_bound | 10000 | 0 | 20.904 | 21.430 | 0 | 0 | 40000 |
 
 ## Matched-Budget Interpretation
 
-- CertiGap has lower median batch lookup time than `balanced_budgeted` in `4/10` measured workload-size cases.
-- CertiGap has lower median batch lookup time than `weighted_budgeted` in `5/10` measured workload-size cases.
+- CertiGap has lower median batch lookup time than `balanced_budgeted` in `3/10` measured workload-size cases.
+- CertiGap has lower median batch lookup time than `weighted_budgeted` in `6/10` measured workload-size cases.
 
 ## Limits
 

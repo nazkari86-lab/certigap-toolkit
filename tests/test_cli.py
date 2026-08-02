@@ -11,6 +11,11 @@ from unittest.mock import patch
 from certigap.compiler import compile_spec
 from certigap.hybrid import HybridConstraints, compile_hybrid_index
 from certigap.autoindex import WorkloadTrace
+from certigap.measured_deployment import (
+    MeasuredDeploymentPolicy,
+    compile_measured_autoindex,
+)
+from certigap.spec import AdaptiveSpec
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -90,6 +95,49 @@ class UnifiedCliTests(unittest.TestCase):
             explanation = json.loads(explained.stdout)
             self.assertEqual(sum(explanation["block_widths"]), 8)
             self.assertEqual(explanation["operation_counts"]["range"], 10)
+
+    def test_verify_and_explain_measured_deployment(self) -> None:
+        train = WorkloadTrace(16)
+        validation = WorkloadTrace(16)
+        for _ in range(4):
+            train.add_range(1, 16)
+            validation.add_range(1, 16)
+        artifact = compile_measured_autoindex(
+            range(16),
+            train,
+            validation,
+            AdaptiveSpec(operations=("range",)),
+            policy=MeasuredDeploymentPolicy(
+                repetitions=2,
+                warmup_repetitions=0,
+            ),
+        ).export_certificate()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "measured.json"
+            path.write_text(json.dumps(artifact), encoding="utf-8")
+            verified = self.run_cli("verify", str(path))
+            self.assertEqual(verified.returncode, 0, verified.stderr)
+            explained = self.run_cli("explain", str(path))
+            self.assertEqual(explained.returncode, 0, explained.stderr)
+            payload = json.loads(explained.stdout)
+            self.assertEqual(
+                payload["artifact_type"],
+                "certigap-measured-deployment-v1",
+            )
+            self.assertIn(payload["selected"], {"sorted_array", "prefix_sum"})
+            self.assertIn("upper_normalized_harm", payload)
+
+    def test_explain_sequential_and_martingale_artifacts(self) -> None:
+        for name in (
+            "sequential_safe_example.json",
+            "martingale_safe_example.json",
+        ):
+            with self.subTest(name=name):
+                result = self.run_cli("explain", str(ROOT / "results" / name))
+                self.assertEqual(result.returncode, 0, result.stderr)
+                payload = json.loads(result.stdout)
+                self.assertIn("selected", payload)
+                self.assertIn("selection_reason", payload)
 
     def test_unknown_or_tampered_artifacts_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -70,6 +70,16 @@ from .martingale_safe_compiler import (
     generate_martingale_safe_cpp_header,
     load_martingale_safe_compile_spec,
 )
+from .measured_deployment import (
+    MeasuredCompiledAutoIndex,
+    MeasuredDeploymentPolicy,
+    compile_measured_autoindex,
+    paired_latency_decision,
+)
+from .measured_deployment_verifier import (
+    MeasuredDeploymentVerificationError,
+    verify_measured_deployment_artifact,
+)
 from .pruned_verifier import (
     PrunedBeamVerificationError,
     verify_pruned_beam_certificate,
@@ -113,6 +123,7 @@ from .sqlite_extension import (
     extension_source_path,
     virtual_table_source_path,
 )
+from .spec import AdaptiveSpec, compile_from_spec
 from .adaptive_profile import (
     parse_adaptive_profile,
     parse_adaptive_profile_text,
@@ -188,6 +199,7 @@ __all__ = [
     "parse_adaptive_profile_text",
     "AdaptiveArray",
     "AdaptiveArrayPolicy",
+    "AdaptiveSpec",
     "virtual_table_source_path",
     "CertiGapToolkit",
     "CompiledAutoIndex",
@@ -197,7 +209,9 @@ __all__ = [
     "cost_cap_dp_best",
     "counterexample_search",
     "compile_autoindex",
+    "compile_from_spec",
     "compile_martingale_safe_autoindex",
+    "compile_measured_autoindex",
     "compile_martingale_safe_spec",
     "compile_safe_autoindex",
     "compile_safe_spec",
@@ -235,8 +249,12 @@ __all__ = [
     "MartingaleSafeAutoIndexVerificationError",
     "MartingaleSafeCompiledAutoIndex",
     "MartingaleSafeSelectionPolicy",
+    "MeasuredCompiledAutoIndex",
+    "MeasuredDeploymentPolicy",
+    "MeasuredDeploymentVerificationError",
     "max_cost_lower_bound",
     "midpoint_binary_profile",
+    "paired_latency_decision",
     "multinomial_uncertainty",
     "migration_decision",
     "normalize_weights",
@@ -276,6 +294,7 @@ __all__ = [
     "verify_anytime_tv_certificate",
     "verify_autoindex_artifact",
     "verify_martingale_safe_autoindex_certificate",
+    "verify_measured_deployment_artifact",
     "verify_safe_autoindex_certificate",
     "verify_sequential_safe_autoindex_certificate",
     "verify_tree",

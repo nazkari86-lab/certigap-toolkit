@@ -445,8 +445,11 @@ struct OptimizeOptions {
     double memory_weight = 0.0;
     double build_weight = 0.0;
     double array_unit_cost = 1.0;
+    double prefix_unit_cost = 1.0;
     double fenwick_unit_cost = 1.0;
+    double sqrt_unit_cost = 1.0;
     double segment_tree_unit_cost = 1.0;
+    double sparse_unit_cost = 1.0;
     double certirange_unit_cost = 1.0;
 };
 
@@ -551,6 +554,38 @@ private:
     Aggregate aggregate_;
 };
 
+class PrefixRuntime {
+public:
+    explicit PrefixRuntime(std::vector<double> values)
+        : values_(std::move(values)), prefix_(values_.size() + 1, 0.0) {
+        rebuild();
+    }
+
+    double get(int key) const { return values_[key - 1]; }
+
+    double range_query(int left, int right) const {
+        return prefix_[right] - prefix_[left - 1];
+    }
+
+    void point_update(int key, double value) {
+        const double delta = value - values_[key - 1];
+        values_[key - 1] = value;
+        for (int index = key; index < static_cast<int>(prefix_.size()); ++index) {
+            prefix_[index] += delta;
+        }
+    }
+
+private:
+    std::vector<double> values_;
+    std::vector<double> prefix_;
+
+    void rebuild() {
+        for (std::size_t index = 0; index < values_.size(); ++index) {
+            prefix_[index + 1] = prefix_[index] + values_[index];
+        }
+    }
+};
+
 class FenwickRuntime {
 public:
     explicit FenwickRuntime(const std::vector<double>& values)
@@ -590,6 +625,67 @@ private:
             key -= key & -key;
         }
         return result;
+    }
+};
+
+class SqrtRuntime {
+public:
+    SqrtRuntime(std::vector<double> values, Aggregate aggregate)
+        : values_(std::move(values)), aggregate_(aggregate) {
+        block_size_ = std::max(
+            1,
+            static_cast<int>(std::ceil(std::sqrt(values_.size())))
+        );
+        blocks_.assign(
+            (values_.size() + block_size_ - 1) / block_size_,
+            identity(aggregate_)
+        );
+        for (int block = 0; block < static_cast<int>(blocks_.size()); ++block) {
+            rebuild_block(block);
+        }
+    }
+
+    double get(int key) const { return values_[key - 1]; }
+
+    double range_query(int left, int right) const {
+        int index = left - 1;
+        double result = identity(aggregate_);
+        while (index < right && index % block_size_ != 0) {
+            result = combine(result, values_[index++], aggregate_);
+        }
+        while (index + block_size_ <= right) {
+            result = combine(
+                result, blocks_[index / block_size_], aggregate_
+            );
+            index += block_size_;
+        }
+        while (index < right) {
+            result = combine(result, values_[index++], aggregate_);
+        }
+        return result;
+    }
+
+    void point_update(int key, double value) {
+        values_[key - 1] = value;
+        rebuild_block((key - 1) / block_size_);
+    }
+
+private:
+    std::vector<double> values_;
+    std::vector<double> blocks_;
+    Aggregate aggregate_;
+    int block_size_ = 1;
+
+    void rebuild_block(int block) {
+        const int first = block * block_size_;
+        const int last = std::min(
+            static_cast<int>(values_.size()), first + block_size_
+        );
+        double result = identity(aggregate_);
+        for (int index = first; index < last; ++index) {
+            result = combine(result, values_[index], aggregate_);
+        }
+        blocks_[block] = result;
     }
 };
 
@@ -646,6 +742,68 @@ private:
     Aggregate aggregate_;
     int size_ = 0;
     std::vector<double> tree_;
+};
+
+class SparseRuntime {
+public:
+    SparseRuntime(std::vector<double> values, Aggregate aggregate)
+        : values_(std::move(values)), aggregate_(aggregate) {
+        if (aggregate_ == Aggregate::Sum) {
+            throw std::invalid_argument(
+                "sparse table supports idempotent min/max only"
+            );
+        }
+        rebuild();
+    }
+
+    double get(int key) const { return values_[key - 1]; }
+
+    double range_query(int left, int right) const {
+        const int level = logs_[right - left + 1];
+        const int width = 1 << level;
+        return combine(
+            table_[level][left - 1],
+            table_[level][right - width],
+            aggregate_
+        );
+    }
+
+    void point_update(int key, double value) {
+        values_[key - 1] = value;
+        rebuild();
+    }
+
+private:
+    std::vector<double> values_;
+    Aggregate aggregate_;
+    std::vector<std::vector<double>> table_;
+    std::vector<int> logs_;
+
+    void rebuild() {
+        logs_.assign(values_.size() + 1, 0);
+        for (std::size_t length = 2; length < logs_.size(); ++length) {
+            logs_[length] = logs_[length / 2] + 1;
+        }
+        table_.clear();
+        table_.push_back(values_);
+        for (
+            int level = 1;
+            (1 << level) <= static_cast<int>(values_.size());
+            ++level
+        ) {
+            const int width = 1 << level;
+            const int half = width >> 1;
+            std::vector<double> row(values_.size() - width + 1);
+            for (int index = 0; index < static_cast<int>(row.size()); ++index) {
+                row[index] = combine(
+                    table_[level - 1][index],
+                    table_[level - 1][index + half],
+                    aggregate_
+                );
+            }
+            table_.push_back(std::move(row));
+        }
+    }
 };
 
 struct RuntimeNode {
@@ -837,6 +995,29 @@ inline int segment_range_steps(int left, int right, int size) {
     return std::max(1, steps);
 }
 
+inline int sqrt_range_steps(int left, int right, int block_size) {
+    int index = left - 1;
+    int steps = 0;
+    while (index < right && index % block_size != 0) {
+        ++steps;
+        ++index;
+    }
+    while (index + block_size <= right) {
+        ++steps;
+        index += block_size;
+    }
+    return steps + right - index;
+}
+
+inline std::size_t sparse_table_entries(std::size_t size) {
+    std::size_t entries = 0;
+    for (std::size_t width = 1; width <= size; width <<= 1) {
+        entries += size - width + 1;
+        if (width > size / 2) break;
+    }
+    return entries;
+}
+
 inline void topology_depths(
     const std::vector<RuntimeNode>& nodes,
     int index,
@@ -977,15 +1158,24 @@ public:
         auto point_topology = make_topology(false, max_depth);
         auto range_topology = make_topology(true, max_depth);
         leaderboard_.clear();
-        leaderboard_.reserve(5);
+        leaderboard_.reserve(8);
         leaderboard_.push_back(score_candidate(
             Backend::SortedArray, {}, options
+        ));
+        leaderboard_.push_back(score_candidate(
+            Backend::PrefixSum, {}, options
         ));
         leaderboard_.push_back(score_candidate(
             Backend::Fenwick, {}, options
         ));
         leaderboard_.push_back(score_candidate(
+            Backend::SqrtDecomposition, {}, options
+        ));
+        leaderboard_.push_back(score_candidate(
             Backend::SegmentTree, {}, options
+        ));
+        leaderboard_.push_back(score_candidate(
+            Backend::SparseTable, {}, options
         ));
         leaderboard_.push_back(score_candidate(
             Backend::CertiRangePoint, point_topology, options
@@ -1018,10 +1208,16 @@ public:
         selected_ = leaderboard_[best].backend;
         if (selected_ == Backend::SortedArray) {
             runtime_.emplace<detail::ArrayRuntime>(values_, aggregate_);
+        } else if (selected_ == Backend::PrefixSum) {
+            runtime_.emplace<detail::PrefixRuntime>(values_);
         } else if (selected_ == Backend::Fenwick) {
             runtime_.emplace<detail::FenwickRuntime>(values_);
+        } else if (selected_ == Backend::SqrtDecomposition) {
+            runtime_.emplace<detail::SqrtRuntime>(values_, aggregate_);
         } else if (selected_ == Backend::SegmentTree) {
             runtime_.emplace<detail::SegmentRuntime>(values_, aggregate_);
+        } else if (selected_ == Backend::SparseTable) {
+            runtime_.emplace<detail::SparseRuntime>(values_, aggregate_);
         } else if (selected_ == Backend::CertiRangePoint) {
             runtime_.emplace<detail::CertiRuntime>(
                 values_, aggregate_, std::move(point_topology)
@@ -1221,8 +1417,11 @@ public:
 private:
     using Runtime = std::variant<
         detail::ArrayRuntime,
+        detail::PrefixRuntime,
         detail::FenwickRuntime,
+        detail::SqrtRuntime,
         detail::SegmentRuntime,
+        detail::SparseRuntime,
         detail::CertiRuntime
     >;
 
@@ -1311,8 +1510,11 @@ private:
             options.memory_weight,
             options.build_weight,
             options.array_unit_cost,
+            options.prefix_unit_cost,
             options.fenwick_unit_cost,
+            options.sqrt_unit_cost,
             options.segment_tree_unit_cost,
+            options.sparse_unit_cost,
             options.certirange_unit_cost,
         }) {
             if (!std::isfinite(value) || value < 0.0) {
@@ -1321,8 +1523,11 @@ private:
         }
         if (
             options.array_unit_cost == 0.0
+            || options.prefix_unit_cost == 0.0
             || options.fenwick_unit_cost == 0.0
+            || options.sqrt_unit_cost == 0.0
             || options.segment_tree_unit_cost == 0.0
+            || options.sparse_unit_cost == 0.0
             || options.certirange_unit_cost == 0.0
         ) {
             throw std::invalid_argument("unit costs must be positive");
@@ -1405,10 +1610,21 @@ private:
         for (int key = 1; key <= n; ++key) {
             double get_work = 1.0;
             double update_work = 1.0;
-            if (backend == Backend::Fenwick) {
+            if (backend == Backend::PrefixSum) {
+                update_work = n - key + 2;
+            } else if (backend == Backend::Fenwick) {
                 update_work = detail::fenwick_update_steps(key, n);
+            } else if (backend == Backend::SqrtDecomposition) {
+                const int block_size = std::max(
+                    1,
+                    static_cast<int>(std::ceil(std::sqrt(values_.size())))
+                );
+                const int block_start = ((key - 1) / block_size) * block_size;
+                update_work = std::min(block_size, n - block_start) + 1;
             } else if (backend == Backend::SegmentTree) {
                 update_work = detail::minimum_height(values_.size()) + 1;
+            } else if (backend == Backend::SparseTable) {
+                update_work = detail::sparse_table_entries(values_.size()) + 1;
             } else if (
                 backend == Backend::CertiRangePoint
                 || backend == Backend::CertiRangeRange
@@ -1423,14 +1639,24 @@ private:
             const int left = entry.first.first;
             const int right = entry.first.second;
             double work = right - left + 1;
-            if (backend == Backend::Fenwick) {
+            if (backend == Backend::PrefixSum) {
+                work = left == 1 ? 1 : 2;
+            } else if (backend == Backend::Fenwick) {
                 work = std::max(
                     1,
                     detail::fenwick_prefix_steps(right)
                         + detail::fenwick_prefix_steps(left - 1)
                 );
+            } else if (backend == Backend::SqrtDecomposition) {
+                const int block_size = std::max(
+                    1,
+                    static_cast<int>(std::ceil(std::sqrt(values_.size())))
+                );
+                work = detail::sqrt_range_steps(left, right, block_size);
             } else if (backend == Backend::SegmentTree) {
                 work = detail::segment_range_steps(left, right, size);
+            } else if (backend == Backend::SparseTable) {
+                work = 2;
             } else if (
                 backend == Backend::CertiRangePoint
                 || backend == Backend::CertiRangeRange
@@ -1457,7 +1683,16 @@ private:
         report.feasible = true;
         report.reason = "feasible";
         double unit_cost = options.array_unit_cost;
-        if (backend == Backend::Fenwick) {
+        if (backend == Backend::PrefixSum) {
+            unit_cost = options.prefix_unit_cost;
+            report.memory_slots = 3 * n + 1;
+            report.height = 1;
+            report.build_units = n;
+            if (options.aggregate != Aggregate::Sum) {
+                report.feasible = false;
+                report.reason = "prefix sum supports sum only";
+            }
+        } else if (backend == Backend::Fenwick) {
             unit_cost = options.fenwick_unit_cost;
             report.memory_slots = 3 * n + 1;
             report.height = detail::minimum_height(n);
@@ -1466,11 +1701,31 @@ private:
                 report.feasible = false;
                 report.reason = "Fenwick supports sum only";
             }
+        } else if (backend == Backend::SqrtDecomposition) {
+            unit_cost = options.sqrt_unit_cost;
+            const std::size_t block_size = std::max<std::size_t>(
+                1,
+                static_cast<std::size_t>(std::ceil(std::sqrt(n)))
+            );
+            const std::size_t blocks = (n + block_size - 1) / block_size;
+            report.memory_slots = 2 * n + blocks;
+            report.height = 1;
+            report.build_units = n + blocks;
         } else if (backend == Backend::SegmentTree) {
             unit_cost = options.segment_tree_unit_cost;
             report.memory_slots = n + 2 * size;
             report.height = detail::minimum_height(n);
             report.build_units = 2 * size;
+        } else if (backend == Backend::SparseTable) {
+            unit_cost = options.sparse_unit_cost;
+            const std::size_t entries = detail::sparse_table_entries(n);
+            report.memory_slots = 3 * n + entries;
+            report.height = 1;
+            report.build_units = entries;
+            if (options.aggregate == Aggregate::Sum) {
+                report.feasible = false;
+                report.reason = "sparse table supports idempotent min/max only";
+            }
         } else if (
             backend == Backend::CertiRangePoint
             || backend == Backend::CertiRangeRange

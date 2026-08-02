@@ -49,7 +49,7 @@ class AdaptiveHeaderTests(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(run.returncode, 0, run.stderr)
-            self.assertIn("selected=fenwick", run.stdout)
+            self.assertIn("selected=prefix_sum", run.stdout)
             self.assertIn("sum=434", run.stdout)
             self.assertIn("old=1 current=100", run.stdout)
 
@@ -70,11 +70,11 @@ int main() {
     certigap::AdaptiveIndex array(values());
     for (int i = 0; i < 100; ++i) array.observe_get(1);
     if (array.optimize() != certigap::Backend::SortedArray) return 2;
-    if (array.leaderboard().size() != 5) return 3;
+    if (array.leaderboard().size() != 8) return 3;
 
     certigap::AdaptiveIndex fenwick(values());
     for (int i = 0; i < 100; ++i) fenwick.observe_range(3, 30);
-    if (fenwick.optimize() != certigap::Backend::Fenwick) return 4;
+    if (fenwick.optimize() != certigap::Backend::PrefixSum) return 4;
     if (std::abs(fenwick.range_query(3, 30) - 434.0) > 1e-12) return 5;
 
     certigap::AdaptiveIndex segment(values());
@@ -107,6 +107,28 @@ int main() {
         return 9;
     }
     if (minimum.range_query(2, 30) != 1.0) return 10;
+
+    certigap::AdaptiveIndex sparse(values(), certigap::Aggregate::Min);
+    for (int i = 0; i < 100; ++i) sparse.observe_range(2, 30);
+    certigap::OptimizeOptions sparse_options;
+    sparse_options.aggregate = certigap::Aggregate::Min;
+    sparse_options.sparse_unit_cost = 0.01;
+    if (sparse.optimize(sparse_options) != certigap::Backend::SparseTable) {
+        return 16;
+    }
+    sparse.point_update(2, -5.0);
+    if (sparse.range_query(2, 30) != -5.0) return 17;
+
+    certigap::AdaptiveIndex sqrt_index(values());
+    for (int i = 0; i < 100; ++i) sqrt_index.observe_range(3, 30);
+    certigap::OptimizeOptions sqrt_options;
+    sqrt_options.sqrt_unit_cost = 0.01;
+    if (
+        sqrt_index.optimize(sqrt_options)
+        != certigap::Backend::SqrtDecomposition
+    ) return 18;
+    sqrt_index.point_update(3, 100.0);
+    if (std::abs(sqrt_index.range_query(3, 4) - 103.0) > 1e-12) return 19;
 
     certigap::AdaptiveIndex implicit_min(values(), certigap::Aggregate::Min);
     for (int i = 0; i < 100; ++i) implicit_min.observe_range(2, 30);
@@ -207,7 +229,7 @@ int main(int argc, char** argv) {
             if (std::abs(data.range_sum(2, 30) - 434.0) > 1e-9) return 2;
         }
         if (!data.optimized()) return 3;
-        if (data.selected_name() != "fenwick") return 4;
+        if (data.selected_name() != "prefix_sum") return 4;
         if (!data.decision().switched) return 5;
         if (data.explain().find("deployment threshold") == std::string::npos) {
             return 6;
@@ -216,7 +238,7 @@ int main(int argc, char** argv) {
     {
         certigap::adaptive_array<double> restored(values(), policy);
         if (restored.observed_operations() != 32.0) return 7;
-        if (restored.selected_name() != "fenwick") return 8;
+        if (restored.selected_name() != "prefix_sum") return 8;
         if (restored.size() != 32) return 9;
     }
 
@@ -236,7 +258,7 @@ int main(int argc, char** argv) {
     for (int index = 0; index < 32; ++index) explicit_data.range_sum(2, 30);
     if (explicit_data.optimized()) return 13;
     if (!explicit_data.maintenance()) return 14;
-    if (explicit_data.selected_name() != "fenwick") return 15;
+    if (explicit_data.selected_name() != "prefix_sum") return 15;
 
     std::ofstream malformed(std::string(argv[1]) + ".bad");
     malformed << "CERTIGAP_PROFILE_V1\nsize 31\naggregate sum\nend\n";

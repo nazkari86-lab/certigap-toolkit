@@ -1,0 +1,5 @@
+scenario,baseline_ns,candidate_ns,sample_count,mean_normalized_harm,upper_normalized_harm,candidate_deployed,expected_deployed,passed
+strong_win,1000,100,64,-0.9,-0.594031646164898,True,True,True
+weak_win,1000,900,64,-0.1,0.20596835383510206,False,False,True
+parity,1000,1000,64,0.0,0.30596835383510207,False,False,True
+regression,1000,1200,64,0.16666666666666666,0.47263502050176875,False,False,True

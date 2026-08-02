@@ -34,6 +34,11 @@ recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
 - Add the zero-based Python `AdaptiveArray` over the complete eight-candidate
   portfolio, bounded profiles, atomic cross-run warm starts, thread-safe public
   operations, deterministic lifecycle validation, and `pkg-config` metadata.
+- Expand the standalone C++ runtime from five to all eight executable AutoIndex
+  candidates, including capability/resource models and native oracle coverage.
+- Add declarative fixed-size `AdaptiveSpec` contracts plus paired measured
+  baseline/candidate replay, migration amortization, a bounded-harm Hoeffding
+  gate, digest-protected artifacts, and an independent decision verifier.
 
 ## 1.10.1 - 2026-07-30
 

@@ -208,6 +208,22 @@ Completed on `main`. Publishing package-manager registry entries, official
 YCSB/storage-engine adapters, independent users, and production traces require
 external infrastructure or third-party adoption and are not claimed.
 
+## Phase 19: Contract And Measured Deployment
+
+- declarative fixed-size operation/resource `AdaptiveSpec`;
+- fail-closed rejection of undeclared or unsupported operations;
+- full eight-candidate parity in standalone C++ and Python portfolios;
+- alternating-order baseline/candidate replay on a separate validation trace;
+- runtime checksum equivalence across get/range/update operations;
+- positive migration overhead amortized over a declared horizon;
+- bounded normalized paired-harm Hoeffding deployment gate;
+- digest-protected artifact and independent decision replay verifier;
+- deterministic four-case boundary matrix plus real timer smoke tests.
+
+Completed on `main`. Insert/erase and lazy range updates, a long-running online
+shadow lifecycle, p99-safe inference under dependent measurements, official
+SOSD/GRE/YCSB results, and production rollback evidence remain future work.
+
 ## External Closure
 
 - independent proof review and broader recurrence/verifier formalization

@@ -62,6 +62,8 @@ def build_abstract_ru(summary_text: str) -> str:
     переносом workload-профиля между запусками и fail-closed score gate.
 16. Python `AdaptiveArray` над полным портфелем из восьми структур с bounded
     профилем, atomic warm start и воспроизводимой проверкой жизненного цикла.
+17. декларативный `AdaptiveSpec` и measured deployment: кандидат сравнивается
+    с baseline на отдельном trace и внедряется только после bounded-harm gate.
 
 Текущее состояние прототипа подтверждается следующими результатами:
 
@@ -159,6 +161,8 @@ CertiGap не строит полное поисковое дерево на в�
   отказ слабой миграции, explicit maintenance и восстановление профиля.
 - Python `AdaptiveArray` прошёл 7 из 7 сценариев и list-oracle тесты,
   включая prefix sum, Fenwick, min-aggregate и отказ слабой миграции.
+- measured gate независимо пересчитывается из paired latency, отклоняет weak
+  win/parity/regression и сохраняет baseline при недостаточной границе.
 
 ## 8. Примеры сертификатов
 
@@ -195,7 +199,10 @@ def build_theses_ru() -> str:
     транзакции, durable reconnect и сериализацию двух WAL writers.
 13. `adaptive_array<T>` автоматически собирает workload-профиль и сохраняет
     прежний backend, если модельный выигрыш ниже заданного порога.
-14. Проект хорошо подходит для РКНП как теоретико-алгоритмическая работа с воспроизводимым результатом.
+14. `AdaptiveSpec` объявляет допустимые операции и ограничения до компиляции.
+15. Measured deployment оставляет baseline, пока paired latency upper bound
+    не подтверждает требуемое улучшение.
+16. Проект хорошо подходит для РКНП как теоретико-алгоритмическая работа с воспроизводимым результатом.
 """
 
 

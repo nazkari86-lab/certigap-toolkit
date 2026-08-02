@@ -57,9 +57,9 @@ matrix. Dynamic CertiRange is not presented as their universal replacement.
 
 ## Certified AutoIndex Extension
 
-The executable compiler compares exactly five declared structures and exports
+The executable compiler compares exactly eight declared structures and exports
 every feasible and infeasible row. Its verifier independently regenerates the
-complete portfolio and proves the selected training minimum. The 120-row
+complete portfolio and proves the selected training minimum. The 192-row
 matrix includes temporal drift, aggregate capability filtering, memory limits,
 and snapshot requirements. Holdout regret is reported rather than hidden.
 
@@ -82,7 +82,7 @@ disk pages, and direct storage-engine integration remain external work.
 ## Adaptive Single-Header Boundary
 
 The standalone C++17 mode removes Python and generated-file requirements. Its
-24-case native matrix verifies complete five-candidate reporting,
+24-case native matrix verifies complete eight-candidate reporting,
 point/range/update behavior, all aggregates, calibrated and constrained
 selection, and snapshot isolation. Root CMake install and downstream
 `find_package` are executable tests.

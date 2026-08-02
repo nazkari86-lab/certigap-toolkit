@@ -32,6 +32,7 @@ from .martingale_safe_compiler import (
     compile_martingale_safe_spec,
     generate_martingale_safe_cpp_header,
 )
+from .measured_deployment_verifier import verify_measured_deployment_artifact
 from .pruned_verifier import verify_pruned_beam_certificate
 from .range_optimizer_verifier import verify_range_optimizer_artifact
 from .safe_autoindex_verifier import verify_safe_autoindex_certificate
@@ -55,6 +56,7 @@ _SCHEMA_VERIFIERS: dict[str, Verifier] = {
     "certigap-martingale-safe-autoindex-v1": (
         verify_martingale_safe_autoindex_certificate
     ),
+    "certigap-measured-deployment-v1": verify_measured_deployment_artifact,
     "certigap-range-optimizer-v1": verify_range_optimizer_artifact,
     "certigap-safe-autoindex-v1": verify_safe_autoindex_certificate,
     "certigap-sequential-safe-autoindex-v1": (
@@ -170,10 +172,47 @@ def explain_artifact(kind: str, artifact: dict, verification: dict) -> dict:
                 "scope": artifact["scope"],
             }
         )
+    elif kind == "certigap-measured-deployment-v1":
+        decision = artifact["decision"]
+        explanation.update(
+            {
+                "selected": artifact["selected"],
+                "candidate": artifact["candidate"],
+                "baseline": artifact["baseline"],
+                "candidate_deployed": decision["candidate_deployed"],
+                "selection_reason": decision["reason"],
+                "sample_count": decision["sample_count"],
+                "mean_normalized_harm": decision["mean_normalized_harm"],
+                "upper_normalized_harm": decision["upper_normalized_harm"],
+                "confidence_alpha": artifact["policy"]["alpha"],
+                "environment": artifact["environment"],
+                "scope": artifact["claim_boundary"],
+            }
+        )
     elif kind == "certigap-sequential-safe-autoindex-v1":
         decision = artifact["decision"]
         checkpoint = (
             decision["selection_checkpoint"] or decision["final_audit"]
+        )
+        explanation.update(
+            {
+                "selected": decision["deployed"],
+                "train_candidate": decision["train_candidate"],
+                "safe_baseline": decision["safe_baseline"],
+                "candidate_approved": decision["candidate_approved"],
+                "selection_reason": decision["reason"],
+                "stopping_operation": decision["stopping_operation"],
+                "upper_difference": (
+                    None
+                    if checkpoint is None
+                    else checkpoint["upper_difference"]
+                ),
+                "confidence_alpha": artifact["policy"][
+                    "confidence_alpha"
+                ],
+                "monitoring": decision["monitoring"],
+                "scope": artifact["scope"],
+            }
         )
     elif kind == "certigap-martingale-safe-autoindex-v1":
         decision = artifact["decision"]
@@ -195,26 +234,6 @@ def explain_artifact(kind: str, artifact: dict, verification: dict) -> dict:
                     if decision["revocation_event"] is None
                     else decision["revocation_event"]["stream_operation"]
                 ),
-                "scope": artifact["scope"],
-            }
-        )
-        explanation.update(
-            {
-                "selected": decision["deployed"],
-                "train_candidate": decision["train_candidate"],
-                "safe_baseline": decision["safe_baseline"],
-                "candidate_approved": decision["candidate_approved"],
-                "selection_reason": decision["reason"],
-                "stopping_operation": decision["stopping_operation"],
-                "upper_difference": (
-                    None
-                    if checkpoint is None
-                    else checkpoint["upper_difference"]
-                ),
-                "confidence_alpha": artifact["policy"][
-                    "confidence_alpha"
-                ],
-                "monitoring": decision["monitoring"],
                 "scope": artifact["scope"],
             }
         )

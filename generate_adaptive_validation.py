@@ -53,7 +53,7 @@ def main() -> None:
                 "",
                 f"- Native C++ rows: `{len(rows)}`.",
                 "- Correct point/range/update/snapshot cases: `24/24`.",
-                "- Complete candidate reports per case: `5/5`.",
+                "- Complete candidate reports per case: `8/8`.",
                 f"- Selected backend distribution: `{dict(sorted(selections.items()))}`.",
                 "- Sizes: `16, 32, 64, 128`.",
                 "- Modes: point-hot, range-hot, calibrated segment tree, "

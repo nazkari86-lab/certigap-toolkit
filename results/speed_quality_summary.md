@@ -2,11 +2,11 @@
 
 ## Small Cases With Exact Reference
 
-- Exact mean time: `2.479 ms`
-- Beam mean time: `4.646 ms`
-- Greedy mean time: `0.222 ms`
-- Balanced mean time: `0.013 ms`
-- Weighted mean time: `0.017 ms`
+- Exact mean time: `1.392 ms`
+- Beam mean time: `2.516 ms`
+- Greedy mean time: `0.119 ms`
+- Balanced mean time: `0.007 ms`
+- Weighted mean time: `0.009 ms`
 - Beam mean absolute objective gap vs exact: `0.000979`
 - Greedy mean absolute objective gap vs exact: `0.114157`
 - Balanced mean absolute objective gap vs exact: `0.447373`
@@ -16,10 +16,10 @@
 
 ## Large Cases Without Exact Reference
 
-- Beam mean time: `57.052 ms`
-- Greedy mean time: `1.654 ms`
-- Balanced mean time: `0.027 ms`
-- Weighted mean time: `0.043 ms`
+- Beam mean time: `40.384 ms`
+- Greedy mean time: `1.125 ms`
+- Balanced mean time: `0.018 ms`
+- Weighted mean time: `0.029 ms`
 
 ## Solver Tradeoff
 

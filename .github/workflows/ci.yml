@@ -67,6 +67,7 @@ jobs:
           python generate_adaptive_validation.py
           python generate_adaptive_array_validation.py
           python generate_python_adaptive_array_validation.py
+          python generate_measured_deployment_validation.py
           python generate_synthesis_validation.py
           python generate_hybrid_validation.py
           python benchmarks/sqlite_ycsb.py --mode full

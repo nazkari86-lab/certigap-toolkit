@@ -35,11 +35,11 @@
 
 ## Small Cases With Exact Reference
 
-- Exact mean time: `2.479 ms`
-- Beam mean time: `4.646 ms`
-- Greedy mean time: `0.222 ms`
-- Balanced mean time: `0.013 ms`
-- Weighted mean time: `0.017 ms`
+- Exact mean time: `1.392 ms`
+- Beam mean time: `2.516 ms`
+- Greedy mean time: `0.119 ms`
+- Balanced mean time: `0.007 ms`
+- Weighted mean time: `0.009 ms`
 - Beam mean absolute objective gap vs exact: `0.000979`
 - Greedy mean absolute objective gap vs exact: `0.114157`
 - Balanced mean absolute objective gap vs exact: `0.447373`
@@ -49,10 +49,10 @@
 
 ## Large Cases Without Exact Reference
 
-- Beam mean time: `57.052 ms`
-- Greedy mean time: `1.654 ms`
-- Balanced mean time: `0.027 ms`
-- Weighted mean time: `0.043 ms`
+- Beam mean time: `40.384 ms`
+- Greedy mean time: `1.125 ms`
+- Balanced mean time: `0.018 ms`
+- Weighted mean time: `0.029 ms`
 
 ## Solver Tradeoff
 
@@ -1095,7 +1095,7 @@ target_link_libraries(app PRIVATE CertiGap::certigap)
 - Use the Python research API for exact/anytime algorithms, certificates, and
   benchmark reproduction.
 
-The adaptive runtime returns all five candidate reports and a deterministic
+The adaptive runtime returns all eight candidate reports and a deterministic
 minimum under its declared model, but it does not export the independently
 replayed omission-resistant certificate of `certigap-compile`.
 
@@ -1405,6 +1405,22 @@ and external users remain adoption work rather than established evidence.
 Completed on `main`. Publishing package-manager registry entries, official
 YCSB/storage-engine adapters, independent users, and production traces require
 external infrastructure or third-party adoption and are not claimed.
+
+## Phase 19: Contract And Measured Deployment
+
+- declarative fixed-size operation/resource `AdaptiveSpec`;
+- fail-closed rejection of undeclared or unsupported operations;
+- full eight-candidate parity in standalone C++ and Python portfolios;
+- alternating-order baseline/candidate replay on a separate validation trace;
+- runtime checksum equivalence across get/range/update operations;
+- positive migration overhead amortized over a declared horizon;
+- bounded normalized paired-harm Hoeffding deployment gate;
+- digest-protected artifact and independent decision replay verifier;
+- deterministic four-case boundary matrix plus real timer smoke tests.
+
+Completed on `main`. Insert/erase and lazy range updates, a long-running online
+shadow lifecycle, p99-safe inference under dependent measurements, official
+SOSD/GRE/YCSB results, and production rollback evidence remain future work.
 
 ## External Closure
 

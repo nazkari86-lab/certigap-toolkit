@@ -9,15 +9,15 @@
 
 | n | workload | fastest method | CertiRange rank | CertiRange ns/op | fastest ns/op |
 |---:|---|---|---:|---:|---:|
-| 128 | clustered_range | array | 4/4 | 1568.5 | 140.3 |
-| 128 | hotspot_point | array | 4/4 | 928.6 | 67.4 |
-| 128 | uniform_mixed | array | 4/4 | 1581.8 | 110.5 |
-| 512 | clustered_range | array | 4/4 | 2069.7 | 252.3 |
-| 512 | hotspot_point | array | 4/4 | 1179.2 | 75.9 |
-| 512 | uniform_mixed | array | 4/4 | 2174.6 | 161.4 |
-| 2048 | clustered_range | fenwick | 4/4 | 2777.8 | 561.4 |
-| 2048 | hotspot_point | array | 4/4 | 1871.1 | 123.7 |
-| 2048 | uniform_mixed | array | 4/4 | 2628.4 | 335.0 |
+| 128 | clustered_range | array | 4/4 | 1563.1 | 139.8 |
+| 128 | hotspot_point | array | 4/4 | 920.8 | 66.9 |
+| 128 | uniform_mixed | array | 4/4 | 1588.7 | 107.8 |
+| 512 | clustered_range | array | 4/4 | 2236.7 | 251.7 |
+| 512 | hotspot_point | array | 4/4 | 1191.3 | 81.7 |
+| 512 | uniform_mixed | array | 4/4 | 2185.7 | 159.2 |
+| 2048 | clustered_range | fenwick | 4/4 | 3206.2 | 523.2 |
+| 2048 | hotspot_point | array | 4/4 | 1741.5 | 119.1 |
+| 2048 | uniform_mixed | array | 4/4 | 2660.9 | 357.1 |
 
 ## Interpretation
 

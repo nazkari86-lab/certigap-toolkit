@@ -38,8 +38,9 @@ the model into Dynamic CertiRange, a complete point/range/update index with
 depth caps, persistent snapshots, range-aware workload search, and replayable
 structural artifacts.
 Finally, Certified AutoIndex compiles a trace into an executable array,
-Fenwick tree, segment tree, or one of two CertiRange variants under aggregate,
-memory, depth, and snapshot constraints. Its omission-resistant artifact
+prefix sum, Fenwick tree, square-root decomposition, segment tree, sparse
+table, or one of two CertiRange variants under aggregate, memory, depth, and
+snapshot constraints. Its omission-resistant artifact
 proves minimum declared training cost over the complete fixed portfolio while
 keeping chronological holdout evaluation outside the selection path.
 As a representation-aware synthesis case, CertiGap-H exactly selects
@@ -242,7 +243,7 @@ semantically isolated value-copy and therefore costs $O(n)$, unlike the
 path-copy Python implementation.
 
 For low-friction use, a separate single-header C++17 mode records normal
-operations in-process and deterministically compares the same five backend
+operations in-process and deterministically compares the same eight backend
 families. Range coverage is accumulated with a difference array, adaptive
 topologies use depth-safe weighted splits, and reoptimization is an explicit
 TV-drift-triggered call rather than hidden query work. This mode exposes the
@@ -311,7 +312,7 @@ Cross-language executable tests cover all backend families, all three
 aggregates, updates, and snapshot isolation; a separate CMake target compiles
 and runs a generated CertiRange configuration.
 The adaptive single-header matrix adds 24 native C++ cases over four sizes and
-six workload/constraint modes; all return complete five-row leaderboards and
+six workload/constraint modes; all return complete eight-row leaderboards and
 pass point/range/update/snapshot oracles. CMake installation and a downstream
 \texttt{find\_package} consumer are executable tests.
 External implementations, independent hardware reproduction, and a
@@ -325,6 +326,17 @@ explicit-maintenance mode avoids unplanned optimization inside latency-critical
 paths. Six native scenarios cover automatic point/range selection, threshold
 rejection, manual maintenance, and profile restoration. This gate concerns the
 structural model and is not a statistical or wall-clock no-regression claim.
+
+A separate measured deployment path accepts a declarative fixed-size operation
+and resource contract. It selects structurally on a training trace, then
+alternates baseline and candidate execution over a separate validation trace.
+For paired batch latencies $b_i,c_i$, bounded normalized harm is
+$D_i=(c_i-b_i)/\max(c_i,b_i)\in[-1,1]$. Deployment requires the one-sided
+Hoeffding upper bound on mean harm to clear the requested improvement after
+amortized positive migration overhead. A digest-protected artifact stores all
+pairs and an independent verifier recomputes the decision. This interpretation
+still requires representative independent repetitions and does not certify
+p99 latency, future drift, or transfer to another machine.
 
 CertiGap-X additionally synthesizes unequal contiguous aggregate blocks
 rather than selecting only a named backend. For block contribution

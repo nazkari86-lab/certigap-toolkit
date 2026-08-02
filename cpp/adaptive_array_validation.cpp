@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
     row(
         "automatic_range_warmup",
         ranges,
-        ranges.selected_name() == "fenwick"
+        ranges.selected_name() == "prefix_sum"
             && std::abs(checksum - 64.0 * 1767.0) < 1e-9
     );
 
@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
         "explicit_maintenance",
         explicit_data,
         explicit_before && explicit_switch
-            && explicit_data.selected_name() == "fenwick"
+            && explicit_data.selected_name() == "prefix_sum"
     );
 
     certigap::AutoTunePolicy persistent = automatic;
@@ -83,13 +83,13 @@ int main(int argc, char** argv) {
     {
         certigap::adaptive_array<double> writer(values(), persistent);
         for (int index = 0; index < 64; ++index) writer.range_sum(3, 60);
-        row("profile_writer", writer, writer.selected_name() == "fenwick");
+        row("profile_writer", writer, writer.selected_name() == "prefix_sum");
     }
     certigap::adaptive_array<double> reader(values(), persistent);
     row(
         "profile_reader",
         reader,
-        reader.selected_name() == "fenwick"
+        reader.selected_name() == "prefix_sum"
             && reader.observed_operations() == 64.0
     );
     std::remove(argv[1]);

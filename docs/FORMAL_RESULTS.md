@@ -492,14 +492,17 @@ of machine code across C++ compilers. `QED`
 ## Proposition N: Adaptive Runtime Portfolio Minimum
 
 Given a nonempty accumulated runtime profile and valid options, the
-single-header selector constructs exactly five ordered candidate reports:
-array, Fenwick, segment tree, point-weighted CertiRange, and
-range-coverage-weighted CertiRange. It computes every report with the same
+single-header selector constructs exactly eight ordered candidate reports:
+array, prefix sum, Fenwick, square-root decomposition, segment tree, sparse
+table, point-weighted CertiRange, and range-coverage-weighted CertiRange. It
+computes every report with the same
 declared mean/tail/resource objective, filters infeasible candidates, and scans
 the complete list with deterministic score, memory, and order tie-breaking.
 The returned backend is therefore the minimum reported feasible candidate.
 
-Both adaptive CertiRange candidates are completed into singleton leaves under
+Capability filtering rejects prefix sum and Fenwick outside sum workloads and
+sparse tables outside idempotent min/max workloads. Both adaptive CertiRange
+candidates are completed into singleton leaves under
 the declared depth cap. The aggregate, query, and update correctness argument
 from Theorem J applies to these completed topologies. `snapshot()` copies all
 value, runtime, and profile state, so later mutation cannot change the copy.

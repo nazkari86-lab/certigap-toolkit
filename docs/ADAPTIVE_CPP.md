@@ -171,6 +171,6 @@ target_link_libraries(app PRIVATE CertiGap::certigap)
 - Use the Python research API for exact/anytime algorithms, certificates, and
   benchmark reproduction.
 
-The adaptive runtime returns all five candidate reports and a deterministic
+The adaptive runtime returns all eight candidate reports and a deterministic
 minimum under its declared model, but it does not export the independently
 replayed omission-resistant certificate of `certigap-compile`.

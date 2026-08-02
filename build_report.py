@@ -228,6 +228,8 @@ def main() -> None:
             RESULTS_DIR / "adaptive_array_validation.md",
             DOCS_DIR / "PYTHON_ADAPTIVE_ARRAY.md",
             RESULTS_DIR / "python_adaptive_array_validation.md",
+            DOCS_DIR / "MEASURED_DEPLOYMENT.md",
+            RESULTS_DIR / "measured_deployment_validation.md",
             DOCS_DIR / "SYNTHESIS.md",
             RESULTS_DIR / "synthesis_validation.md",
             DOCS_DIR / "HYBRID.md",

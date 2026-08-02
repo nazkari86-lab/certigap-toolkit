@@ -30,6 +30,8 @@
     переносом workload-профиля между запусками и fail-closed score gate.
 16. Python `AdaptiveArray` над полным портфелем из восьми структур с bounded
     профилем, atomic warm start и воспроизводимой проверкой жизненного цикла.
+17. декларативный `AdaptiveSpec` и measured deployment: кандидат сравнивается
+    с baseline на отдельном trace и внедряется только после bounded-harm gate.
 
 Текущее состояние прототипа подтверждается следующими результатами:
 

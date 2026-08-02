@@ -24,7 +24,7 @@ existing one-based inclusive API.
 ## Automatic Policy
 
 Tracked operations build the workload profile. At `warmup_operations`, the
-wrapper scores the five native runtime candidates. A backend change is retained
+wrapper scores the eight native runtime candidates. A backend change is retained
 only when its modeled relative improvement reaches
 `minimum_relative_improvement`; otherwise the complete previous index is
 restored. Later checks require both `check_interval` new operations and the

@@ -84,7 +84,19 @@ class SQLiteExtensionTests(unittest.TestCase):
             lines = completed.stdout.strip().splitlines()
             self.assertEqual(lines[0], "8")
             self.assertAlmostEqual(float(lines[1]), 10_500.0)
-            self.assertIn(lines[2], {"sorted_array", "fenwick", "segment_tree", "certirange_point", "certirange_range"})
+            self.assertIn(
+                lines[2],
+                {
+                    "sorted_array",
+                    "prefix_sum",
+                    "fenwick",
+                    "sqrt_decomposition",
+                    "segment_tree",
+                    "sparse_table",
+                    "certirange_point",
+                    "certirange_range",
+                },
+            )
             self.assertEqual(lines[3], "100.0")
             self.assertEqual(lines[4], "118.0")
             self.assertEqual(lines[5], "1")

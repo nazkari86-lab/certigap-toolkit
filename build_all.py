@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -10,7 +11,14 @@ ROOT = Path(__file__).resolve().parent
 
 
 def run(cmd: list[str]) -> None:
-    subprocess.run(cmd, cwd=ROOT, check=True)
+    environment = os.environ.copy()
+    existing_pythonpath = environment.get("PYTHONPATH")
+    environment["PYTHONPATH"] = (
+        str(ROOT)
+        if not existing_pythonpath
+        else os.pathsep.join((str(ROOT), existing_pythonpath))
+    )
+    subprocess.run(cmd, cwd=ROOT, env=environment, check=True)
 
 
 def main() -> None:
@@ -32,6 +40,7 @@ def main() -> None:
     run([python, "generate_adaptive_validation.py"])
     run([python, "generate_adaptive_array_validation.py"])
     run([python, "generate_python_adaptive_array_validation.py"])
+    run([python, "generate_measured_deployment_validation.py"])
     run([python, "generate_synthesis_validation.py"])
     run([python, "generate_hybrid_validation.py"])
     run([python, "benchmarks/sqlite_ycsb.py", "--mode", "full"])
