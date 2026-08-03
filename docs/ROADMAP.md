@@ -278,8 +278,10 @@ it should not add unsupported candidates without runtime and verifier parity.
 - pinned official YCSB/RocksDB container protocol.
 
 Completed in `v1.16.0` for the Python reference delta runtime and SOSD-derived
-local evidence. Native indexed delta reads, an actually executed official YCSB
-run, a CertiGap RocksDB plugin, durability, and concurrent writers remain open.
+local evidence. The official YCSB runner now fails closed across launcher,
+architecture, operation-count, error, and disk-space failures, but a complete
+run is still not committed. Native indexed delta reads, a CertiGap RocksDB
+plugin, durability, and concurrent writers remain open.
 
 ## External Closure
 

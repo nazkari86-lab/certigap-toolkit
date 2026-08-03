@@ -29,3 +29,25 @@ RECORDS=1000000 OPERATIONS=1000000 \
 
 That protocol is an external storage-engine baseline. It does not claim a
 CertiGap RocksDB plugin.
+
+The pinned RocksDB JNI is x86-64, so the runner deliberately uses
+`linux/amd64` on Apple Silicon. It fails before building unless the host has
+at least `max(5 GiB, 12 KiB * RECORDS)` free, rejects zero-throughput runs,
+worker exceptions, error returns, and incomplete operation counts, and removes
+each reproducible database after retaining raw metrics. On Docker Desktop,
+`RECLAIM_SPACE=1` asks Docker to discard free VM blocks after every workload.
+
+Interrupted experiments can reuse the already built image and rerun selected
+workloads; final metadata is emitted only after all A/B/C/D/F logs pass the
+same complete verification:
+
+```bash
+REBUILD_IMAGE=0 RECLAIM_SPACE=1 WORKLOADS_TO_RUN="d f" \
+  RECORDS=1000000 OPERATIONS=1000000 \
+  bash benchmarks/official_ycsb_rocksdb.sh
+```
+
+No official YCSB result is committed yet. The local full-scale attempt exposed
+and fixed the Python-launcher, source-distribution, ARM JNI, silent worker
+failure, and disk-preflight issues, but the host lacked the required free disk.
+This failed attempt is not performance evidence.

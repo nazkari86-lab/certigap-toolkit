@@ -5,6 +5,16 @@ recorded in [`docs/CLAIMS.md`](docs/CLAIMS.md).
 
 ## Unreleased
 
+- Harden the official YCSB/RocksDB path with a runnable binary distribution,
+  Python 3 launcher support, native-build/cross-runtime Docker stages, explicit
+  amd64 execution for the pinned RocksDB JNI, resumable workloads, compact raw
+  metrics, provenance hashes, database cleanup, and optional Docker VM reclaim.
+- Reject invalid numeric parameters, insufficient host disk, worker exceptions,
+  error returns, zero throughput, incomplete operation counts, and incomplete
+  A/B/C/D/F result sets instead of accepting a successful container exit code.
+- Record that the local full-scale attempt was storage-blocked and is not
+  performance evidence; no partial YCSB result is committed.
+
 ## 1.16.0 - 2026-08-03
 
 - Add the proof-carrying ordered-map delta layer with insert, update, erase,

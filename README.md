@@ -876,7 +876,8 @@ What is already done:
 Current limits and open research work:
 
 - tighter scalable bounds for strongly skewed large instances.
-- official YCSB or a RocksDB plugin plus independent hardware runs.
+- a completed official YCSB run or a CertiGap RocksDB plugin, plus independent
+  hardware runs; the pinned fail-closed YCSB runner itself is available.
 - external or machine-assisted formal review of the written proofs.
 - approximation guarantees for the candidate-pruned C++ heuristic.
 
