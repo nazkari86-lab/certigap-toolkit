@@ -1,0 +1,92 @@
+{
+  "absolute_gap": 0.08170416594551044,
+  "budget": 2,
+  "eta": 0.0,
+  "events": [
+    {
+      "action": "expanded",
+      "identity": "daa8af40ab439c9fd99a5c0c402b6ec0e5096f77e76b4f5051d2569fb9d408bd"
+    },
+    {
+      "action": "expanded",
+      "identity": "1e77ea66212c6ed0e5a5a6b2ab1cc5489eac6e7313c019bac4c8fc7ec29eca4b"
+    },
+    {
+      "action": "expanded",
+      "identity": "05b0d6407f7d3319c41ff6c374958dfa52cca0b07954d65e322d9db404ec27c8"
+    },
+    {
+      "action": "expanded",
+      "identity": "2145efec8d9a57c1400412e6cf84895a8740f3b13d81791e1b99e705e7ae7d81"
+    }
+  ],
+  "exact": false,
+  "final_incumbent": {
+    "objective": 2.6666666666666665,
+    "tree": {
+      "interval": [
+        1,
+        6
+      ],
+      "left": {
+        "interval": [
+          1,
+          2
+        ],
+        "type": "leaf"
+      },
+      "right": {
+        "interval": [
+          3,
+          6
+        ],
+        "type": "leaf"
+      },
+      "threshold": 2,
+      "type": "split"
+    }
+  },
+  "frontier_count": 9,
+  "frontier_sha256": "d6384ead183cd4969e93bf465594440797044a973f6548043cdbd1b48b568a51",
+  "global_floor": 2.584962500721156,
+  "initial_incumbent": {
+    "objective": 2.6666666666666665,
+    "tree": {
+      "interval": [
+        1,
+        6
+      ],
+      "left": {
+        "interval": [
+          1,
+          2
+        ],
+        "type": "leaf"
+      },
+      "right": {
+        "interval": [
+          3,
+          6
+        ],
+        "type": "leaf"
+      },
+      "threshold": 2,
+      "type": "split"
+    }
+  },
+  "lower_bound": 2.584962500721156,
+  "max_expansions": 4,
+  "relative_gap": 0.030639062229566416,
+  "schema": "certigap-anytime-core-v1",
+  "stop_reason": "expansion_limit",
+  "target_relative_gap": 0.0,
+  "upper_bound": 2.6666666666666665,
+  "weights": [
+    0.16666666666666666,
+    0.16666666666666666,
+    0.16666666666666666,
+    0.16666666666666666,
+    0.16666666666666666,
+    0.16666666666666666
+  ]
+}

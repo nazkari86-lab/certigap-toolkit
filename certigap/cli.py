@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Callable, Sequence
 
 from .anytime_verifier import verify_anytime_tv_certificate
+from .anytime_core_verifier import verify_anytime_core_certificate
 from .adaptive_profile import parse_adaptive_profile
 from .autodro import verify_autodro_selection_artifact
 from .autoindex_verifier import verify_autoindex_artifact
@@ -53,6 +54,7 @@ from .tracking_autoindex_verifier import verify_tracking_autoindex_certificate
 Verifier = Callable[[dict], dict]
 
 _SCHEMA_VERIFIERS: dict[str, Verifier] = {
+    "certigap-anytime-core-v1": verify_anytime_core_certificate,
     "certigap-autoindex-v2": verify_autoindex_artifact,
     "certigap-dynamic-range-v1": verify_dynamic_range_certificate,
     "certigap-proof-carrying-delta-v1": verify_delta_certificate,
@@ -112,7 +114,7 @@ def verify_artifact(artifact: dict) -> tuple[str, dict]:
     supported = ", ".join(sorted(_SCHEMA_VERIFIERS))
     raise ValueError(
         f"unsupported artifact type; known schemas: {supported}, "
-        "CertiGap-AutoDRO-v2, and anytime-TV certificates"
+        "CertiGap-AutoDRO-v2, anytime-TV certificates, and anytime-core certificates"
     )
 
 

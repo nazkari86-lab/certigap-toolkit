@@ -48,3 +48,15 @@ theorem candidate_pruning_gap_decomposition
     (hRestricted : restricted ≤ beam) :
     beam - optimum = (beam - restricted) + (restricted - optimum) := by
   omega
+
+/-
+  Algebraic kernel of an anytime additive certificate.  Once a replayed search
+  establishes `lower ≤ optimum ≤ upper`, the reported interval width bounds
+  the incumbent's excess over optimum.
+-/
+theorem anytime_additive_gap_bound
+    (lower optimum upper : Nat)
+    (hLower : lower ≤ optimum)
+    (hUpper : optimum ≤ upper) :
+    upper - optimum ≤ upper - lower := by
+  omega

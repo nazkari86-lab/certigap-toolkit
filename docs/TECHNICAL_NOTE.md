@@ -70,6 +70,12 @@ The second exact solver stores `A[l, r, b, h]`: the minimum average-cost contrib
 
 For proof-sized instances, `branch_and_bound_exact` returns an exhaustive trace. Every state either terminates one open leaf, branches on every legal threshold of that leaf, or is pruned only when its local depth-based lower bound is no better than the submitted incumbent. `verify_branch_and_bound_certificate` reconstructs all legal branches and validates every pruning inequality without importing a search solver.
 
+`anytime_branch_and_bound` additionally returns a valid interval at any
+declared expansion limit. Its verifier replays each best-first transition and
+the final frontier digest. The interval is a full-grammar additive certificate
+for the ordinary objective, whereas the C++ pruned beam remains a separate
+heuristic.
+
 ## Why Greedy Fails
 
 A one-step greedy policy asks whether a split is immediately beneficial.

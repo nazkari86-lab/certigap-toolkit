@@ -31,6 +31,9 @@
   rebuilds further at measurable regret.
 - A scalable best-first TV-DRO solver with componentwise, entropy, and
   conditional-entropy lower bounds and a replay-verified optimality interval.
+- An ordinary-objective anytime branch-and-bound with a full-threshold-grammar,
+  independently replayed additive optimality interval at every expansion
+  limit. It is distinct from, and does not overstate, the C++ pruned beam.
 - Twelve of twelve complete-tree-space oracle matches and 36 monotone
   certified scaling trajectories over 16, 32, and 64 keys.
 - A formal mean-cost regret bound `g + 2 delta R` for online distribution

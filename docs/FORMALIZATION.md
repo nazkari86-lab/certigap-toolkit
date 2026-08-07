@@ -14,6 +14,9 @@ It proves:
    beam-truncation gaps. This is the machine-checked algebraic kernel of
    Corollary Q.2; the floating-point implementation is cross-validated by the
    generated decomposition table.
+4. Given a replayed interval `lower <= OPT <= upper`, the returned incumbent's
+   additive excess is at most `upper - lower`. This is the arithmetic kernel
+   of Theorem R.
 
 The checked-in `lean-toolchain` pins the exact Lean 4 release. Run:
 

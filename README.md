@@ -788,6 +788,8 @@ Generated artifacts live in [`results/`](results):
 - [`cpp_dynamic_range.md`](results/cpp_dynamic_range.md): C++ mixed traces against Fenwick and segment tree
 - [`range_optimizer_validation.md`](results/range_optimizer_validation.md): exact-oracle and scaling validation
 - [`anytime_validation.md`](results/anytime_validation.md): exact-oracle and scalable certified-gap trajectories
+- [`anytime_core_validation.md`](results/anytime_core_validation.md): ordinary-objective full-grammar anytime interval validation
+- [`anytime_core_example.json`](results/anytime_core_example.json): standalone replayable ordinary-objective certificate
 - [`synthesis_native_latency.md`](results/synthesis_native_latency.md): train-only structure selection and native C++ holdout latency
 - [`synthesis_native_latency_metadata.json`](results/synthesis_native_latency_metadata.json): compiler, source hashes, seeds, public-data derivation, and limitations
 - [`hybrid_validation.md`](results/hybrid_validation.md): exact representation-aware frontier and best-uniform ablation

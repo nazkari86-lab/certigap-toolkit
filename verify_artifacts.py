@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 
 from certigap import (
+    verify_anytime_core_certificate,
     verify_anytime_tv_certificate,
     verify_autoindex_artifact,
     verify_autodro_selection_artifact,
@@ -70,6 +71,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "uncertainty_validation.csv": 12,
         "online_adaptation.csv": 4,
         "anytime_validation.csv": 48,
+        "anytime_core_validation.csv": 96,
         "dynamic_range_benchmark.csv": 36,
         "cpp_dynamic_range.csv": 36,
         "range_optimizer_validation.csv": 114,
@@ -154,6 +156,38 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
             or abs(residual) > 2e-9
         ):
             raise ValueError("pruning gap decomposition is invalid")
+
+    anytime_core_rows = csv_records("anytime_core_validation.csv")
+    required_anytime_fields = {
+        "exact_objective",
+        "lower_bound",
+        "upper_bound",
+        "absolute_gap",
+        "certificate_verified",
+    }
+    if (
+        not anytime_core_rows
+        or not required_anytime_fields.issubset(anytime_core_rows[0])
+    ):
+        raise ValueError("ordinary-anytime validation schema is incomplete")
+    for row in anytime_core_rows:
+        exact = float(row["exact_objective"])
+        lower = float(row["lower_bound"])
+        upper = float(row["upper_bound"])
+        gap = float(row["absolute_gap"])
+        if (
+            row["certificate_verified"] != "True"
+            or not all(math.isfinite(value) for value in (exact, lower, upper, gap))
+            or lower > exact + 2e-9
+            or exact > upper + 2e-9
+            or abs((upper - lower) - gap) > 2e-9
+        ):
+            raise ValueError("ordinary-anytime interval validation is invalid")
+    anytime_core_artifact = json.loads(
+        (RESULTS / "anytime_core_example.json").read_text(encoding="utf-8")
+    )
+    if not verify_anytime_core_certificate(anytime_core_artifact)["verified"]:
+        raise ValueError("ordinary-anytime certificate did not replay")
 
     tracking_rows = csv_records("tracking_autoindex_validation.csv")
     if (

@@ -655,3 +655,52 @@ oracle for every published proof-sized row.
 
 This is a diagnostic identity, not an approximation guarantee: neither term
 is bounded independently of the input by this theorem.
+
+## Theorem R: Certified Anytime Interval for the Full Threshold Grammar
+
+Fix normalized weights `p`, budget `B`, and `eta in [0,1]`. An ordinary
+anytime search state consists of a partial tree `S`, a set `O` of its unresolved
+leaves, and its used split count. Define the partial per-key cost vector by
+
+- `d(i)` for a key in an unresolved leaf at routing depth `d(i)`;
+- `d(i) + ceil(log2(|I|))` for a key in a closed leaf `I`.
+
+Let `L_local(S)` be the CertiGap objective evaluated on this vector, and let
+`L_global` be the entropy/max-cost lower bound for the original instance. The
+state lower bound is `L(S) = max(L_local(S), L_global)`.
+
+Suppose the search uses the canonical expansion that either closes the first
+unresolved leaf or splits it at every legal threshold, and publishes a replay
+certificate containing every processed transition and its remaining frontier.
+Let `U` be the score of the best feasible incumbent and
+
+`L = min(U, min_{S in frontier} L(S))`,
+
+with the empty-frontier minimum interpreted as `U`. Then the independently
+verified certificate proves `L <= OPT <= U` and `U - OPT <= U - L`.
+
+### Proof
+
+For every unresolved key, any completion either stops the leaf and adds its
+non-negative fallback cost, or makes one or more routing comparisons before
+eventually adding a non-negative fallback cost. Its final cost is therefore at
+least its partial cost. Closed-leaf costs are already final. Both weighted
+average cost and maximum cost are monotone under componentwise cost increase;
+thus `L_local(S)` lower-bounds every completion of `S`. `L_global` lower-bounds
+every feasible tree in the original grammar, so their maximum remains a valid
+state lower bound.
+
+The canonical close-or-all-threshold expansion partitions every completion of
+a state: its first unresolved leaf is either closed or has one unique root
+threshold. Induction over expansion history shows that the unprocessed
+frontier, together with previously pruned states, covers the full tree grammar
+without overlap. A pruned state has lower bound at least the incumbent present
+when it was pruned; the final incumbent can only improve, so it also has lower
+bound at least `U`. Every pending completion has score at least its recorded
+`L(S)`. Taking the minimum over these alternatives proves `OPT >= L`.
+The incumbent is itself feasible, hence `OPT <= U`. Subtracting `OPT >= L`
+from `U` proves the additive bound. `QED`
+
+The certificate is exact when `U-L` is zero. This is an a-posteriori additive
+guarantee for the full threshold grammar, not a fixed multiplicative ratio and
+not a claim that the C++ candidate-pruned beam itself is exact.
