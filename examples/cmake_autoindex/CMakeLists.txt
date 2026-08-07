@@ -11,13 +11,14 @@ add_custom_command(
     OUTPUT "${GENERATED_HEADER}" "${SELECTION_ARTIFACT}"
     COMMAND
         "${CMAKE_COMMAND}" -E env "PYTHONPATH=${CERTIGAP_ROOT}"
-        "${Python3_EXECUTABLE}" -m certigap.compiler compile
+        "${Python3_EXECUTABLE}" -m certigap.cli compile
         "${CMAKE_CURRENT_LIST_DIR}/trace.json"
         --artifact "${SELECTION_ARTIFACT}"
         --header "${GENERATED_HEADER}"
     DEPENDS
         "${CMAKE_CURRENT_LIST_DIR}/trace.json"
         "${CERTIGAP_ROOT}/certigap/compiler.py"
+        "${CERTIGAP_ROOT}/certigap/cli.py"
         "${CERTIGAP_ROOT}/cpp/certigap_autoindex.hpp"
     VERBATIM
 )

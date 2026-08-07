@@ -76,6 +76,11 @@ Minimum independent report fields:
 }
 ```
 
+A machine-readable starter is committed at
+[`reproduction/independent_run_manifest.template.json`](../reproduction/independent_run_manifest.template.json).
+The reviewer must keep `all_scenarios_reported` false until every committed
+scenario, including regressions and temporal shift, is present in the report.
+
 ## Train, Validation, Test Rule
 
 - Training traces may select partitions and backends.

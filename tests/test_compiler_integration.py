@@ -85,7 +85,7 @@ class CompilerIntegrationTests(unittest.TestCase):
             command = [
                 sys.executable,
                 "-m",
-                "certigap.compiler",
+                "certigap.cli",
                 "compile",
                 str(source),
                 "--artifact",
@@ -101,13 +101,14 @@ class CompilerIntegrationTests(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertNotIn("RuntimeWarning", result.stderr)
             self.assertTrue(artifact.is_file())
             self.assertTrue(header.is_file())
             verification = subprocess.run(
                 [
                     sys.executable,
                     "-m",
-                    "certigap.compiler",
+                    "certigap.cli",
                     "verify",
                     str(artifact),
                 ],
@@ -117,7 +118,10 @@ class CompilerIntegrationTests(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(verification.returncode, 0, verification.stderr)
-            self.assertTrue(json.loads(verification.stdout)["verified"])
+            self.assertNotIn("RuntimeWarning", verification.stderr)
+            self.assertTrue(
+                json.loads(verification.stdout)["verification"]["verified"]
+            )
 
             broken = json.loads(artifact.read_text(encoding="utf-8"))
             broken["selected"] = "sorted_array"
@@ -126,7 +130,7 @@ class CompilerIntegrationTests(unittest.TestCase):
                 [
                     sys.executable,
                     "-m",
-                    "certigap.compiler",
+                    "certigap.cli",
                     "verify",
                     str(artifact),
                 ],
@@ -149,7 +153,7 @@ class CompilerIntegrationTests(unittest.TestCase):
                 [
                     sys.executable,
                     "-m",
-                    "certigap.compiler",
+                    "certigap.cli",
                     "compile",
                     str(source),
                     "--artifact",
@@ -182,7 +186,7 @@ class CompilerIntegrationTests(unittest.TestCase):
                 [
                     sys.executable,
                     "-m",
-                    "certigap.compiler",
+                    "certigap.cli",
                     "compile",
                     str(source),
                     "--artifact",

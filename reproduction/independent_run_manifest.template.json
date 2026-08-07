@@ -1,0 +1,22 @@
+{
+  "schema": "certigap-independent-reproduction-v1",
+  "commit": "full git SHA",
+  "reviewer": "independent name or organization",
+  "reviewer_repository": "optional public repository URL",
+  "cpu": "vendor and model",
+  "os": "name and version",
+  "memory_gib": 0,
+  "compiler": "name and version",
+  "python": "version",
+  "commands": [
+    "python3 build_cpp_core.py",
+    "PYTHONPATH=. python3 -m unittest discover -s tests -q",
+    "PYTHONPATH=. python3 verify_artifacts.py",
+    "PYTHONPATH=. python3 generate_synthesis_native_benchmark.py"
+  ],
+  "artifact_sha256": {},
+  "result_paths": [],
+  "deviations": [],
+  "all_scenarios_reported": false,
+  "signed_utc": "ISO-8601 UTC timestamp"
+}
