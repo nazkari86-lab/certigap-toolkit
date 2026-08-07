@@ -5,11 +5,13 @@ import unittest
 
 from certigap import (
     CppCertiGap,
+    brute_force_candidate_restricted_best,
     candidate_restricted_frontier_dp_best,
     combined_lower_bound,
     cost_cap_dp_best,
     frontier_dp_best,
     mass_quantile_thresholds,
+    tree_respects_mass_quantile_grammar,
 )
 from certigap.autoindex import WorkloadTrace
 from certigap.hybrid import HybridConstraints, synthesize_hybrid_partitions
@@ -47,6 +49,29 @@ class ScientificPropertyTests(unittest.TestCase):
         self.assertGreaterEqual(candidate_gap, -1e-9)
         self.assertGreaterEqual(beam_gap, -1e-9)
         self.assertAlmostEqual(candidate_gap + beam_gap, total_gap, places=8)
+
+    def test_candidate_restricted_dp_matches_independent_enumeration(self) -> None:
+        cases = [
+            ([1, 8, 1, 2, 11, 1], 3, 0.0, 4),
+            ([3, 1, 7, 1, 2, 9, 1], 3, 0.15, 4),
+            ([1, 2, 1, 13, 4, 1, 6], 4, 0.35, 5),
+            ([2, 1, 5, 1, 11, 1, 3, 1], 3, 0.8, 4),
+        ]
+        for weights, budget, eta, candidate_limit in cases:
+            dynamic_program = candidate_restricted_frontier_dp_best(
+                weights, budget, eta, candidate_limit
+            )
+            exhaustive = brute_force_candidate_restricted_best(
+                weights, budget, eta, candidate_limit
+            )
+            self.assertAlmostEqual(
+                dynamic_program["objective"], exhaustive["objective"], places=9
+            )
+            self.assertTrue(
+                tree_respects_mass_quantile_grammar(
+                    dynamic_program["tree"], weights, candidate_limit
+                )
+            )
 
     def test_exact_optimum_never_worsens_with_more_budget(self) -> None:
         generator = random.Random(20260730)

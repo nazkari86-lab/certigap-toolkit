@@ -94,3 +94,5 @@ result `H`, restricted-DP optimum `R`, and unrestricted optimum `OPT`,
 
 The first non-negative term is beam-truncation loss and the second is
 candidate-pruning loss. Both are exactly measurable on proof-sized instances.
+When `candidate_limit >= n-1`, the grammar becomes complete and Theorem Q
+reduces to unrestricted exactness.

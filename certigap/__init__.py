@@ -174,6 +174,7 @@ from .core import (
     beam_search_best,
     benchmark_case,
     brute_force_best,
+    brute_force_candidate_restricted_best,
     candidate_restricted_frontier_dp_best,
     combined_lower_bound,
     cost_cap_dp_best,
@@ -194,6 +195,7 @@ from .core import (
     normalize_weights,
     power_of_two_greedy_family,
     split_count,
+    tree_respects_mass_quantile_grammar,
     validate_problem,
 )
 from .verifier import VerificationError, verify_branch_and_bound_certificate, verify_certificate_artifact, verify_tree
@@ -219,6 +221,7 @@ __all__ = [
     "branch_and_bound_exact",
     "benchmark_case",
     "brute_force_best",
+    "brute_force_candidate_restricted_best",
     "candidate_restricted_frontier_dp_best",
     "build_sqlite_extension",
     "parse_adaptive_profile",
@@ -312,6 +315,7 @@ __all__ = [
     "SequentialSafeSelectionPolicy",
     "make_range_optimizer_artifact",
     "split_count",
+    "tree_respects_mass_quantile_grammar",
     "SynthesisConstraints",
     "SynthesizedIndex",
     "SynthesisVerificationError",

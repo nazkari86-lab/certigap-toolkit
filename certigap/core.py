@@ -390,6 +390,96 @@ def candidate_restricted_frontier_dp_best(
     return result
 
 
+def tree_respects_mass_quantile_grammar(
+    tree: Tree,
+    weights: list[float],
+    candidate_limit: int = 16,
+) -> bool:
+    """Check that every split belongs to the declared candidate grammar."""
+    normalized = validate_problem(weights, budget=0, eta=0.0)
+    if candidate_limit < 4:
+        raise ValueError("candidate_limit must be at least 4")
+    n = len(normalized)
+
+    def visit(node: Tree, left: int, right: int) -> bool:
+        if isinstance(node, IntervalLeaf):
+            return (node.left, node.right) == (left, right)
+        if (
+            (node.left, node.right) != (left, right)
+            or node.threshold not in mass_quantile_thresholds(
+                normalized, left, right, candidate_limit
+            )
+        ):
+            return False
+        return visit(node.left_child, left, node.threshold) and visit(
+            node.right_child, node.threshold + 1, right
+        )
+
+    return visit(tree, 1, n)
+
+
+def brute_force_candidate_restricted_best(
+    weights: list[float],
+    budget: int,
+    eta: float,
+    candidate_limit: int = 16,
+) -> dict:
+    """Independently enumerate the candidate grammar on proof-sized inputs."""
+    weights = validate_problem(weights, budget, eta)
+    if candidate_limit < 4:
+        raise ValueError("candidate_limit must be at least 4")
+    n = len(weights)
+    requested_budget, budget = budget, effective_budget(budget, n)
+
+    @lru_cache(maxsize=None)
+    def build(left: int, right: int, remaining_budget: int) -> tuple[Tree, ...]:
+        trees: list[Tree] = [IntervalLeaf(left, right)]
+        if remaining_budget <= 0 or left >= right:
+            return tuple(trees)
+        for threshold in mass_quantile_thresholds(
+            weights, left, right, candidate_limit
+        ):
+            for left_budget in range(remaining_budget):
+                right_budget = remaining_budget - 1 - left_budget
+                for left_tree, right_tree in product(
+                    build(left, threshold, left_budget),
+                    build(threshold + 1, right, right_budget),
+                ):
+                    trees.append(
+                        SplitNode(
+                            left=left,
+                            right=right,
+                            threshold=threshold,
+                            left_child=left_tree,
+                            right_child=right_tree,
+                        )
+                    )
+        return tuple(trees)
+
+    best_eval: dict | None = None
+    for tree in build(1, n, budget):
+        current = evaluate_tree(tree, weights, eta)
+        if best_eval is None or current["objective"] < best_eval["objective"] - EPS or (
+            abs(current["objective"] - best_eval["objective"]) <= EPS
+            and (
+                current["max_cost"] < best_eval["max_cost"]
+                or (
+                    current["max_cost"] == best_eval["max_cost"]
+                    and current["average_cost"] < best_eval["average_cost"] - EPS
+                )
+            )
+        ):
+            best_eval = current
+    assert best_eval is not None
+    best_eval["budget"] = budget
+    best_eval["requested_budget"] = requested_budget
+    best_eval["eta"] = eta
+    best_eval["candidate_limit"] = candidate_limit
+    best_eval["enumerated_tree_count"] = len(build(1, n, budget))
+    best_eval["solver_scope"] = "exhaustive_over_deterministic_mass_quantile_threshold_grammar"
+    return best_eval
+
+
 def cost_cap_dp_best(weights: list[float], budget: int, eta: float) -> dict:
     """Exact DP indexed by an explicit cap on the worst-case search cost.
 

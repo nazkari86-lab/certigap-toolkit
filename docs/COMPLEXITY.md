@@ -41,7 +41,7 @@ precomputation does not increase the displayed frontier-DP worst-case bound.
 For a fixed candidate limit `K`, the candidate-restricted frontier DP considers
 at most `K+7` deterministic threshold candidates per interval (the exact bound
 is smaller after duplicates are removed). Its conservative arithmetic bound is
-`O(n^2 B (K+7) D^2)` with `O(n^2 B D)` compressed-state storage. It is exact
+`O(n^2 B^2 (K+7) D^2)` with `O(n^2 B D)` compressed-state storage. It is exact
 only in that declared candidate grammar. It is a proof-sized diagnostic solver
 used to decompose C++ beam error, not a replacement for the large-instance
 beam and not an approximation theorem for it.

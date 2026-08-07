@@ -563,28 +563,84 @@ instance-level statement is realized cost minus exact K-switch oracle cost.
 
 ## Theorem Q: Exactness in a Fixed Candidate-Threshold Grammar
 
-Fix an integer `K >= 4`. For every non-singleton interval `[l,r]`, define
-`C_K(l,r)` to be the deterministic set returned by the published candidate
-rule: every threshold for intervals with at most `K` possible thresholds;
-otherwise the two boundaries, midpoint, evenly spaced rank thresholds, and
-eighth-mass quantiles. Let `G_K` be the class of valid CertiGap trees where
-every split of interval `[l,r]` uses a threshold in `C_K(l,r)`.
+Fix a normalized weight vector `p`, a split budget `B`, distrust parameter
+`eta in [0,1]`, and integer candidate limit `K >= 4`. For each non-singleton
+interval `[l,r]`, let `t = r-l` be its number of legal thresholds and define
+the ordered candidate set `C_K(l,r)` exactly as in the C++ implementation:
 
-Then `candidate_restricted_frontier_dp_best` returns a tree minimizing
-`J_eta(T)` over all `T in G_K` with at most `B` splits.
+1. if `t <= K`, `C_K(l,r) = {l,...,r-1}`;
+2. otherwise include `l`, `r-1`, midpoint `floor((l+r-1)/2)`, every
+   `l + floor(qt/(K-1))` for `q=1,...,K-3`, and the first prefix index at or
+   after each of the seven targets `P(l-1)+q P(l,r)/8`, `q=1,...,7`.
 
-### Proof
+Duplicate candidates are removed, and values outside `[l,r-1]` are excluded.
+Thus `C_K(l,r)` is a fixed, nonempty subset of the legal thresholds before
+the recurrence starts. Let `G_K(l,r,b)` be the family of valid CertiGap trees
+on `[l,r]` with at most `b` splits such that each split threshold on every
+visited interval belongs to that interval's `C_K` set.
 
-The proof of Theorem A applies verbatim with one change in Lemma 1: the root
-split case enumerates `k in C_K(l,r)` rather than every `l <= k < r`. The
-candidate rule is deterministic from the weights and interval, so it is fixed
-before the DP begins. Every tree in `G_K` is therefore either the leaf or has
-one of the explicitly enumerated root thresholds, and its children are again
-in `G_K`. Lemmas 2--4 remain unchanged. Induction on interval length and
-budget proves that the compressed frontier retains every potentially optimal
-candidate-grammar state and hence its scalarized minimum. `QED`
+Then `candidate_restricted_frontier_dp_best(p,B,eta,K)` returns a tree
+minimizing `J_eta(T)` over `G_K(1,n,B)`.
 
-## Corollary Q.1: Exact Pruning/Truncation Gap Decomposition
+### Lemma Q.1: Restricted Structural Decomposition
+
+Every tree in `G_K(l,r,b)` is exactly one of:
+
+1. the unsplit leaf `[l,r]`; or
+2. a root split at one `k in C_K(l,r)` and two trees in
+   `G_K(l,k,b_L)` and `G_K(k+1,r,b_R)` for some nonnegative `b_L,b_R` with
+   `b_L+b_R <= b-1`.
+
+Conversely, combining any two such children under any `k in C_K(l,r)` gives a
+tree in `G_K(l,r,b)`.
+
+### Proof of Lemma Q.1
+
+The root of a valid ordered partial tree is either its single unresolved leaf
+or a legal threshold split. Membership in `G_K` restricts that threshold to
+`C_K(l,r)`. The two child intervals are uniquely `[l,k]` and `[k+1,r]`; the
+root consumes one split, so their actual split counts sum to at most `b-1`.
+The candidate rule depends only on `p,l,r,K`, hence the same definition applies
+recursively to both children. The converse follows by attaching the two valid
+children beneath the permitted root split. `QED`
+
+### Proof of Theorem Q
+
+Use induction on the lexicographically ordered pair `(r-l,b)`.
+
+If `l=r` or `b=0`, Lemma Q.1 permits only the leaf, which the recurrence
+inserts. Assume the statement for every smaller interval-budget pair. For a
+non-base subproblem, the recurrence first inserts that same leaf. It then
+enumerates every `k in C_K(l,r)` and every exact budget partition
+`b_L+b_R=b-1`. Although the model allows *at most* `b` splits, this enumeration
+is complete: a tree using child counts `s_L+s_R <= b-1` is included by choosing
+`b_L=s_L` and `b_R=b-1-s_L`; the right child may simply leave unused budget.
+
+By the induction hypothesis, each recursive frontier contains a representative
+for every nondominated achievable child pair. Lemmas 2 and 3 compute the
+combined average and maximum costs exactly. Hence, before compression, the
+recurrence contains a state for every tree in `G_K(l,r,b)`.
+
+Compression first retains a minimum-average representative for each integer
+maximum cost and then removes only coordinatewise dominated states. Equal
+coordinate pairs have identical scalarized objective. Lemma 4 shows that a
+strictly dominated pair cannot be optimal for any `eta in [0,1]`. Thus no
+minimizer is lost. Selecting the minimum scalarized state from the retained
+frontier therefore returns the optimum over `G_K(l,r,b)`, and in particular at
+the root over `G_K(1,n,B)`. `QED`
+
+## Corollary Q.1: Full-Grammar Limit
+
+If `K >= n-1`, then every interval `[l,r]` has at most `n-1 <= K` legal
+thresholds. By case 1 of the definition, every `C_K(l,r)` contains all legal
+thresholds, so `G_K(1,n,B)` is the unrestricted tree family. Therefore the
+candidate-restricted frontier DP and Theorem A have the same optimal objective.
+
+The repository validates this equality and independently compares the
+candidate-restricted DP with exhaustive enumeration of `G_K` on proof-sized
+cases.
+
+## Corollary Q.2: Exact Pruning/Truncation Gap Decomposition
 
 Let `OPT` be the unrestricted optimum, `R` the optimum in `G_K`, and `H` any
 tree returned by the C++ beam with the same threshold rule. Since the beam

@@ -12,7 +12,7 @@ It proves:
 3. For integer scores satisfying `OPT <= restricted <= beam`, the total
    heuristic gap is exactly the sum of the candidate-pruning and
    beam-truncation gaps. This is the machine-checked algebraic kernel of
-   Corollary Q.1; the floating-point implementation is cross-validated by the
+   Corollary Q.2; the floating-point implementation is cross-validated by the
    generated decomposition table.
 
 The checked-in `lean-toolchain` pins the exact Lean 4 release. Run:
@@ -23,4 +23,7 @@ lean formal/CertiGap.lean
 ```
 
 This is not a formalization of recurrence completeness, the C++ runtime, or
-the complete CertiGap paper. Those remain explicit future proof work.
+the complete CertiGap paper. Theorem Q has a full written inductive proof and
+independent proof-sized exhaustive validation; Lean currently checks its
+dominance and gap-decomposition kernels, not the complete recurrence. Those
+remaining formalization layers stay explicit future work.
