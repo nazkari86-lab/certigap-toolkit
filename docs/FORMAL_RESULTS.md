@@ -704,3 +704,48 @@ from `U` proves the additive bound. `QED`
 The certificate is exact when `U-L` is zero. This is an a-posteriori additive
 guarantee for the full threshold grammar, not a fixed multiplicative ratio and
 not a claim that the C++ candidate-pruned beam itself is exact.
+
+## Theorem S: Finite-Portfolio Checkpoint Selection Coverage
+
+Fix `C` candidate training programs and `T` positive checkpoint epochs before
+examining validation labels. Assume every program's training path uses only the
+training split and that the `m` validation examples are IID. For observed
+validation accuracy `a_hat(c,t)`, define
+
+`eps = sqrt(log(2CT/alpha)/(2m))`.
+
+Then, with probability at least `1-alpha`, every candidate/checkpoint program
+simultaneously satisfies
+
+`|a_hat(c,t) - a(c,t)| <= eps`.
+
+Let `R` be the set of checkpoint programs actually evaluated by CertiGap-ML
+and let `s` be its selected final survivor. With clipped intervals
+`LCB(r), UCB(r)`, the certificate's reported quantity
+
+`G = max(0, max_{r in R} UCB(r) - LCB(s))`
+
+satisfies
+
+`max_{r in R} a(r) - a(s) <= G`.
+
+### Proof
+
+For one fixed candidate/checkpoint program, Hoeffding's two-sided inequality
+with the displayed `eps` gives failure probability at most
+`alpha/(CT)`. The training paths are fixed without validation labels, so this
+statement applies to every program even when the policy later chooses which
+ones to inspect or continue. A union bound over all predeclared `C*T` programs
+gives simultaneous coverage with probability at least `1-alpha`.
+
+On this event, `a(r) <= UCB(r)` for every observed program and
+`a(s) >= LCB(s)`. Therefore
+
+`max_{r in R} a(r) - a(s) <= max_{r in R} UCB(r) - LCB(s) <= G`.
+
+Clipping to `[0,1]` preserves validity, and taking the maximum with zero only
+expresses the nonnegative nature of regret. `QED`
+
+This theorem compares only *evaluated checkpoint programs*. It does not bound
+the quality a pruned candidate might have reached after unobserved future
+epochs, and it does not claim general AutoML optimality.

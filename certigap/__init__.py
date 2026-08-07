@@ -6,6 +6,8 @@ from .anytime_core_verifier import (
     AnytimeCoreVerificationError,
     verify_anytime_core_certificate,
 )
+from .ml import CertiGapML, CertiGapMLError, LogisticConfig
+from .ml_verifier import CertiGapMLVerificationError, verify_certigap_ml_certificate
 from .autodro import (
     AutoDROFitResult,
     AutoDROVerificationError,
@@ -216,6 +218,9 @@ __all__ = [
     "anytime_branch_and_bound",
     "AnytimeVerificationError",
     "AnytimeCoreVerificationError",
+    "CertiGapML",
+    "CertiGapMLError",
+    "CertiGapMLVerificationError",
     "AutoDROFitResult",
     "AutoDROVerificationError",
     "AutoIndexConstraints",
@@ -277,6 +282,7 @@ __all__ = [
     "DynamicCertiRange",
     "DynamicRangeVerificationError",
     "FitResult",
+    "LogisticConfig",
     "frontier_dp_best",
     "fixed_rounds_profile",
     "fit_autodro",
@@ -344,6 +350,7 @@ __all__ = [
     "verify_autodro_selection_artifact",
     "verify_anytime_tv_certificate",
     "verify_anytime_core_certificate",
+    "verify_certigap_ml_certificate",
     "verify_autoindex_artifact",
     "verify_tracking_autoindex_certificate",
     "verify_martingale_safe_autoindex_certificate",

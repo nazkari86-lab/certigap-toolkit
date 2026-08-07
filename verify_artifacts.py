@@ -23,6 +23,7 @@ from certigap import (
     verify_safe_autoindex_certificate,
     verify_sequential_safe_autoindex_certificate,
     verify_tracking_autoindex_certificate,
+    verify_certigap_ml_certificate,
 )
 from certigap.benchmark_datasets import MANIFEST_PATH, SOSD_SOURCES, SOURCES
 
@@ -72,6 +73,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "online_adaptation.csv": 4,
         "anytime_validation.csv": 48,
         "anytime_core_validation.csv": 96,
+        "certigap_ml_validation.csv": 16,
         "dynamic_range_benchmark.csv": 36,
         "cpp_dynamic_range.csv": 36,
         "range_optimizer_validation.csv": 114,
@@ -188,6 +190,43 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
     )
     if not verify_anytime_core_certificate(anytime_core_artifact)["verified"]:
         raise ValueError("ordinary-anytime certificate did not replay")
+
+    ml_rows = csv_records("certigap_ml_validation.csv")
+    required_ml_fields = {
+        "test_accuracy",
+        "full_portfolio_test_accuracy",
+        "fully_trained_candidates",
+        "pruned_candidates",
+        "selection_regret_upper_bound",
+        "certificate_verified",
+    }
+    if not ml_rows or not required_ml_fields.issubset(ml_rows[0]):
+        raise ValueError("CertiGap-ML validation schema is incomplete")
+    for row in ml_rows:
+        test_accuracy = float(row["test_accuracy"])
+        baseline_accuracy = float(row["full_portfolio_test_accuracy"])
+        regret = float(row["selection_regret_upper_bound"])
+        trained = int(row["fully_trained_candidates"])
+        pruned = int(row["pruned_candidates"])
+        if (
+            row["certificate_verified"] != "True"
+            or not all(
+                math.isfinite(value)
+                for value in (test_accuracy, baseline_accuracy, regret)
+            )
+            or not 0.0 <= test_accuracy <= 1.0
+            or not 0.0 <= baseline_accuracy <= 1.0
+            or not 0.0 <= regret <= 1.0
+            or trained <= 0
+            or pruned < 0
+            or trained + pruned != 4
+        ):
+            raise ValueError("CertiGap-ML validation row is invalid")
+    ml_artifact = json.loads(
+        (RESULTS / "certigap_ml_example.json").read_text(encoding="utf-8")
+    )
+    if not verify_certigap_ml_certificate(ml_artifact)["verified"]:
+        raise ValueError("CertiGap-ML certificate did not replay")
 
     tracking_rows = csv_records("tracking_autoindex_validation.csv")
     if (

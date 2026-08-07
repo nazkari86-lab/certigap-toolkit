@@ -31,6 +31,7 @@ from .hybrid_verifier import verify_hybrid_certificate
 from .martingale_safe_autoindex_verifier import (
     verify_martingale_safe_autoindex_certificate,
 )
+from .ml_verifier import verify_certigap_ml_certificate
 from .martingale_safe_compiler import (
     compile_martingale_safe_spec,
     generate_martingale_safe_cpp_header,
@@ -60,6 +61,7 @@ _SCHEMA_VERIFIERS: dict[str, Verifier] = {
     "certigap-proof-carrying-delta-v1": verify_delta_certificate,
     "certigap-proof-carrying-dsl-v1": verify_dsl_certificate,
     "certigap-hybrid-v1": verify_hybrid_certificate,
+    "certigap-ml-v1": verify_certigap_ml_certificate,
     "certigap-martingale-safe-autoindex-v1": (
         verify_martingale_safe_autoindex_certificate
     ),

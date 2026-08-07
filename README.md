@@ -12,6 +12,11 @@ portfolio; native timings are separate machine-specific evidence. Exact
 reproduction roles and commands are in
 [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
 
+The separate experimental extension [`CertiGap-ML`](docs/CERTIGAP_ML.md)
+implements finite-portfolio binary-model elimination with replayed validation
+confidence arithmetic. It is explicitly not presented as a general AutoML
+optimizer or a certificate of future training quality.
+
 CertiGap-X can synthesize a new variable-block aggregate index instead of
 selecting only a named backend. Its exact dynamic program and independent
 verifier cover every legal partition in the declared grammar; see
@@ -790,6 +795,8 @@ Generated artifacts live in [`results/`](results):
 - [`anytime_validation.md`](results/anytime_validation.md): exact-oracle and scalable certified-gap trajectories
 - [`anytime_core_validation.md`](results/anytime_core_validation.md): ordinary-objective full-grammar anytime interval validation
 - [`anytime_core_example.json`](results/anytime_core_example.json): standalone replayable ordinary-objective certificate
+- [`certigap_ml_validation.md`](results/certigap_ml_validation.md): synthetic diagnostic for the finite-portfolio ML extension
+- [`certigap_ml_example.json`](results/certigap_ml_example.json): replayable CertiGap-ML statistical certificate
 - [`synthesis_native_latency.md`](results/synthesis_native_latency.md): train-only structure selection and native C++ holdout latency
 - [`synthesis_native_latency_metadata.json`](results/synthesis_native_latency_metadata.json): compiler, source hashes, seeds, public-data derivation, and limitations
 - [`hybrid_validation.md`](results/hybrid_validation.md): exact representation-aware frontier and best-uniform ablation

@@ -24,6 +24,8 @@ latency is measured separately and is never certified by a structural score.
 | The contamination objective equals finite-support worst-case expectation | Mathematical | Theorems A and B | Declared Huber contamination set |
 | Direct TV search is globally optimal on proof-sized cases | Exhaustive | 181 complete tree spaces in `results/direct_tv_validation.csv` | Enumerated key sizes, budgets, fallbacks, and TV objective |
 | Anytime TV search returns a valid interval | Mathematical and replay-verified | Theorem H and `results/anytime_validation.csv` | Declared lower bound, processed prefix, and remaining frontier |
+| Ordinary anytime search returns a full-grammar additive interval | Mathematical and replay-verified | Theorem R and `results/anytime_core_validation.csv` | The declared partial-search grammar and replayed finite frontier; not a fixed multiplicative ratio |
+| CertiGap-ML verifies finite checkpoint-selection arithmetic | Statistical and replay-certified | Theorem S, `docs/CERTIGAP_ML.md`, and `results/certigap_ml_validation.csv` | Predeclared online-logistic candidate/checkpoint programs, IID validation examples, submitted prediction vectors, and post-selection test evaluation; not general AutoML or future-training quality |
 | Candidate-pruned C++ beam returns a valid interval | Replay-certified | `certigap-pruned-beam-v1` and scaling artifacts | Feasible heuristic upper bound plus entropy/max-cost lower bound; no approximation ratio |
 | Online mean-cost regret is at most `g + 2 delta R` | Mathematical | Theorem I and `online_regret_certificate` tests | Mean modeled execution cost; excludes unmodeled DB and migration latency |
 | AutoIndex selects the minimum-score feasible candidate | Replay-certified | `results/autoindex_validation.csv` | The complete declared eight-candidate portfolio, not all data structures |
@@ -71,6 +73,8 @@ The following statements must not appear as project conclusions:
 - CertiGap-H universally beats Fenwick, segment trees, or global prefix sums.
 - Public frequency-derived cases are real database query traces.
 - The candidate-pruned C++ beam has an approximation ratio or a tight gap.
+- CertiGap-ML proves that a pruned model could not improve with more training.
+- CertiGap-ML is generally superior to Hyperband, Optuna, or full AutoML.
 - The current replay verifiers are machine-checked formal proofs.
 - The current project discovers arbitrary new data structures from operation
   specifications.
