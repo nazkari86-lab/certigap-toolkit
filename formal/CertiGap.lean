@@ -35,3 +35,16 @@ theorem dominance_safe_after_common_additive_extension
   apply dominance_safe
   · exact Nat.add_le_add_right hAverage extraAverage
   · exact Nat.add_le_add_right hMaximum extraMaximum
+
+/-
+  Algebraic kernel of the candidate-pruning / beam-truncation decomposition.
+  `optimum`, `restricted`, and `beam` are integer-unit scores.  The practical
+  implementation uses floating point, so its generated table separately
+  checks the residual numerically.
+-/
+theorem candidate_pruning_gap_decomposition
+    (optimum restricted beam : Nat)
+    (hOptimum : optimum ≤ restricted)
+    (hRestricted : restricted ≤ beam) :
+    beam - optimum = (beam - restricted) + (restricted - optimum) := by
+  omega

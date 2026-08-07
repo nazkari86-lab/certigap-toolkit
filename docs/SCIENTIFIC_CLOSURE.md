@@ -5,7 +5,7 @@
 - Exact frontier DP, independent cost-cap DP, brute-force checks, and proof-carrying exact branch-and-bound.
 - Mathematical proofs for the robust objective identity and frontier-DP exactness, plus an infinite unbounded-gap family for one-step greedy.
 - Public workload provenance, synthetic stress distributions, and a complete maximum Python benchmark range.
-- Candidate-pruned C++ beam with a 432-case exact-oracle ablation: candidate limit 16 has mean relative gap 0.04% on that suite.
+- Candidate-pruned C++ beam with a 432-case exact-oracle ablation and an exact candidate-grammar diagnostic DP. The published table separates threshold-pruning loss from beam-truncation loss; it remains empirical and is not an approximation proof.
 - A timestamped MovieLens early-to-late holdout over identical tuned
   portfolios. TV radii 0.1/0.2 reduce future maximum cost by 2--3 comparisons
   while increasing future average cost by 0.055--0.086 comparisons.
@@ -113,7 +113,8 @@ or global structure optimality.
 
 - The C++ pruned beam is empirical: it has no approximation theorem. Its
   replay certificate establishes only feasibility and a coarse
-  entropy/max-cost lower bound.
+  entropy/max-cost lower bound. The candidate-restricted DP gives exact
+  diagnostic decomposition on proof-sized inputs, not a global ratio.
 - The exact DP recurrence is mathematically exact, while the current
   implementation uses floating-point dominance with `EPS`. Rational arithmetic
   verifies submitted-tree costs but does not machine-prove DP enumeration.

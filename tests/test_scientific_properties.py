@@ -4,15 +4,50 @@ import random
 import unittest
 
 from certigap import (
+    CppCertiGap,
+    candidate_restricted_frontier_dp_best,
     combined_lower_bound,
     cost_cap_dp_best,
     frontier_dp_best,
+    mass_quantile_thresholds,
 )
 from certigap.autoindex import WorkloadTrace
 from certigap.hybrid import HybridConstraints, synthesize_hybrid_partitions
 
 
 class ScientificPropertyTests(unittest.TestCase):
+    def test_complete_candidate_grammar_matches_unrestricted_dp(self) -> None:
+        weights = [1, 7, 2, 11, 3, 5, 13, 1]
+        exact = frontier_dp_best(weights, budget=3, eta=0.2)
+        restricted = candidate_restricted_frontier_dp_best(
+            weights, budget=3, eta=0.2, candidate_limit=len(weights)
+        )
+        self.assertAlmostEqual(restricted["objective"], exact["objective"], places=9)
+
+    def test_candidate_thresholds_match_declared_boundary_grammar(self) -> None:
+        thresholds = mass_quantile_thresholds(
+            [1.0] * 20, left=3, right=18, candidate_limit=4
+        )
+        self.assertEqual(thresholds[0], 3)
+        self.assertEqual(thresholds[-1], 17)
+        self.assertIn(10, thresholds)
+
+    def test_pruning_and_beam_gaps_have_a_nonnegative_decomposition(self) -> None:
+        weights = [1, 1, 4, 14, 20, 13, 4, 1, 1, 1]
+        exact = frontier_dp_best(weights, budget=3, eta=0.15)
+        restricted = candidate_restricted_frontier_dp_best(
+            weights, budget=3, eta=0.15, candidate_limit=4
+        )
+        beam = CppCertiGap().pruned_beam(
+            weights, budget=3, eta=0.15, beam_width=2, candidate_limit=4
+        )
+        candidate_gap = restricted["objective"] - exact["objective"]
+        beam_gap = beam["objective"] - restricted["objective"]
+        total_gap = beam["objective"] - exact["objective"]
+        self.assertGreaterEqual(candidate_gap, -1e-9)
+        self.assertGreaterEqual(beam_gap, -1e-9)
+        self.assertAlmostEqual(candidate_gap + beam_gap, total_gap, places=8)
+
     def test_exact_optimum_never_worsens_with_more_budget(self) -> None:
         generator = random.Random(20260730)
         for n in range(2, 9):

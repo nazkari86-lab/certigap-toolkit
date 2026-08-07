@@ -560,3 +560,42 @@ replays the causal Work Function Algorithm trajectory. The classical
 `(2|S|-1)` WFA competitive theorem is cited from the metrical-task-system
 literature; it is not newly proved here. The certificate's exact new
 instance-level statement is realized cost minus exact K-switch oracle cost.
+
+## Theorem Q: Exactness in a Fixed Candidate-Threshold Grammar
+
+Fix an integer `K >= 4`. For every non-singleton interval `[l,r]`, define
+`C_K(l,r)` to be the deterministic set returned by the published candidate
+rule: every threshold for intervals with at most `K` possible thresholds;
+otherwise the two boundaries, midpoint, evenly spaced rank thresholds, and
+eighth-mass quantiles. Let `G_K` be the class of valid CertiGap trees where
+every split of interval `[l,r]` uses a threshold in `C_K(l,r)`.
+
+Then `candidate_restricted_frontier_dp_best` returns a tree minimizing
+`J_eta(T)` over all `T in G_K` with at most `B` splits.
+
+### Proof
+
+The proof of Theorem A applies verbatim with one change in Lemma 1: the root
+split case enumerates `k in C_K(l,r)` rather than every `l <= k < r`. The
+candidate rule is deterministic from the weights and interval, so it is fixed
+before the DP begins. Every tree in `G_K` is therefore either the leaf or has
+one of the explicitly enumerated root thresholds, and its children are again
+in `G_K`. Lemmas 2--4 remain unchanged. Induction on interval length and
+budget proves that the compressed frontier retains every potentially optimal
+candidate-grammar state and hence its scalarized minimum. `QED`
+
+## Corollary Q.1: Exact Pruning/Truncation Gap Decomposition
+
+Let `OPT` be the unrestricted optimum, `R` the optimum in `G_K`, and `H` any
+tree returned by the C++ beam with the same threshold rule. Since the beam
+searches only a subset of `G_K`, `J(OPT) <= J(R) <= J(H)`. Consequently,
+
+`J(H) - J(OPT) = [J(H) - J(R)] + [J(R) - J(OPT)]`,
+
+where both bracketed terms are non-negative. The first is loss from retaining
+only finitely many beam states; the second is loss from excluding thresholds.
+`generate_pruning_decomposition.py` recomputes these values against the exact
+oracle for every published proof-sized row.
+
+This is a diagnostic identity, not an approximation guarantee: neither term
+is bounded independently of the input by this theorem.

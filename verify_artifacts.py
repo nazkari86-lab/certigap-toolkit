@@ -59,6 +59,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "experiment_sweep.csv": 240,
         "exact_cross_validation.csv": 336,
         "pruning_validation.csv": 432,
+        "pruning_decomposition.csv": 432,
         "scaling_benchmark.csv": 450 if require_max_scaling else 1,
         "speed_quality.csv": 1_152,
         "temporal_holdout.csv": 9,
@@ -106,6 +107,53 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         if count < minimum:
             raise ValueError(f"{name} has {count} rows; expected at least {minimum}")
         observed[name] = count
+
+    pruning_decomposition_rows = csv_records("pruning_decomposition.csv")
+    required_decomposition_fields = {
+        "exact_objective",
+        "restricted_objective",
+        "beam_objective",
+        "candidate_pruning_gap",
+        "beam_truncation_gap",
+        "total_gap",
+        "decomposition_residual",
+    }
+    if (
+        not pruning_decomposition_rows
+        or not required_decomposition_fields.issubset(
+            pruning_decomposition_rows[0]
+        )
+    ):
+        raise ValueError("pruning decomposition schema is incomplete")
+    for row in pruning_decomposition_rows:
+        exact = float(row["exact_objective"])
+        restricted = float(row["restricted_objective"])
+        beam = float(row["beam_objective"])
+        pruning_gap = float(row["candidate_pruning_gap"])
+        truncation_gap = float(row["beam_truncation_gap"])
+        total_gap = float(row["total_gap"])
+        residual = float(row["decomposition_residual"])
+        if (
+            not all(
+                math.isfinite(value)
+                for value in (
+                    exact,
+                    restricted,
+                    beam,
+                    pruning_gap,
+                    truncation_gap,
+                    total_gap,
+                    residual,
+                )
+            )
+            or restricted < exact - 2e-9
+            or beam < restricted - 2e-9
+            or pruning_gap < -2e-9
+            or truncation_gap < -2e-9
+            or abs(total_gap - pruning_gap - truncation_gap) > 2e-9
+            or abs(residual) > 2e-9
+        ):
+            raise ValueError("pruning gap decomposition is invalid")
 
     tracking_rows = csv_records("tracking_autoindex_validation.csv")
     if (

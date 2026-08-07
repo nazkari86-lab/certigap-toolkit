@@ -76,3 +76,21 @@ a heuristic portfolio contains the globally optimal tree.
 Prove an additive approximation guarantee for mass-quantile candidate pruning
 with mandatory size-boundary thresholds. This is intentionally still marked
 open; empirical 0.04% mean relative gap is not a theorem.
+
+## New Closed Diagnostic Theorem
+
+**Theorem Q: Exactness in the declared candidate grammar**
+
+Fix `candidate_limit` and the deterministic boundary/rank/mass-quantile
+threshold function used by the C++ pruned beam. The candidate-restricted
+frontier DP returns the minimum objective among all valid trees in which every
+split threshold belongs to that function for its interval.
+
+This does **not** give an approximation ratio to the unrestricted optimum.
+It makes the scalable-path ablation scientifically diagnostic: for a C++ beam
+result `H`, restricted-DP optimum `R`, and unrestricted optimum `OPT`,
+
+`J(H) - J(OPT) = [J(H) - J(R)] + [J(R) - J(OPT)]`.
+
+The first non-negative term is beam-truncation loss and the second is
+candidate-pruning loss. Both are exactly measurable on proof-sized instances.

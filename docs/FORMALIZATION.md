@@ -9,6 +9,11 @@ It proves:
    non-negative scalarization also scores it no worse.
 2. The ordering remains safe after adding the same non-negative continuation
    cost to both states.
+3. For integer scores satisfying `OPT <= restricted <= beam`, the total
+   heuristic gap is exactly the sum of the candidate-pruning and
+   beam-truncation gaps. This is the machine-checked algebraic kernel of
+   Corollary Q.1; the floating-point implementation is cross-validated by the
+   generated decomposition table.
 
 The checked-in `lean-toolchain` pins the exact Lean 4 release. Run:
 

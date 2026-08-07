@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from bisect import bisect_left
 from functools import lru_cache
 from itertools import product
 from math import ceil, isfinite, log2
@@ -94,6 +95,43 @@ def _prefix(weights: Iterable[float]) -> tuple[float, ...]:
 
 def _mass(prefix: tuple[float, ...], left: int, right: int) -> float:
     return prefix[right] - prefix[left - 1]
+
+
+def mass_quantile_thresholds(
+    weights: list[float],
+    left: int,
+    right: int,
+    candidate_limit: int,
+) -> tuple[int, ...]:
+    """Return the deterministic threshold grammar used by the C++ pruned beam.
+
+    For short intervals the grammar is complete.  Larger intervals retain
+    boundaries, evenly spaced ranks, and eighth-mass quantiles.  Keeping this
+    function in the reference implementation lets us separate the loss caused
+    by threshold pruning from the independent loss caused by beam truncation.
+    """
+    normalized = validate_problem(weights, budget=0, eta=0.0)
+    n = len(normalized)
+    if candidate_limit < 4:
+        raise ValueError("candidate_limit must be at least 4")
+    if not (1 <= left < right <= n):
+        raise ValueError("threshold interval must satisfy 1 <= left < right <= n")
+    prefix = _prefix(normalized)
+    count = right - left
+    if count <= candidate_limit:
+        return tuple(range(left, right))
+
+    points = {left, right - 1, (left + right - 1) // 2}
+    for quantile in range(1, candidate_limit - 2):
+        points.add(left + (quantile * count) // (candidate_limit - 1))
+
+    total = _mass(prefix, left, right)
+    for quantile in range(1, 8):
+        target = prefix[left - 1] + total * quantile / 8.0
+        threshold = bisect_left(prefix, target, left, right)
+        if threshold < right:
+            points.add(threshold)
+    return tuple(sorted(point for point in points if left <= point < right))
 
 
 def make_distribution(kind: str, n: int) -> list[float]:
@@ -260,6 +298,95 @@ def frontier_dp_best(weights: list[float], budget: int, eta: float) -> dict:
     result["requested_budget"] = requested_budget
     result["eta"] = eta
     result["frontier_size"] = len(frontier)
+    return result
+
+
+def candidate_restricted_frontier_dp_best(
+    weights: list[float],
+    budget: int,
+    eta: float,
+    candidate_limit: int = 16,
+) -> dict:
+    """Exactly optimize the deterministic mass-quantile threshold grammar.
+
+    This reference solver is deliberately distinct from the C++ beam.  It
+    retains every Pareto state, so any gap between it and the C++ result is
+    attributable to beam truncation, while its gap to the unrestricted DP is
+    attributable to threshold pruning.  It is intended for proof-sized
+    ablations rather than as a large-instance replacement for the beam.
+    """
+    weights = validate_problem(weights, budget, eta)
+    if candidate_limit < 4:
+        raise ValueError("candidate_limit must be at least 4")
+    prefix = _prefix(weights)
+    n = len(weights)
+    requested_budget, budget = budget, effective_budget(budget, n)
+
+    @lru_cache(maxsize=None)
+    def thresholds(left: int, right: int) -> tuple[int, ...]:
+        # Inline the already-normalized calculation to avoid repeated public
+        # input validation in the hot recurrence.
+        count = right - left
+        if count <= candidate_limit:
+            return tuple(range(left, right))
+        points = {left, right - 1, (left + right - 1) // 2}
+        for quantile in range(1, candidate_limit - 2):
+            points.add(left + (quantile * count) // (candidate_limit - 1))
+        total = _mass(prefix, left, right)
+        for quantile in range(1, 8):
+            target = prefix[left - 1] + total * quantile / 8.0
+            threshold = bisect_left(prefix, target, left, right)
+            if threshold < right:
+                points.add(threshold)
+        return tuple(sorted(point for point in points if left <= point < right))
+
+    @lru_cache(maxsize=None)
+    def solve(left: int, right: int, remaining_budget: int) -> tuple[FrontierState, ...]:
+        size = right - left + 1
+        states = [
+            FrontierState(
+                average_cost=_mass(prefix, left, right) * interval_cost(size),
+                max_cost=interval_cost(size),
+                tree=IntervalLeaf(left, right),
+            )
+        ]
+        if remaining_budget <= 0 or size <= 1:
+            return tuple(_compress(states))
+
+        total_mass = _mass(prefix, left, right)
+        for threshold in thresholds(left, right):
+            for left_budget in range(remaining_budget):
+                right_budget = remaining_budget - 1 - left_budget
+                left_states = solve(left, threshold, left_budget)
+                right_states = solve(threshold + 1, right, right_budget)
+                for left_state, right_state in product(left_states, right_states):
+                    states.append(
+                        FrontierState(
+                            average_cost=total_mass + left_state.average_cost + right_state.average_cost,
+                            max_cost=1 + max(left_state.max_cost, right_state.max_cost),
+                            tree=SplitNode(
+                                left=left,
+                                right=right,
+                                threshold=threshold,
+                                left_child=left_state.tree,
+                                right_child=right_state.tree,
+                            ),
+                        )
+                    )
+        return tuple(_compress(states))
+
+    frontier = solve(1, n, budget)
+    best = min(
+        frontier,
+        key=lambda item: ((1.0 - eta) * item.average_cost + eta * item.max_cost, item.max_cost),
+    )
+    result = evaluate_tree(best.tree, weights, eta)
+    result["budget"] = budget
+    result["requested_budget"] = requested_budget
+    result["eta"] = eta
+    result["candidate_limit"] = candidate_limit
+    result["frontier_size"] = len(frontier)
+    result["solver_scope"] = "exact_over_deterministic_mass_quantile_threshold_grammar"
     return result
 
 

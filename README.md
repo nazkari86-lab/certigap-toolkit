@@ -778,6 +778,7 @@ Generated artifacts live in [`results/`](results):
 - [`cpp_pruned_scaling.md`](results/cpp_pruned_scaling.md): C++ pruned-beam measurements through 100,000 keys
 - [`cpp_lookup_latency.md`](results/cpp_lookup_latency.md): post-build lookup latency and routing-footprint microbenchmark
 - [`pruning_validation.md`](results/pruning_validation.md): candidate-limit ablation against the exact oracle
+- [`pruning_decomposition.md`](results/pruning_decomposition.md): exact separation of candidate-pruning and beam-truncation loss on the same proof-sized suite
 - [`temporal_holdout.md`](results/temporal_holdout.md): early-to-late MovieLens shift evaluation
 - [`autodro_shift.md`](results/autodro_shift.md): fair TV-vs-nominal tuned-portfolio ablation
 - [`direct_tv_validation.md`](results/direct_tv_validation.md): complete-tree-space validation and strict separation witness
