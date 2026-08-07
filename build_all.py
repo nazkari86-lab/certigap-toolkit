@@ -78,6 +78,7 @@ def main() -> None:
     run([python, "generate_pruning_validation.py"])
     run([python, "generate_pruned_certificate.py"])
     run([python, "generate_temporal_holdout.py"])
+    run([python, "generate_real_temporal_access.py"])
     run([python, "-m", "unittest", "discover", "-s", "tests", "-v"])
     run([python, "generate_results.py"])
     run([python, "analyze_experiments.py"])

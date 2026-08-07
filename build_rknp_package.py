@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 from pathlib import Path
 
 
@@ -25,6 +26,29 @@ def parse_global_summary(summary_text: str) -> list[str]:
         if inside and line.startswith("- "):
             lines.append(line[2:].strip())
     return lines
+
+
+def real_trace_summary_ru() -> str:
+    """Read the direct-trace result without turning it into a latency claim."""
+    with (RESULTS_DIR / "real_temporal_access.csv").open(
+        encoding="utf-8", newline=""
+    ) as handle:
+        rows = {row["solver"]: row for row in csv.DictReader(handle)}
+    certigap = rows["certigap_pruned"]
+    balanced = rows["balanced_budgeted"]
+    cert_cost = float(certigap["mean_event_cost"])
+    balanced_cost = float(balanced["mean_event_cost"])
+    improvement = 100.0 * (balanced_cost - cert_cost) / balanced_cost
+    return (
+        "В прямом хронологическом тесте MovieLens 100K первые 80 000 "
+        "реальных событий строят профиль, а последние 20 000 остаются "
+        "нетронутой проверкой: CertiGap выбрал "
+        f"{certigap['split_count']} разбиений и дал {cert_cost:.3f} "
+        "модельных сравнений на обращение против "
+        f"{balanced_cost:.3f} у сбалансированного дерева с бюджетом 6 "
+        f"({improvement:.2f}% меньше). Это сравнение числа сравнений для "
+        "статического поиска по ID фильма, а не задержка базы данных."
+    )
 
 
 def build_abstract_ru(summary_text: str) -> str:
@@ -68,6 +92,8 @@ def build_abstract_ru(summary_text: str) -> str:
 Текущее состояние прототипа подтверждается следующими результатами:
 
 {metric_lines}
+
+{real_trace_summary_ru()}
 
 Полученные результаты поддерживают основную гипотезу работы: оптимизация степени материализации порядка является нетривиальной алгоритмической задачей и даёт измеримое преимущество над простыми greedy и balanced baseline на скошенных распределениях запросов.
 Первоначальный native benchmark не подтвердил ускорение CertiGap-X и этот
@@ -163,6 +189,7 @@ CertiGap не строит полное поисковое дерево на в�
   включая prefix sum, Fenwick, min-aggregate и отказ слабой миграции.
 - measured gate независимо пересчитывается из paired latency, отклоняет weak
   win/parity/regression и сохраняет baseline при недостаточной границе.
+- {real_trace_summary_ru()}
 
 ## 8. Примеры сертификатов
 
@@ -174,7 +201,7 @@ CertiGap не строит полное поисковое дерево на в�
 
 ## 10. Вывод
 
-На текущем этапе CertiGap оформлен как воспроизводимый research-прототип: есть generalized exact solver, две независимые exact-рекуррентности, rational checker, proof trace, scalable anytime TV-DRO interval, C++ heuristic и matched-budget benchmark. Теоремы ещё не проходили внешнюю или машинную формальную проверку. Главный оставшийся теоретический шаг — получить более тесные large-instance bounds или approximation guarantee; главный внешний шаг — официальный YCSB/storage-engine эксперимент, независимое воспроизведение и production pilot.
+На текущем этапе CertiGap оформлен как воспроизводимый research-прототип: есть generalized exact solver, две независимые exact-рекуррентности, rational checker, proof trace, scalable anytime TV-DRO interval, C++ heuristic, matched-budget benchmark и отдельный прямой public event-trace test. Теоремы ещё не проходили внешнюю или машинную формальную проверку. Главный оставшийся теоретический шаг — получить более тесные large-instance bounds или approximation guarantee; главный внешний шаг — официальный YCSB/storage-engine эксперимент, независимое воспроизведение и production pilot.
 """
 
 
@@ -202,7 +229,10 @@ def build_theses_ru() -> str:
 14. `AdaptiveSpec` объявляет допустимые операции и ограничения до компиляции.
 15. Measured deployment оставляет baseline, пока paired latency upper bound
     не подтверждает требуемое улучшение.
-16. Проект хорошо подходит для РКНП как теоретико-алгоритмическая работа с воспроизводимым результатом.
+16. На прямом хронологическом MovieLens-тесте CertiGap снижает модельное число
+    сравнений относительно matched-budget balanced tree; это не выдаётся за
+    измерение database latency.
+17. Проект хорошо подходит для РКНП как теоретико-алгоритмическая работа с воспроизводимым результатом.
 """
 
 
@@ -239,6 +269,9 @@ CertiGap: робастный префиксный поиск с исполняе
 
 {metric_lines}
 
+- прямой MovieLens 100K trace: реальная хронология train/test, без генерации запросов;
+- результат измеряет число сравнений, не скорость базы данных.
+
 ## Слайд 6. Сертификаты
 
 - upper bound;
@@ -270,6 +303,7 @@ def main() -> None:
             RESULTS_DIR / "autodro_shift.md",
             RESULTS_DIR / "direct_tv_validation.md",
             RESULTS_DIR / "temporal_holdout.md",
+            RESULTS_DIR / "real_temporal_access.md",
             RESULTS_DIR / "uncertainty_validation.md",
             RESULTS_DIR / "online_adaptation.md",
             RESULTS_DIR / "anytime_validation.md",

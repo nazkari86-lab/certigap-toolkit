@@ -6,6 +6,7 @@ from pathlib import Path
 from certigap.benchmark_datasets import (
     _hetrec_delicious,
     _hetrec_lastfm,
+    _movielens_100k_temporal_trace,
     _movielens_32m,
 )
 
@@ -30,6 +31,19 @@ class BenchmarkDatasetParserTests(unittest.TestCase):
             }
         )
         self.assertEqual(_movielens_32m(path), [1 / 3, 2 / 3])
+
+    def test_movielens_temporal_trace_preserves_source_tie_order(self) -> None:
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        path = Path(directory.name) / "u.data"
+        path.write_text(
+            "1\t9\t4\t20\n2\t3\t5\t10\n3\t7\t4\t10\n",
+            encoding="latin-1",
+        )
+        self.assertEqual(
+            _movielens_100k_temporal_trace(path),
+            [(10, 3), (10, 7), (20, 9)],
+        )
 
     def test_lastfm_aggregates_reported_play_weights(self) -> None:
         path = self.archive(

@@ -18,6 +18,12 @@ Synthetic stress families are deterministic under seed `20260725`:
 - one hot middle block, one hot tail, and two separated hot blocks;
 - alternating hot/cold keys, which tests whether locality assumptions fail.
 
+The machine-readable and review-facing distinction between direct event traces,
+real aggregates, key distributions, and synthetic controls is maintained in
+[`DATA_EVIDENCE.md`](DATA_EVIDENCE.md). A result retains its evidence class in
+the claim register; a real source does not by itself make a generated operation
+stream a real trace.
+
 Real observed-frequency workloads are downloaded on demand and cached outside
 version control. The generated provenance file records source URL, retrieval
 time, byte size, SHA-256, aggregation rule, and key order.
@@ -73,6 +79,27 @@ PYTHONPATH=. python3 download_all_datasets.py --class all
 Use `--datasets real` to fail closed when any real source cannot be fetched.
 Use `--datasets synthetic` only for offline stress testing; it must not be
 described as a real-data result.
+
+## Direct Real Access Trace
+
+`generate_real_temporal_access.py` adds one deliberately narrow real-trace
+test that does not reconstruct operations from frequency counts. It uses the
+first 80% of the original MovieLens 100K rating events in chronological order
+only to choose a static six-split lookup tree. It evaluates the selected tree
+and matched-budget balanced and weighted-median trees on the untouched final
+20% of those actual events. Equal timestamps preserve original source-file
+order.
+
+One rating event means one lookup of its numeric movie identifier. Therefore
+the output measures modeled comparison counts for a static ordered lookup, not
+wall-clock latency, semantic recommendation quality, database-engine behavior,
+range queries, updates, or a production traffic trace. The C++ pruned-tree
+certificate is replayed by the independent Python verifier.
+
+```bash
+PYTHONPATH=. python3 generate_real_temporal_access.py
+PYTHONPATH=. python3 verify_artifacts.py
+```
 
 ## C++ Large-N Heuristic
 

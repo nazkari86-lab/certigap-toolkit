@@ -34,6 +34,9 @@ CertiGap: робастный префиксный поиск с исполняе
 - Beam strictly improves on greedy in `104` rows
 - Beam matches exact in `237` rows
 
+- прямой MovieLens 100K trace: реальная хронология train/test, без генерации запросов;
+- результат измеряет число сравнений, не скорость базы данных.
+
 ## Слайд 6. Сертификаты
 
 - upper bound;

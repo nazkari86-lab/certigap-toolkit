@@ -34,8 +34,9 @@ certigap reproduce --mode full --benchmark-mode max
 ```
 
 This regenerates source headers, native validations, exact and heuristic
-matrices, public-frequency inputs, figures, report material, and package
-artifacts before running the integrity verifier.
+matrices, public-frequency inputs, the direct chronological MovieLens trace,
+figures, report material, and package artifacts before running the integrity
+verifier.
 
 ## Container
 

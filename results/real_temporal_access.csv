@@ -1,0 +1,4 @@
+dataset,trace_source,n,train_events,test_events,budget,eta,solver,split_count,mean_event_cost,p95_event_cost,max_event_cost
+movielens_100k,timestamped_rating_events,1682,80000,20000,6,0.15,certigap_pruned,5,10.55745,11,11
+movielens_100k,timestamped_rating_events,1682,80000,20000,6,0.15,balanced_budgeted,6,11.0,11,11
+movielens_100k,timestamped_rating_events,1682,80000,20000,6,0.15,weighted_budgeted,6,10.7958,13,13

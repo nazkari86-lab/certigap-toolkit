@@ -85,6 +85,7 @@ CertiGap не строит полное поисковое дерево на в�
   включая prefix sum, Fenwick, min-aggregate и отказ слабой миграции.
 - measured gate независимо пересчитывается из paired latency, отклоняет weak
   win/parity/regression и сохраняет baseline при недостаточной границе.
+- В прямом хронологическом тесте MovieLens 100K первые 80 000 реальных событий строят профиль, а последние 20 000 остаются нетронутой проверкой: CertiGap выбрал 5 разбиений и дал 10.557 модельных сравнений на обращение против 11.000 у сбалансированного дерева с бюджетом 6 (4.02% меньше). Это сравнение числа сравнений для статического поиска по ID фильма, а не задержка базы данных.
 
 ## 8. Примеры сертификатов
 
@@ -121,11 +122,11 @@ CertiGap не строит полное поисковое дерево на в�
 
 ## Small Cases With Exact Reference
 
-- Exact mean time: `1.392 ms`
-- Beam mean time: `2.516 ms`
-- Greedy mean time: `0.119 ms`
-- Balanced mean time: `0.007 ms`
-- Weighted mean time: `0.009 ms`
+- Exact mean time: `8.037 ms`
+- Beam mean time: `15.149 ms`
+- Greedy mean time: `0.489 ms`
+- Balanced mean time: `0.026 ms`
+- Weighted mean time: `0.037 ms`
 - Beam mean absolute objective gap vs exact: `0.000979`
 - Greedy mean absolute objective gap vs exact: `0.114157`
 - Balanced mean absolute objective gap vs exact: `0.447373`
@@ -135,10 +136,10 @@ CertiGap не строит полное поисковое дерево на в�
 
 ## Large Cases Without Exact Reference
 
-- Beam mean time: `40.384 ms`
-- Greedy mean time: `1.125 ms`
-- Balanced mean time: `0.018 ms`
-- Weighted mean time: `0.029 ms`
+- Beam mean time: `183.513 ms`
+- Greedy mean time: `3.552 ms`
+- Balanced mean time: `0.050 ms`
+- Weighted mean time: `0.084 ms`
 
 ## Solver Tradeoff
 
@@ -785,6 +786,195 @@ replays the causal Work Function Algorithm trajectory. The classical
 literature; it is not newly proved here. The certificate's exact new
 instance-level statement is realized cost minus exact K-switch oracle cost.
 
+## Theorem Q: Exactness in a Fixed Candidate-Threshold Grammar
+
+Fix a normalized weight vector `p`, a split budget `B`, distrust parameter
+`eta in [0,1]`, and integer candidate limit `K >= 4`. For each non-singleton
+interval `[l,r]`, let `t = r-l` be its number of legal thresholds and define
+the ordered candidate set `C_K(l,r)` exactly as in the C++ implementation:
+
+1. if `t <= K`, `C_K(l,r) = {l,...,r-1}`;
+2. otherwise include `l`, `r-1`, midpoint `floor((l+r-1)/2)`, every
+   `l + floor(qt/(K-1))` for `q=1,...,K-3`, and the first prefix index at or
+   after each of the seven targets `P(l-1)+q P(l,r)/8`, `q=1,...,7`.
+
+Duplicate candidates are removed, and values outside `[l,r-1]` are excluded.
+Thus `C_K(l,r)` is a fixed, nonempty subset of the legal thresholds before
+the recurrence starts. Let `G_K(l,r,b)` be the family of valid CertiGap trees
+on `[l,r]` with at most `b` splits such that each split threshold on every
+visited interval belongs to that interval's `C_K` set.
+
+Then `candidate_restricted_frontier_dp_best(p,B,eta,K)` returns a tree
+minimizing `J_eta(T)` over `G_K(1,n,B)`.
+
+### Lemma Q.1: Restricted Structural Decomposition
+
+Every tree in `G_K(l,r,b)` is exactly one of:
+
+1. the unsplit leaf `[l,r]`; or
+2. a root split at one `k in C_K(l,r)` and two trees in
+   `G_K(l,k,b_L)` and `G_K(k+1,r,b_R)` for some nonnegative `b_L,b_R` with
+   `b_L+b_R <= b-1`.
+
+Conversely, combining any two such children under any `k in C_K(l,r)` gives a
+tree in `G_K(l,r,b)`.
+
+### Proof of Lemma Q.1
+
+The root of a valid ordered partial tree is either its single unresolved leaf
+or a legal threshold split. Membership in `G_K` restricts that threshold to
+`C_K(l,r)`. The two child intervals are uniquely `[l,k]` and `[k+1,r]`; the
+root consumes one split, so their actual split counts sum to at most `b-1`.
+The candidate rule depends only on `p,l,r,K`, hence the same definition applies
+recursively to both children. The converse follows by attaching the two valid
+children beneath the permitted root split. `QED`
+
+### Proof of Theorem Q
+
+Use induction on the lexicographically ordered pair `(r-l,b)`.
+
+If `l=r` or `b=0`, Lemma Q.1 permits only the leaf, which the recurrence
+inserts. Assume the statement for every smaller interval-budget pair. For a
+non-base subproblem, the recurrence first inserts that same leaf. It then
+enumerates every `k in C_K(l,r)` and every exact budget partition
+`b_L+b_R=b-1`. Although the model allows *at most* `b` splits, this enumeration
+is complete: a tree using child counts `s_L+s_R <= b-1` is included by choosing
+`b_L=s_L` and `b_R=b-1-s_L`; the right child may simply leave unused budget.
+
+By the induction hypothesis, each recursive frontier contains a representative
+for every nondominated achievable child pair. Lemmas 2 and 3 compute the
+combined average and maximum costs exactly. Hence, before compression, the
+recurrence contains a state for every tree in `G_K(l,r,b)`.
+
+Compression first retains a minimum-average representative for each integer
+maximum cost and then removes only coordinatewise dominated states. Equal
+coordinate pairs have identical scalarized objective. Lemma 4 shows that a
+strictly dominated pair cannot be optimal for any `eta in [0,1]`. Thus no
+minimizer is lost. Selecting the minimum scalarized state from the retained
+frontier therefore returns the optimum over `G_K(l,r,b)`, and in particular at
+the root over `G_K(1,n,B)`. `QED`
+
+## Corollary Q.1: Full-Grammar Limit
+
+If `K >= n-1`, then every interval `[l,r]` has at most `n-1 <= K` legal
+thresholds. By case 1 of the definition, every `C_K(l,r)` contains all legal
+thresholds, so `G_K(1,n,B)` is the unrestricted tree family. Therefore the
+candidate-restricted frontier DP and Theorem A have the same optimal objective.
+
+The repository validates this equality and independently compares the
+candidate-restricted DP with exhaustive enumeration of `G_K` on proof-sized
+cases.
+
+## Corollary Q.2: Exact Pruning/Truncation Gap Decomposition
+
+Let `OPT` be the unrestricted optimum, `R` the optimum in `G_K`, and `H` any
+tree returned by the C++ beam with the same threshold rule. Since the beam
+searches only a subset of `G_K`, `J(OPT) <= J(R) <= J(H)`. Consequently,
+
+`J(H) - J(OPT) = [J(H) - J(R)] + [J(R) - J(OPT)]`,
+
+where both bracketed terms are non-negative. The first is loss from retaining
+only finitely many beam states; the second is loss from excluding thresholds.
+`generate_pruning_decomposition.py` recomputes these values against the exact
+oracle for every published proof-sized row.
+
+This is a diagnostic identity, not an approximation guarantee: neither term
+is bounded independently of the input by this theorem.
+
+## Theorem R: Certified Anytime Interval for the Full Threshold Grammar
+
+Fix normalized weights `p`, budget `B`, and `eta in [0,1]`. An ordinary
+anytime search state consists of a partial tree `S`, a set `O` of its unresolved
+leaves, and its used split count. Define the partial per-key cost vector by
+
+- `d(i)` for a key in an unresolved leaf at routing depth `d(i)`;
+- `d(i) + ceil(log2(|I|))` for a key in a closed leaf `I`.
+
+Let `L_local(S)` be the CertiGap objective evaluated on this vector, and let
+`L_global` be the entropy/max-cost lower bound for the original instance. The
+state lower bound is `L(S) = max(L_local(S), L_global)`.
+
+Suppose the search uses the canonical expansion that either closes the first
+unresolved leaf or splits it at every legal threshold, and publishes a replay
+certificate containing every processed transition and its remaining frontier.
+Let `U` be the score of the best feasible incumbent and
+
+`L = min(U, min_{S in frontier} L(S))`,
+
+with the empty-frontier minimum interpreted as `U`. Then the independently
+verified certificate proves `L <= OPT <= U` and `U - OPT <= U - L`.
+
+### Proof
+
+For every unresolved key, any completion either stops the leaf and adds its
+non-negative fallback cost, or makes one or more routing comparisons before
+eventually adding a non-negative fallback cost. Its final cost is therefore at
+least its partial cost. Closed-leaf costs are already final. Both weighted
+average cost and maximum cost are monotone under componentwise cost increase;
+thus `L_local(S)` lower-bounds every completion of `S`. `L_global` lower-bounds
+every feasible tree in the original grammar, so their maximum remains a valid
+state lower bound.
+
+The canonical close-or-all-threshold expansion partitions every completion of
+a state: its first unresolved leaf is either closed or has one unique root
+threshold. Induction over expansion history shows that the unprocessed
+frontier, together with previously pruned states, covers the full tree grammar
+without overlap. A pruned state has lower bound at least the incumbent present
+when it was pruned; the final incumbent can only improve, so it also has lower
+bound at least `U`. Every pending completion has score at least its recorded
+`L(S)`. Taking the minimum over these alternatives proves `OPT >= L`.
+The incumbent is itself feasible, hence `OPT <= U`. Subtracting `OPT >= L`
+from `U` proves the additive bound. `QED`
+
+The certificate is exact when `U-L` is zero. This is an a-posteriori additive
+guarantee for the full threshold grammar, not a fixed multiplicative ratio and
+not a claim that the C++ candidate-pruned beam itself is exact.
+
+## Theorem S: Finite-Portfolio Checkpoint Selection Coverage
+
+Fix `C` candidate training programs and `T` positive checkpoint epochs before
+examining validation labels. Assume every program's training path uses only the
+training split and that the `m` validation examples are IID. For observed
+validation accuracy `a_hat(c,t)`, define
+
+`eps = sqrt(log(2CT/alpha)/(2m))`.
+
+Then, with probability at least `1-alpha`, every candidate/checkpoint program
+simultaneously satisfies
+
+`|a_hat(c,t) - a(c,t)| <= eps`.
+
+Let `R` be the set of checkpoint programs actually evaluated by CertiGap-ML
+and let `s` be its selected final survivor. With clipped intervals
+`LCB(r), UCB(r)`, the certificate's reported quantity
+
+`G = max(0, max_{r in R} UCB(r) - LCB(s))`
+
+satisfies
+
+`max_{r in R} a(r) - a(s) <= G`.
+
+### Proof
+
+For one fixed candidate/checkpoint program, Hoeffding's two-sided inequality
+with the displayed `eps` gives failure probability at most
+`alpha/(CT)`. The training paths are fixed without validation labels, so this
+statement applies to every program even when the policy later chooses which
+ones to inspect or continue. A union bound over all predeclared `C*T` programs
+gives simultaneous coverage with probability at least `1-alpha`.
+
+On this event, `a(r) <= UCB(r)` for every observed program and
+`a(s) >= LCB(s)`. Therefore
+
+`max_{r in R} a(r) - a(s) <= max_{r in R} UCB(r) - LCB(s) <= G`.
+
+Clipping to `[0,1]` preserves validity, and taking the maximum with zero only
+expresses the nonnegative nature of regret. `QED`
+
+This theorem compares only *evaluated checkpoint programs*. It does not bound
+the quality a pruned candidate might have reached after unobserved future
+epochs, and it does not claim general AutoML optimality.
+
 # Generalized Executable Fallback Model
 
 ## Motivation
@@ -1094,123 +1284,123 @@ certified intervals. Nonzero gaps remain nonzero claims.
 
 | Scenario | n | Method | Solver | Fallback | Splits | Bytes | Candidates | Select s | Test mean | Test max |
 |---|---:|---|---|---|---:|---:|---:|---:|---:|---:|
-| hot_reversal | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1142 | 6.63636 | 7.00000 |
-| hot_reversal | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1115 | 6.63636 | 7.00000 |
+| hot_reversal | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.4173 | 6.63636 | 7.00000 |
+| hot_reversal | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.4077 | 6.63636 | 7.00000 |
 | hot_reversal | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 1 | 0.0000 | 6.82955 | 7.00000 |
 | hot_reversal | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | hot_reversal | 32 | fixed_weighted | weighted | fixed_rounds | 3 | 464 | 1 | 0.0000 | 6.82955 | 7.00000 |
-| hot_reversal | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.3269 | 7.67614 | 8.00000 |
-| hot_reversal | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.3301 | 7.67614 | 8.00000 |
+| hot_reversal | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 1.1542 | 7.67614 | 8.00000 |
+| hot_reversal | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 1.1947 | 7.67614 | 8.00000 |
 | hot_reversal | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 1 | 0.0000 | 7.82955 | 8.00000 |
 | hot_reversal | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | hot_reversal | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 7.82955 | 8.00000 |
-| hot_reversal | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 0.9843 | 8.71591 | 9.00000 |
-| hot_reversal | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 0.9955 | 8.71591 | 9.00000 |
+| hot_reversal | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 3.1576 | 8.71591 | 9.00000 |
+| hot_reversal | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 3.1034 | 8.71591 | 9.00000 |
 | hot_reversal | 128 | fixed_beam | beam | fixed_rounds | 2 | 752 | 1 | 0.0000 | 8.82955 | 9.00000 |
 | hot_reversal | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | hot_reversal | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 8.82955 | 9.00000 |
-| partial_hot_drift_15 | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1158 | 3.70974 | 7.00000 |
-| partial_hot_drift_15 | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1230 | 3.70974 | 7.00000 |
+| partial_hot_drift_15 | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.4856 | 3.70974 | 7.00000 |
+| partial_hot_drift_15 | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.5125 | 3.70974 | 7.00000 |
 | partial_hot_drift_15 | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 1 | 0.0000 | 3.76015 | 7.00000 |
 | partial_hot_drift_15 | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | partial_hot_drift_15 | 32 | fixed_weighted | weighted | fixed_rounds | 3 | 464 | 1 | 0.0000 | 3.76015 | 7.00000 |
-| partial_hot_drift_15 | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.3331 | 4.71571 | 8.00000 |
-| partial_hot_drift_15 | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.3264 | 4.71571 | 8.00000 |
+| partial_hot_drift_15 | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 1.2083 | 4.71571 | 8.00000 |
+| partial_hot_drift_15 | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 1.2750 | 4.71571 | 8.00000 |
 | partial_hot_drift_15 | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 1 | 0.0000 | 4.76015 | 8.00000 |
 | partial_hot_drift_15 | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | partial_hot_drift_15 | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 4.76015 | 8.00000 |
-| partial_hot_drift_15 | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 0.9923 | 5.72167 | 9.00000 |
-| partial_hot_drift_15 | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 0.9913 | 5.72167 | 9.00000 |
+| partial_hot_drift_15 | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 3.0701 | 5.72167 | 9.00000 |
+| partial_hot_drift_15 | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 3.2658 | 5.72167 | 9.00000 |
 | partial_hot_drift_15 | 128 | fixed_beam | beam | fixed_rounds | 2 | 752 | 1 | 0.0000 | 5.76015 | 9.00000 |
 | partial_hot_drift_15 | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | partial_hot_drift_15 | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 5.76015 | 9.00000 |
-| partial_hot_drift_35 | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1205 | 4.39836 | 7.00000 |
-| partial_hot_drift_35 | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1188 | 4.39836 | 7.00000 |
+| partial_hot_drift_35 | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.4101 | 4.39836 | 7.00000 |
+| partial_hot_drift_35 | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.3640 | 4.39836 | 7.00000 |
 | partial_hot_drift_35 | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 1 | 0.0000 | 4.48236 | 7.00000 |
 | partial_hot_drift_35 | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | partial_hot_drift_35 | 32 | fixed_weighted | weighted | fixed_rounds | 3 | 464 | 1 | 0.0000 | 4.48236 | 7.00000 |
-| partial_hot_drift_35 | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.3137 | 5.41228 | 8.00000 |
-| partial_hot_drift_35 | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.3238 | 5.41228 | 8.00000 |
+| partial_hot_drift_35 | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 1.1907 | 5.41228 | 8.00000 |
+| partial_hot_drift_35 | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 1.2523 | 5.41228 | 8.00000 |
 | partial_hot_drift_35 | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 1 | 0.0000 | 5.48236 | 8.00000 |
 | partial_hot_drift_35 | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | partial_hot_drift_35 | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 5.48236 | 8.00000 |
-| partial_hot_drift_35 | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.0235 | 6.42620 | 9.00000 |
-| partial_hot_drift_35 | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.0544 | 6.42620 | 9.00000 |
+| partial_hot_drift_35 | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 6.4441 | 6.42620 | 9.00000 |
+| partial_hot_drift_35 | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 3.9595 | 6.42620 | 9.00000 |
 | partial_hot_drift_35 | 128 | fixed_beam | beam | fixed_rounds | 2 | 752 | 1 | 0.0000 | 6.48236 | 9.00000 |
 | partial_hot_drift_35 | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | partial_hot_drift_35 | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 6.48236 | 9.00000 |
-| partial_hot_drift_65 | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1211 | 5.43128 | 7.00000 |
-| partial_hot_drift_65 | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1195 | 5.43128 | 7.00000 |
+| partial_hot_drift_65 | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.3551 | 5.43128 | 7.00000 |
+| partial_hot_drift_65 | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.3600 | 5.43128 | 7.00000 |
 | partial_hot_drift_65 | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 1 | 0.0000 | 5.56568 | 7.00000 |
 | partial_hot_drift_65 | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | partial_hot_drift_65 | 32 | fixed_weighted | weighted | fixed_rounds | 3 | 464 | 1 | 0.0000 | 5.56568 | 7.00000 |
-| partial_hot_drift_65 | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.3167 | 6.45714 | 8.00000 |
-| partial_hot_drift_65 | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.3160 | 6.45714 | 8.00000 |
+| partial_hot_drift_65 | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 1.2428 | 6.45714 | 8.00000 |
+| partial_hot_drift_65 | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 1.4622 | 6.45714 | 8.00000 |
 | partial_hot_drift_65 | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 1 | 0.0000 | 6.56568 | 8.00000 |
 | partial_hot_drift_65 | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | partial_hot_drift_65 | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.56568 | 8.00000 |
-| partial_hot_drift_65 | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.0414 | 7.48299 | 9.00000 |
-| partial_hot_drift_65 | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 1.0217 | 7.48299 | 9.00000 |
+| partial_hot_drift_65 | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 5.1817 | 7.48299 | 9.00000 |
+| partial_hot_drift_65 | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 3.6375 | 7.48299 | 9.00000 |
 | partial_hot_drift_65 | 128 | fixed_beam | beam | fixed_rounds | 2 | 752 | 1 | 0.0000 | 7.56568 | 9.00000 |
 | partial_hot_drift_65 | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | partial_hot_drift_65 | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.56568 | 9.00000 |
-| stationary_hot_head | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.1129 | 3.19328 | 7.00000 |
-| stationary_hot_head | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.1118 | 3.19328 | 7.00000 |
+| stationary_hot_head | 32 | tuned_tv_dro | beam | midpoint_binary | 2 | 368 | 24 | 0.4300 | 3.19328 | 7.00000 |
+| stationary_hot_head | 32 | tuned_nominal | beam | midpoint_binary | 2 | 368 | 24 | 0.4239 | 3.19328 | 7.00000 |
 | stationary_hot_head | 32 | fixed_beam | beam | fixed_rounds | 2 | 368 | 1 | 0.0000 | 3.21849 | 7.00000 |
 | stationary_hot_head | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | stationary_hot_head | 32 | fixed_weighted | weighted | fixed_rounds | 3 | 464 | 1 | 0.0000 | 3.21849 | 7.00000 |
-| stationary_hot_head | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 0.3146 | 4.19328 | 8.00000 |
-| stationary_hot_head | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 0.3117 | 4.19328 | 8.00000 |
+| stationary_hot_head | 64 | tuned_tv_dro | beam | midpoint_binary | 2 | 496 | 26 | 1.2553 | 4.19328 | 8.00000 |
+| stationary_hot_head | 64 | tuned_nominal | beam | midpoint_binary | 2 | 496 | 26 | 1.4968 | 4.19328 | 8.00000 |
 | stationary_hot_head | 64 | fixed_beam | beam | fixed_rounds | 2 | 496 | 1 | 0.0000 | 4.21849 | 8.00000 |
 | stationary_hot_head | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | stationary_hot_head | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 4.21849 | 8.00000 |
-| stationary_hot_head | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 1.0152 | 5.19328 | 9.00000 |
-| stationary_hot_head | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 0.9876 | 5.19328 | 9.00000 |
+| stationary_hot_head | 128 | tuned_tv_dro | beam | midpoint_binary | 2 | 752 | 26 | 3.6580 | 5.19328 | 9.00000 |
+| stationary_hot_head | 128 | tuned_nominal | beam | midpoint_binary | 2 | 752 | 26 | 4.7895 | 5.19328 | 9.00000 |
 | stationary_hot_head | 128 | fixed_beam | beam | fixed_rounds | 2 | 752 | 1 | 0.0000 | 5.21849 | 9.00000 |
 | stationary_hot_head | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | stationary_hot_head | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 5.21849 | 9.00000 |
-| stationary_zipf | 32 | tuned_tv_dro | beam | fixed_rounds | 3 | 464 | 34 | 0.1183 | 4.30368 | 6.00000 |
-| stationary_zipf | 32 | tuned_nominal | beam | midpoint_binary | 4 | 560 | 34 | 0.1127 | 4.20624 | 7.00000 |
+| stationary_zipf | 32 | tuned_tv_dro | beam | fixed_rounds | 3 | 464 | 34 | 0.3967 | 4.30368 | 6.00000 |
+| stationary_zipf | 32 | tuned_nominal | beam | midpoint_binary | 4 | 560 | 34 | 0.4404 | 4.20624 | 7.00000 |
 | stationary_zipf | 32 | fixed_beam | beam | fixed_rounds | 4 | 560 | 1 | 0.0000 | 4.24755 | 6.00000 |
 | stationary_zipf | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | stationary_zipf | 32 | fixed_weighted | weighted | fixed_rounds | 4 | 560 | 1 | 0.0000 | 4.34144 | 7.00000 |
-| stationary_zipf | 64 | tuned_tv_dro | beam | midpoint_binary | 4 | 688 | 40 | 0.3163 | 4.99841 | 7.00000 |
-| stationary_zipf | 64 | tuned_nominal | beam | midpoint_binary | 4 | 688 | 40 | 0.3192 | 4.94234 | 8.00000 |
+| stationary_zipf | 64 | tuned_tv_dro | beam | midpoint_binary | 4 | 688 | 40 | 1.0348 | 4.99841 | 7.00000 |
+| stationary_zipf | 64 | tuned_nominal | beam | midpoint_binary | 4 | 688 | 40 | 1.2805 | 4.94234 | 8.00000 |
 | stationary_zipf | 64 | fixed_beam | beam | fixed_rounds | 4 | 688 | 1 | 0.0000 | 5.01343 | 7.00000 |
 | stationary_zipf | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | stationary_zipf | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 5.15870 | 8.00000 |
-| stationary_zipf | 128 | tuned_tv_dro | beam | midpoint_binary | 3 | 848 | 38 | 1.0143 | 5.75959 | 8.00000 |
-| stationary_zipf | 128 | tuned_nominal | beam | midpoint_binary | 4 | 944 | 38 | 1.0443 | 5.65590 | 9.00000 |
+| stationary_zipf | 128 | tuned_tv_dro | beam | midpoint_binary | 3 | 848 | 38 | 3.6813 | 5.75959 | 8.00000 |
+| stationary_zipf | 128 | tuned_nominal | beam | midpoint_binary | 4 | 944 | 38 | 4.1822 | 5.65590 | 9.00000 |
 | stationary_zipf | 128 | fixed_beam | beam | fixed_rounds | 3 | 848 | 1 | 0.0000 | 5.79996 | 8.00000 |
 | stationary_zipf | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | stationary_zipf | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 5.94223 | 9.00000 |
-| uniform_to_zipf | 32 | tuned_tv_dro | beam | fixed_rounds | 0 | 176 | 16 | 0.1168 | 5.00000 | 5.00000 |
-| uniform_to_zipf | 32 | tuned_nominal | beam | fixed_rounds | 0 | 176 | 16 | 0.1187 | 5.00000 | 5.00000 |
+| uniform_to_zipf | 32 | tuned_tv_dro | beam | fixed_rounds | 0 | 176 | 16 | 0.4278 | 5.00000 | 5.00000 |
+| uniform_to_zipf | 32 | tuned_nominal | beam | fixed_rounds | 0 | 176 | 16 | 0.4388 | 5.00000 | 5.00000 |
 | uniform_to_zipf | 32 | fixed_beam | beam | fixed_rounds | 0 | 176 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | uniform_to_zipf | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | uniform_to_zipf | 32 | fixed_weighted | weighted | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
-| uniform_to_zipf | 64 | tuned_tv_dro | beam | fixed_rounds | 0 | 304 | 18 | 0.3073 | 6.00000 | 6.00000 |
-| uniform_to_zipf | 64 | tuned_nominal | beam | fixed_rounds | 0 | 304 | 18 | 0.3063 | 6.00000 | 6.00000 |
+| uniform_to_zipf | 64 | tuned_tv_dro | beam | fixed_rounds | 0 | 304 | 18 | 1.3715 | 6.00000 | 6.00000 |
+| uniform_to_zipf | 64 | tuned_nominal | beam | fixed_rounds | 0 | 304 | 18 | 1.3931 | 6.00000 | 6.00000 |
 | uniform_to_zipf | 64 | fixed_beam | beam | fixed_rounds | 0 | 304 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | uniform_to_zipf | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | uniform_to_zipf | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
-| uniform_to_zipf | 128 | tuned_tv_dro | beam | fixed_rounds | 0 | 560 | 18 | 0.9577 | 7.00000 | 7.00000 |
-| uniform_to_zipf | 128 | tuned_nominal | beam | fixed_rounds | 0 | 560 | 18 | 0.9607 | 7.00000 | 7.00000 |
+| uniform_to_zipf | 128 | tuned_tv_dro | beam | fixed_rounds | 0 | 560 | 18 | 3.7595 | 7.00000 | 7.00000 |
+| uniform_to_zipf | 128 | tuned_nominal | beam | fixed_rounds | 0 | 560 | 18 | 4.8367 | 7.00000 | 7.00000 |
 | uniform_to_zipf | 128 | fixed_beam | beam | fixed_rounds | 0 | 560 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | uniform_to_zipf | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | uniform_to_zipf | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
-| zipf_to_uniform | 32 | tuned_tv_dro | beam | fixed_rounds | 3 | 464 | 34 | 0.1211 | 5.50000 | 6.00000 |
-| zipf_to_uniform | 32 | tuned_nominal | beam | midpoint_binary | 4 | 560 | 34 | 0.1195 | 5.75000 | 7.00000 |
+| zipf_to_uniform | 32 | tuned_tv_dro | beam | fixed_rounds | 3 | 464 | 34 | 0.3715 | 5.50000 | 6.00000 |
+| zipf_to_uniform | 32 | tuned_nominal | beam | midpoint_binary | 4 | 560 | 34 | 0.3856 | 5.75000 | 7.00000 |
 | zipf_to_uniform | 32 | fixed_beam | beam | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.50000 | 6.00000 |
 | zipf_to_uniform | 32 | fixed_balanced | balanced | fixed_rounds | 4 | 560 | 1 | 0.0000 | 5.00000 | 5.00000 |
 | zipf_to_uniform | 32 | fixed_weighted | weighted | fixed_rounds | 4 | 560 | 1 | 0.0000 | 6.03125 | 7.00000 |
-| zipf_to_uniform | 64 | tuned_tv_dro | beam | midpoint_binary | 4 | 688 | 40 | 0.3160 | 6.46875 | 7.00000 |
-| zipf_to_uniform | 64 | tuned_nominal | beam | midpoint_binary | 4 | 688 | 40 | 0.3186 | 6.82812 | 8.00000 |
+| zipf_to_uniform | 64 | tuned_tv_dro | beam | midpoint_binary | 4 | 688 | 40 | 1.2339 | 6.46875 | 7.00000 |
+| zipf_to_uniform | 64 | tuned_nominal | beam | midpoint_binary | 4 | 688 | 40 | 1.4432 | 6.82812 | 8.00000 |
 | zipf_to_uniform | 64 | fixed_beam | beam | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.50000 | 7.00000 |
 | zipf_to_uniform | 64 | fixed_balanced | balanced | fixed_rounds | 4 | 688 | 1 | 0.0000 | 6.00000 | 6.00000 |
 | zipf_to_uniform | 64 | fixed_weighted | weighted | fixed_rounds | 4 | 688 | 1 | 0.0000 | 7.20312 | 8.00000 |
-| zipf_to_uniform | 128 | tuned_tv_dro | beam | midpoint_binary | 3 | 848 | 38 | 1.0597 | 7.59375 | 8.00000 |
-| zipf_to_uniform | 128 | tuned_nominal | beam | midpoint_binary | 4 | 944 | 38 | 1.0239 | 7.82812 | 9.00000 |
+| zipf_to_uniform | 128 | tuned_tv_dro | beam | midpoint_binary | 3 | 848 | 38 | 4.7655 | 7.59375 | 8.00000 |
+| zipf_to_uniform | 128 | tuned_nominal | beam | midpoint_binary | 4 | 944 | 38 | 4.4924 | 7.82812 | 9.00000 |
 | zipf_to_uniform | 128 | fixed_beam | beam | fixed_rounds | 3 | 848 | 1 | 0.0000 | 7.70312 | 8.00000 |
 | zipf_to_uniform | 128 | fixed_balanced | balanced | fixed_rounds | 4 | 944 | 1 | 0.0000 | 7.00000 | 7.00000 |
 | zipf_to_uniform | 128 | fixed_weighted | weighted | fixed_rounds | 4 | 944 | 1 | 0.0000 | 8.32812 | 9.00000 |
@@ -1301,6 +1491,18 @@ Identical tuned portfolios are fitted on the earliest 80% of timestamped ratings
 | 128 | tuned_tv_010 | 0.10 | beam | fixed_rounds | 2 | 6.560300 | 8 |
 | 128 | tuned_tv_020 | 0.20 | beam | fixed_rounds | 2 | 6.560300 | 8 |
 
+# Real Temporal Access Trace: MovieLens 100K
+
+The first 80% of the original timestamped rating events forms the training profile. The final 20% is an untouched chronological test trace. Each event is treated only as a static lookup of its numeric movie identifier; no synthetic query sequence is generated.
+
+| Solver | Splits | Later-trace mean comparisons | Later-trace p95 | Later-trace max |
+|---|---:|---:|---:|---:|
+| certigap_pruned | 5 | 10.557450 | 11 | 11 |
+| balanced_budgeted | 6 | 11.000000 | 11 | 11 |
+| weighted_budgeted | 6 | 10.795800 | 13 | 13 |
+
+The comparison is modeled comparison count, not nanoseconds. Movie ID order is not semantic similarity, and this trace does not establish dynamic-range or database-engine performance.
+
 # Finite-Sample TV Radius Validation
 
 Each row uses 250 deterministic i.i.d. multinomial repetitions. Coverage checks whether the known generating distribution lies inside the reported smoothed TV ball. This validates implementation and conservatism under the i.i.d. model only; it is not evidence for dependent production traces.
@@ -1341,42 +1543,42 @@ The exact phase compares against independent complete-tree-space enumeration. Th
 
 | n | Workload | Expansions | Upper | Lower | Relative gap | Exact | Seconds |
 |---:|---|---:|---:|---:|---:|:---:|---:|
-| 16 | uniform | 0 | 4.000000 | 4.000000 | 0.000000 | yes | 0.093962 |
-| 16 | uniform | 25 | 4.000000 | 4.000000 | 0.000000 | yes | 0.087158 |
-| 16 | uniform | 100 | 4.000000 | 4.000000 | 0.000000 | yes | 0.092409 |
-| 16 | uniform | 400 | 4.000000 | 4.000000 | 0.000000 | yes | 0.095180 |
-| 16 | zipf | 0 | 3.737221 | 3.403220 | 0.089371 | no | 0.094900 |
-| 16 | zipf | 25 | 3.737221 | 3.426050 | 0.083263 | no | 0.097786 |
-| 16 | zipf | 100 | 3.737221 | 3.437218 | 0.080274 | no | 0.106464 |
-| 16 | zipf | 400 | 3.737221 | 3.462515 | 0.073505 | no | 0.126316 |
-| 16 | hot_tail | 0 | 3.654545 | 3.277613 | 0.103141 | no | 0.087670 |
-| 16 | hot_tail | 25 | 3.654545 | 3.288693 | 0.100109 | no | 0.092019 |
-| 16 | hot_tail | 100 | 3.654545 | 3.292455 | 0.099079 | no | 0.095336 |
-| 16 | hot_tail | 400 | 3.654545 | 3.297565 | 0.097681 | no | 0.114852 |
-| 32 | uniform | 0 | 5.000000 | 5.000000 | 0.000000 | yes | 0.266193 |
-| 32 | uniform | 25 | 5.000000 | 5.000000 | 0.000000 | yes | 0.263863 |
-| 32 | uniform | 100 | 5.000000 | 5.000000 | 0.000000 | yes | 0.265170 |
-| 32 | uniform | 400 | 5.000000 | 5.000000 | 0.000000 | yes | 0.264759 |
-| 32 | zipf | 0 | 4.601010 | 4.149104 | 0.098219 | no | 0.262052 |
-| 32 | zipf | 25 | 4.601010 | 4.158535 | 0.096169 | no | 0.255145 |
-| 32 | zipf | 100 | 4.601010 | 4.168352 | 0.094036 | no | 0.266763 |
-| 32 | zipf | 400 | 4.601010 | 4.182008 | 0.091067 | no | 0.305036 |
-| 32 | hot_tail | 0 | 4.663636 | 4.277613 | 0.082773 | no | 0.250916 |
-| 32 | hot_tail | 25 | 4.663636 | 4.285225 | 0.081141 | no | 0.259912 |
-| 32 | hot_tail | 100 | 4.663636 | 4.286757 | 0.080812 | no | 0.271527 |
-| 32 | hot_tail | 400 | 4.663636 | 4.288841 | 0.080365 | no | 0.312429 |
-| 64 | uniform | 0 | 6.000000 | 6.000000 | 0.000000 | yes | 0.712178 |
-| 64 | uniform | 25 | 6.000000 | 6.000000 | 0.000000 | yes | 0.710620 |
-| 64 | uniform | 100 | 6.000000 | 6.000000 | 0.000000 | yes | 0.751279 |
-| 64 | uniform | 400 | 6.000000 | 6.000000 | 0.000000 | yes | 0.754302 |
-| 64 | zipf | 0 | 5.359076 | 4.863833 | 0.092412 | no | 0.749528 |
-| 64 | zipf | 25 | 5.359076 | 4.879230 | 0.089539 | no | 0.744300 |
-| 64 | zipf | 100 | 5.359076 | 4.884646 | 0.088528 | no | 0.760271 |
-| 64 | zipf | 400 | 5.359076 | 4.896088 | 0.086393 | no | 1.121251 |
-| 64 | hot_tail | 0 | 5.654545 | 5.277613 | 0.066660 | no | 0.928767 |
-| 64 | hot_tail | 25 | 5.654545 | 5.278164 | 0.066563 | no | 0.837380 |
-| 64 | hot_tail | 100 | 5.654545 | 5.278815 | 0.066447 | no | 0.821664 |
-| 64 | hot_tail | 400 | 5.654545 | 5.280205 | 0.066202 | no | 0.872658 |
+| 16 | uniform | 0 | 4.000000 | 4.000000 | 0.000000 | yes | 0.246486 |
+| 16 | uniform | 25 | 4.000000 | 4.000000 | 0.000000 | yes | 0.248111 |
+| 16 | uniform | 100 | 4.000000 | 4.000000 | 0.000000 | yes | 0.356567 |
+| 16 | uniform | 400 | 4.000000 | 4.000000 | 0.000000 | yes | 0.255265 |
+| 16 | zipf | 0 | 3.737221 | 3.403220 | 0.089371 | no | 0.261157 |
+| 16 | zipf | 25 | 3.737221 | 3.426050 | 0.083263 | no | 0.494407 |
+| 16 | zipf | 100 | 3.737221 | 3.437218 | 0.080274 | no | 0.314374 |
+| 16 | zipf | 400 | 3.737221 | 3.462515 | 0.073505 | no | 0.353898 |
+| 16 | hot_tail | 0 | 3.654545 | 3.277613 | 0.103141 | no | 0.246271 |
+| 16 | hot_tail | 25 | 3.654545 | 3.288693 | 0.100109 | no | 0.271872 |
+| 16 | hot_tail | 100 | 3.654545 | 3.292455 | 0.099079 | no | 0.283355 |
+| 16 | hot_tail | 400 | 3.654545 | 3.297565 | 0.097681 | no | 0.339277 |
+| 32 | uniform | 0 | 5.000000 | 5.000000 | 0.000000 | yes | 0.838106 |
+| 32 | uniform | 25 | 5.000000 | 5.000000 | 0.000000 | yes | 0.890745 |
+| 32 | uniform | 100 | 5.000000 | 5.000000 | 0.000000 | yes | 0.824093 |
+| 32 | uniform | 400 | 5.000000 | 5.000000 | 0.000000 | yes | 0.825566 |
+| 32 | zipf | 0 | 4.601010 | 4.149104 | 0.098219 | no | 0.869693 |
+| 32 | zipf | 25 | 4.601010 | 4.158535 | 0.096169 | no | 1.245156 |
+| 32 | zipf | 100 | 4.601010 | 4.168352 | 0.094036 | no | 1.443759 |
+| 32 | zipf | 400 | 4.601010 | 4.182008 | 0.091067 | no | 1.711092 |
+| 32 | hot_tail | 0 | 4.663636 | 4.277613 | 0.082773 | no | 0.886391 |
+| 32 | hot_tail | 25 | 4.663636 | 4.285225 | 0.081141 | no | 0.962451 |
+| 32 | hot_tail | 100 | 4.663636 | 4.286757 | 0.080812 | no | 1.221799 |
+| 32 | hot_tail | 400 | 4.663636 | 4.288841 | 0.080365 | no | 1.153733 |
+| 64 | uniform | 0 | 6.000000 | 6.000000 | 0.000000 | yes | 2.385719 |
+| 64 | uniform | 25 | 6.000000 | 6.000000 | 0.000000 | yes | 2.387345 |
+| 64 | uniform | 100 | 6.000000 | 6.000000 | 0.000000 | yes | 2.426822 |
+| 64 | uniform | 400 | 6.000000 | 6.000000 | 0.000000 | yes | 2.282407 |
+| 64 | zipf | 0 | 5.359076 | 4.863833 | 0.092412 | no | 2.237064 |
+| 64 | zipf | 25 | 5.359076 | 4.879230 | 0.089539 | no | 2.197516 |
+| 64 | zipf | 100 | 5.359076 | 4.884646 | 0.088528 | no | 2.268248 |
+| 64 | zipf | 400 | 5.359076 | 4.896088 | 0.086393 | no | 2.636288 |
+| 64 | hot_tail | 0 | 5.654545 | 5.277613 | 0.066660 | no | 2.028452 |
+| 64 | hot_tail | 25 | 5.654545 | 5.278164 | 0.066563 | no | 3.630921 |
+| 64 | hot_tail | 100 | 5.654545 | 5.278815 | 0.066447 | no | 3.301533 |
+| 64 | hot_tail | 400 | 5.654545 | 5.280205 | 0.066202 | no | 3.562304 |
 
 ## Interpretation
 
@@ -1396,60 +1598,60 @@ This measures only rank lookup after each structure is built. Times are local-ma
 
 | Workload | Solver | n | B | Median batch ns/query | p95 batch ns/query | Nodes | Auxiliary bytes | Total bytes |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| uniform | certigap_pruned | 1000 | 6 | 8.949 | 9.259 | 1 | 48 | 4048 |
-| uniform | balanced_budgeted | 1000 | 6 | 10.097 | 10.427 | 13 | 624 | 4624 |
-| uniform | weighted_budgeted | 1000 | 6 | 10.074 | 11.305 | 13 | 624 | 4624 |
-| uniform | balanced_full_reference | 1000 | 999 | 8.934 | 9.365 | 1999 | 95952 | 99952 |
-| uniform | std_lower_bound | 1000 | 0 | 8.541 | 8.830 | 0 | 0 | 4000 |
-| zipf | certigap_pruned | 1000 | 6 | 13.905 | 14.909 | 11 | 528 | 4528 |
-| zipf | balanced_budgeted | 1000 | 6 | 8.629 | 8.844 | 13 | 624 | 4624 |
-| zipf | weighted_budgeted | 1000 | 6 | 13.653 | 14.171 | 13 | 624 | 4624 |
-| zipf | balanced_full_reference | 1000 | 999 | 8.612 | 8.869 | 1999 | 95952 | 99952 |
-| zipf | std_lower_bound | 1000 | 0 | 8.231 | 8.465 | 0 | 0 | 4000 |
-| hot_tail | certigap_pruned | 1000 | 6 | 11.810 | 12.731 | 13 | 624 | 4624 |
-| hot_tail | balanced_budgeted | 1000 | 6 | 8.290 | 9.006 | 13 | 624 | 4624 |
-| hot_tail | weighted_budgeted | 1000 | 6 | 13.040 | 13.756 | 13 | 624 | 4624 |
-| hot_tail | balanced_full_reference | 1000 | 999 | 8.686 | 9.255 | 1999 | 95952 | 99952 |
-| hot_tail | std_lower_bound | 1000 | 0 | 8.444 | 8.849 | 0 | 0 | 4000 |
-| ycsb_hotspot_80_20 | certigap_pruned | 1000 | 6 | 13.404 | 13.803 | 13 | 624 | 4624 |
-| ycsb_hotspot_80_20 | balanced_budgeted | 1000 | 6 | 9.188 | 9.479 | 13 | 624 | 4624 |
-| ycsb_hotspot_80_20 | weighted_budgeted | 1000 | 6 | 8.707 | 8.969 | 13 | 624 | 4624 |
-| ycsb_hotspot_80_20 | balanced_full_reference | 1000 | 999 | 8.677 | 8.950 | 1999 | 95952 | 99952 |
-| ycsb_hotspot_80_20 | std_lower_bound | 1000 | 0 | 8.429 | 8.880 | 0 | 0 | 4000 |
-| ycsb_latest_biased | certigap_pruned | 1000 | 6 | 15.528 | 16.012 | 13 | 624 | 4624 |
-| ycsb_latest_biased | balanced_budgeted | 1000 | 6 | 8.057 | 8.426 | 13 | 624 | 4624 |
-| ycsb_latest_biased | weighted_budgeted | 1000 | 6 | 14.263 | 14.898 | 13 | 624 | 4624 |
-| ycsb_latest_biased | balanced_full_reference | 1000 | 999 | 8.750 | 9.024 | 1999 | 95952 | 99952 |
-| ycsb_latest_biased | std_lower_bound | 1000 | 0 | 8.531 | 8.799 | 0 | 0 | 4000 |
-| uniform | certigap_pruned | 10000 | 6 | 15.239 | 15.827 | 5 | 240 | 40240 |
-| uniform | balanced_budgeted | 10000 | 6 | 14.732 | 15.192 | 13 | 624 | 40624 |
-| uniform | weighted_budgeted | 10000 | 6 | 14.797 | 15.059 | 13 | 624 | 40624 |
-| uniform | balanced_full_reference | 10000 | 9999 | 29.893 | 30.804 | 19999 | 959952 | 999952 |
-| uniform | std_lower_bound | 10000 | 0 | 20.933 | 21.291 | 0 | 0 | 40000 |
-| zipf | certigap_pruned | 10000 | 6 | 15.223 | 15.872 | 13 | 624 | 40624 |
-| zipf | balanced_budgeted | 10000 | 6 | 12.891 | 13.183 | 13 | 624 | 40624 |
-| zipf | weighted_budgeted | 10000 | 6 | 15.512 | 16.038 | 13 | 624 | 40624 |
-| zipf | balanced_full_reference | 10000 | 9999 | 27.974 | 28.412 | 19999 | 959952 | 999952 |
-| zipf | std_lower_bound | 10000 | 0 | 23.908 | 24.221 | 0 | 0 | 40000 |
-| hot_tail | certigap_pruned | 10000 | 6 | 12.259 | 12.674 | 13 | 624 | 40624 |
-| hot_tail | balanced_budgeted | 10000 | 6 | 13.474 | 13.831 | 13 | 624 | 40624 |
-| hot_tail | weighted_budgeted | 10000 | 6 | 14.598 | 14.829 | 13 | 624 | 40624 |
-| hot_tail | balanced_full_reference | 10000 | 9999 | 26.450 | 27.018 | 19999 | 959952 | 999952 |
-| hot_tail | std_lower_bound | 10000 | 0 | 20.885 | 21.177 | 0 | 0 | 40000 |
-| ycsb_hotspot_80_20 | certigap_pruned | 10000 | 6 | 11.807 | 12.105 | 3 | 144 | 40144 |
-| ycsb_hotspot_80_20 | balanced_budgeted | 10000 | 6 | 13.731 | 14.008 | 13 | 624 | 40624 |
-| ycsb_hotspot_80_20 | weighted_budgeted | 10000 | 6 | 12.916 | 13.127 | 13 | 624 | 40624 |
-| ycsb_hotspot_80_20 | balanced_full_reference | 10000 | 9999 | 27.691 | 28.388 | 19999 | 959952 | 999952 |
-| ycsb_hotspot_80_20 | std_lower_bound | 10000 | 0 | 20.964 | 21.316 | 0 | 0 | 40000 |
-| ycsb_latest_biased | certigap_pruned | 10000 | 6 | 16.590 | 17.881 | 7 | 336 | 40336 |
-| ycsb_latest_biased | balanced_budgeted | 10000 | 6 | 13.137 | 13.438 | 13 | 624 | 40624 |
-| ycsb_latest_biased | weighted_budgeted | 10000 | 6 | 17.536 | 18.007 | 13 | 624 | 40624 |
-| ycsb_latest_biased | balanced_full_reference | 10000 | 9999 | 27.387 | 28.099 | 19999 | 959952 | 999952 |
-| ycsb_latest_biased | std_lower_bound | 10000 | 0 | 20.904 | 21.430 | 0 | 0 | 40000 |
+| uniform | certigap_pruned | 1000 | 6 | 23.128 | 24.295 | 1 | 48 | 4048 |
+| uniform | balanced_budgeted | 1000 | 6 | 21.739 | 25.825 | 13 | 624 | 4624 |
+| uniform | weighted_budgeted | 1000 | 6 | 21.741 | 22.063 | 13 | 624 | 4624 |
+| uniform | balanced_full_reference | 1000 | 999 | 18.946 | 19.423 | 1999 | 95952 | 99952 |
+| uniform | std_lower_bound | 1000 | 0 | 18.354 | 18.733 | 0 | 0 | 4000 |
+| zipf | certigap_pruned | 1000 | 6 | 30.092 | 31.191 | 11 | 528 | 4528 |
+| zipf | balanced_budgeted | 1000 | 6 | 22.203 | 26.521 | 13 | 624 | 4624 |
+| zipf | weighted_budgeted | 1000 | 6 | 36.631 | 43.134 | 13 | 624 | 4624 |
+| zipf | balanced_full_reference | 1000 | 999 | 22.068 | 24.392 | 1999 | 95952 | 99952 |
+| zipf | std_lower_bound | 1000 | 0 | 22.748 | 25.024 | 0 | 0 | 4000 |
+| hot_tail | certigap_pruned | 1000 | 6 | 31.562 | 34.838 | 13 | 624 | 4624 |
+| hot_tail | balanced_budgeted | 1000 | 6 | 21.933 | 22.887 | 13 | 624 | 4624 |
+| hot_tail | weighted_budgeted | 1000 | 6 | 28.647 | 34.461 | 13 | 624 | 4624 |
+| hot_tail | balanced_full_reference | 1000 | 999 | 18.975 | 19.823 | 1999 | 95952 | 99952 |
+| hot_tail | std_lower_bound | 1000 | 0 | 18.352 | 18.765 | 0 | 0 | 4000 |
+| ycsb_hotspot_80_20 | certigap_pruned | 1000 | 6 | 28.867 | 29.551 | 13 | 624 | 4624 |
+| ycsb_hotspot_80_20 | balanced_budgeted | 1000 | 6 | 20.135 | 48.102 | 13 | 624 | 4624 |
+| ycsb_hotspot_80_20 | weighted_budgeted | 1000 | 6 | 29.854 | 57.864 | 13 | 624 | 4624 |
+| ycsb_hotspot_80_20 | balanced_full_reference | 1000 | 999 | 28.780 | 34.626 | 1999 | 95952 | 99952 |
+| ycsb_hotspot_80_20 | std_lower_bound | 1000 | 0 | 26.143 | 33.612 | 0 | 0 | 4000 |
+| ycsb_latest_biased | certigap_pruned | 1000 | 6 | 39.573 | 42.992 | 13 | 624 | 4624 |
+| ycsb_latest_biased | balanced_budgeted | 1000 | 6 | 20.477 | 21.698 | 13 | 624 | 4624 |
+| ycsb_latest_biased | weighted_budgeted | 1000 | 6 | 26.672 | 31.193 | 13 | 624 | 4624 |
+| ycsb_latest_biased | balanced_full_reference | 1000 | 999 | 16.207 | 16.858 | 1999 | 95952 | 99952 |
+| ycsb_latest_biased | std_lower_bound | 1000 | 0 | 15.819 | 16.931 | 0 | 0 | 4000 |
+| uniform | certigap_pruned | 10000 | 6 | 29.476 | 34.106 | 5 | 240 | 40240 |
+| uniform | balanced_budgeted | 10000 | 6 | 32.254 | 38.024 | 13 | 624 | 40624 |
+| uniform | weighted_budgeted | 10000 | 6 | 31.314 | 32.129 | 13 | 624 | 40624 |
+| uniform | balanced_full_reference | 10000 | 9999 | 58.331 | 66.672 | 19999 | 959952 | 999952 |
+| uniform | std_lower_bound | 10000 | 0 | 56.047 | 420.668 | 0 | 0 | 40000 |
+| zipf | certigap_pruned | 10000 | 6 | 28.476 | 33.188 | 13 | 624 | 40624 |
+| zipf | balanced_budgeted | 10000 | 6 | 27.954 | 28.729 | 13 | 624 | 40624 |
+| zipf | weighted_budgeted | 10000 | 6 | 39.999 | 42.138 | 13 | 624 | 40624 |
+| zipf | balanced_full_reference | 10000 | 9999 | 62.164 | 74.319 | 19999 | 959952 | 999952 |
+| zipf | std_lower_bound | 10000 | 0 | 62.115 | 67.965 | 0 | 0 | 40000 |
+| hot_tail | certigap_pruned | 10000 | 6 | 32.328 | 38.915 | 13 | 624 | 40624 |
+| hot_tail | balanced_budgeted | 10000 | 6 | 29.178 | 35.784 | 13 | 624 | 40624 |
+| hot_tail | weighted_budgeted | 10000 | 6 | 27.179 | 31.334 | 13 | 624 | 40624 |
+| hot_tail | balanced_full_reference | 10000 | 9999 | 49.058 | 49.700 | 19999 | 959952 | 999952 |
+| hot_tail | std_lower_bound | 10000 | 0 | 39.071 | 45.236 | 0 | 0 | 40000 |
+| ycsb_hotspot_80_20 | certigap_pruned | 10000 | 6 | 25.400 | 26.034 | 3 | 144 | 40144 |
+| ycsb_hotspot_80_20 | balanced_budgeted | 10000 | 6 | 29.433 | 29.895 | 13 | 624 | 40624 |
+| ycsb_hotspot_80_20 | weighted_budgeted | 10000 | 6 | 27.991 | 29.150 | 13 | 624 | 40624 |
+| ycsb_hotspot_80_20 | balanced_full_reference | 10000 | 9999 | 59.368 | 65.029 | 19999 | 959952 | 999952 |
+| ycsb_hotspot_80_20 | std_lower_bound | 10000 | 0 | 45.240 | 46.808 | 0 | 0 | 40000 |
+| ycsb_latest_biased | certigap_pruned | 10000 | 6 | 35.541 | 35.959 | 7 | 336 | 40336 |
+| ycsb_latest_biased | balanced_budgeted | 10000 | 6 | 28.350 | 29.335 | 13 | 624 | 40624 |
+| ycsb_latest_biased | weighted_budgeted | 10000 | 6 | 37.888 | 39.130 | 13 | 624 | 40624 |
+| ycsb_latest_biased | balanced_full_reference | 10000 | 9999 | 58.931 | 62.336 | 19999 | 959952 | 999952 |
+| ycsb_latest_biased | std_lower_bound | 10000 | 0 | 39.022 | 45.610 | 0 | 0 | 40000 |
 
 ## Matched-Budget Interpretation
 
-- CertiGap has lower median batch lookup time than `balanced_budgeted` in `3/10` measured workload-size cases.
+- CertiGap has lower median batch lookup time than `balanced_budgeted` in `2/10` measured workload-size cases.
 - CertiGap has lower median batch lookup time than `weighted_budgeted` in `6/10` measured workload-size cases.
 
 ## Limits
@@ -1591,15 +1793,15 @@ The complete-tree-space checks validate the search implementation on n=8. The sc
 
 | n | workload | fastest | CertiRange rank | CertiRange ns/op | fastest ns/op | hot depth vs balanced |
 |---:|---|---|---:|---:|---:|---:|
-| 1024 | clustered_range | fenwick | 4/4 | 78.3 | 12.8 | 12 vs 10 |
-| 1024 | hotspot_point | array | 4/4 | 27.4 | 4.5 | 7 vs 10 |
-| 1024 | uniform_mixed | fenwick | 4/4 | 63.6 | 14.1 | 10 vs 10 |
-| 16384 | clustered_range | fenwick | 3/4 | 141.3 | 15.5 | 16 vs 14 |
-| 16384 | hotspot_point | segment_tree | 3/4 | 55.1 | 9.2 | 11 vs 14 |
-| 16384 | uniform_mixed | fenwick | 3/4 | 143.9 | 17.0 | 14 vs 14 |
-| 100000 | clustered_range | fenwick | 3/4 | 201.0 | 16.9 | 18 vs 17 |
-| 100000 | hotspot_point | segment_tree | 3/4 | 65.4 | 11.8 | 14 vs 17 |
-| 100000 | uniform_mixed | fenwick | 3/4 | 178.3 | 18.1 | 17 vs 17 |
+| 1024 | clustered_range | fenwick | 4/4 | 206.7 | 33.0 | 12 vs 10 |
+| 1024 | hotspot_point | array | 4/4 | 71.2 | 11.7 | 7 vs 10 |
+| 1024 | uniform_mixed | fenwick | 4/4 | 163.0 | 37.3 | 10 vs 10 |
+| 16384 | clustered_range | fenwick | 3/4 | 324.8 | 33.4 | 16 vs 14 |
+| 16384 | hotspot_point | segment_tree | 3/4 | 142.5 | 23.5 | 11 vs 14 |
+| 16384 | uniform_mixed | fenwick | 3/4 | 346.9 | 36.3 | 14 vs 14 |
+| 100000 | clustered_range | fenwick | 3/4 | 944.3 | 38.0 | 18 vs 17 |
+| 100000 | hotspot_point | segment_tree | 3/4 | 150.1 | 24.2 | 14 vs 17 |
+| 100000 | uniform_mixed | fenwick | 3/4 | 533.2 | 38.8 | 17 vs 17 |
 
 ## Honest result
 
@@ -1704,10 +1906,10 @@ prefix sum, Fenwick tree, segment tree, or CertiRange. The current operation
 reveals a non-negative structural service-cost vector over these states.
 
 For state path `s_1,...,s_T`, initial state `s_0`, service costs `c_t`, and
-positive uniform migration cost `d`, total modeled cost is
+positive migration metric `d`, total modeled cost is
 
 ```text
-sum_t c_t(s_t) + d * [s_t != s_(t-1)].
+sum_t c_t(s_t) + d(s_(t-1), s_t).
 ```
 
 This is a finite metrical task system. The implementation uses the
@@ -1778,6 +1980,105 @@ certigap verify tracking.json
 certigap explain tracking.json
 ```
 
+## Native C++ API
+
+`certigap_tracking.hpp` provides a dependency-free C++17 implementation over
+the conventional array, prefix, Fenwick, square-root, segment-tree, and sparse
+table runtimes. Sum portfolios exclude sparse tables; min/max portfolios
+exclude prefix sums and Fenwick trees.
+
+```cpp
+#include <certigap_tracking.hpp>
+
+std::vector<double> values(4096, 1.0);
+certigap::TrackingPolicy policy;
+policy.backends = {
+    certigap::Backend::SortedArray,
+    certigap::Backend::PrefixSum,
+    certigap::Backend::Fenwick,
+    certigap::Backend::SqrtDecomposition,
+    certigap::Backend::SegmentTree,
+};
+policy.migration_matrix = certigap::tracking_rebuild_metric(
+    values.size(), policy.backends);
+policy.record_history = false;
+
+certigap::TrackingAutoIndex index(values, certigap::Aggregate::Sum, policy);
+auto answers = index.run_batch({
+    certigap::TrackingOperation::range(1, 4096),
+    certigap::TrackingOperation::update(10, 7.0),
+    certigap::TrackingOperation::get(10),
+});
+```
+
+For low-overhead deployment without full per-operation WFA accounting, use the
+sampled controller. It keeps an always-current Fenwick shadow for sums (segment
+tree for min/max), evaluates candidates once per 32 operations, and enters a
+4096-operation lease after four stable decisions. An update that invalidates a
+static prefix/sparse view falls back to the robust shadow immediately.
+
+```cpp
+certigap::FastTrackingAutoIndex fast(values, certigap::Aggregate::Sum);
+double total = fast.range_query(1, 4096);
+fast.point_update(10, 7.0);
+fast.flush();  // process a partial sampling epoch before inspection
+auto explanation = fast.explain();
+```
+
+### Detached data and control planes
+
+Applications that already have sampled telemetry can remove observation from
+the request path. `hot_*` methods execute only data-structure work and safe
+fallback; `observe_sample(operation, represented_operations)` updates the
+controller without executing the operation. Samples should represent equal-size
+batches inside an epoch.
+
+```cpp
+double total = fast.hot_range_query(1, 4096);  // valid one-based input required
+fast.observe_sample(certigap::TrackingOperation::range(1, 4096), 4096);
+if (fast.maintenance_pending()) {
+    fast.maintenance();
+}
+```
+
+Set `FastTrackingPolicy::defer_specialist_rebuilds=true` to keep rebuilds out
+of the request that made the decision. `maintenance()` constructs the pending
+specialist from current canonical values. The class is not internally
+thread-safe: call maintenance only when no operation is concurrent, or protect
+the entire index with external synchronization. This is an explicit maintenance
+boundary, not a claimed lock-free RCU implementation.
+
+### Frozen deployment
+
+`freeze()` returns a fixed dynamic backend with no controller, sampling, shadow,
+or switching. When the deployment backend is known at compile time,
+`freeze_static<Backend, Aggregate>()` additionally removes indirect dispatch.
+
+```cpp
+auto dynamic = fast.freeze();
+auto compiled = fast.freeze_static<
+    certigap::Backend::Fenwick,
+    certigap::Aggregate::Sum>();
+double answer = compiled.range_query(1, 4096);
+```
+
+`unchecked_*` and `hot_*` require valid one-based keys, valid inclusive ranges,
+and finite update values. Use checked methods at trust boundaries.
+
+`FastTrackingAutoIndex` guarantees the same query/update semantics, validates
+its policy fail-closed, and is covered by randomized ASan/UBSan differential
+tests. It deliberately does not claim WFA competitiveness: sampling, leases,
+directed rebuild costs, and robust fallback are runtime engineering choices.
+Use `TrackingAutoIndex` when full trajectories, exact offline comparators, or
+the metrical-task-system theorem are required.
+
+The rebuild helper uses `max(build(i), build(j))` off the diagonal. This is a
+positive symmetric metric satisfying the triangle inequality, unlike a raw
+directed conversion table. General non-negative directed matrices are allowed,
+but `wfa_competitive_factor()` returns zero because the classical MTS theorem
+does not apply. Production mode reuses WFA scratch buffers and omits trajectory
+allocation. Exact oracles fail closed unless `record_history=true`.
+
 ## What The Certificate Establishes
 
 - The nested AutoIndex portfolio and every feasible candidate are replayed.
@@ -1801,8 +2102,9 @@ systems](https://doi.org/10.1145/28395.28435), and the
 - Structural units are not portable nanoseconds. Target measurements should
   calibrate candidate unit costs and migration cost.
 - The portfolio and operation grammar remain fixed and explicit.
-- The current migration metric is positive and uniform; measured asymmetric
-  conversion costs are future work.
+- Python certificates currently use a positive uniform metric. Native C++ also
+  accepts a verified rebuild-aware metric or an explicitly non-theorem directed
+  matrix.
 - WFA observes the current operation cost before moving, but never future cost.
 - The K-switch oracle is retrospective and is used for evaluation, not routing.
 - Runtime switching has no statistical no-regression gate. Use measured or
@@ -1838,13 +2140,35 @@ five repetitions, and identical checksum validation. Tracking is `96.42x` to
 gap includes online cost-vector construction, WFA accounting, trace recording,
 and in-trace rebuilds, but excludes initial construction and certificate
 export. Therefore the present Python path is a research reference, not a
-low-latency replacement for Fenwick or prefix sums. A native C++ tracking core
-with batched accounting is the highest-value performance follow-up.
+low-latency replacement for Fenwick or prefix sums.
+
+The native matching benchmark adds four phased workloads at `n=64,256,4096`.
+Rebuild-aware production runs at `61.23-317.23 ns/op` on the recorded machine
+and uniform native mode is `173.2x-15952.7x` faster than the matching Python
+reference. It still costs `11.2x` median versus the fastest fixed C++ backend,
+so tracking is useful when the best representation changes or is unknown, not
+as a universal Fenwick replacement. Full audit history adds `2.04x` median.
+On larger read-mostly streams, rebuild-aware migration cuts switches by
+`360x-394x` and improves runtime by `3.6x-16.4x` over naive uniform migration.
+
+The separate Fast matrix covers 64 configurations: four sizes, eight stationary
+or adversarial workloads, and 5,000/50,000-operation horizons. All implementation
+checksums agree. Relative to Fenwick, Fast is `1.21x` median, `1.59x` p95, and
+`1.90x` worst-case. Relative to the fastest fixed backend selected with hindsight,
+the same figures are `1.35x` median and `5.40x` worst-case. The second comparator
+can choose an O(1)-update array after seeing that no future range query arrives;
+a causal online system cannot safely make that assumption.
 
 See `results/tracking_autoindex_comparison.md` for the complete outcome tables,
 `tracking_autoindex_comparison.csv` for policy rows,
 `tracking_autoindex_candidates.csv` for every fixed backend, and
-`tracking_autoindex_runtime.csv` for machine-specific timing.
+`tracking_autoindex_runtime.csv` for Python timing. Native raw rows and
+provenance are in `tracking_autoindex_native_runtime.csv` and its metadata JSON.
+Fast-mode rows and provenance are in `tracking_autoindex_fast_runtime.csv` and
+`tracking_autoindex_fast_runtime.metadata.json`.
+The paired hot-path matrix is in `tracking_hot_path_runtime.csv`; at the
+50,000-operation horizon checked static Fenwick records `1.01x` median and
+`1.23x` maximum versus a direct Fenwick runtime on this machine.
 
 # TrackingAutoIndex validation
 
@@ -1904,25 +2228,25 @@ Every row executes the selected backend and independently replays the causal Wor
 
 ## Runtime boundary
 
-- Median TrackingAutoIndex slowdown versus fastest tested runtime: `288.06x`.
-- Maximum TrackingAutoIndex slowdown versus fastest tested runtime: `1952.02x`.
-- Median slowdown versus fastest fixed portfolio backend: `280.86x`.
-- Maximum slowdown versus fastest fixed portfolio backend: `958.87x`.
+- Median TrackingAutoIndex slowdown versus fastest tested runtime: `352.27x`.
+- Maximum TrackingAutoIndex slowdown versus fastest tested runtime: `1197.78x`.
+- Median slowdown versus fastest fixed portfolio backend: `315.80x`.
+- Maximum slowdown versus fastest fixed portfolio backend: `930.68x`.
 - These Python timings include online WFA accounting and in-trace rebuilds, but exclude initial construction and certificate export.
 - Structural scores and wall-clock nanoseconds are reported separately; neither is substituted for the other.
 
 | n | Workload | Tracking ns/op | Fastest fixed | Fixed ns/op | Slowdown |
 |---:|---|---:|---|---:|---:|
-| 64 | `alternating_range_update` | 34211.9 | `sorted_array` | 354.8 | 96.42x |
-| 64 | `mixed_read_heavy` | 34074.1 | `prefix_sum` | 268.6 | 126.88x |
-| 64 | `point_to_range` | 43244.5 | `prefix_sum` | 167.8 | 257.71x |
-| 64 | `stable_points` | 18025.7 | `sorted_array` | 126.3 | 142.72x |
-| 64 | `stable_ranges` | 47897.9 | `prefix_sum` | 157.6 | 304.01x |
-| 256 | `alternating_range_update` | 132611.0 | `fenwick` | 649.9 | 204.05x |
-| 256 | `mixed_read_heavy` | 131029.0 | `fenwick` | 358.1 | 365.93x |
-| 256 | `point_to_range` | 129876.5 | `prefix_sum` | 143.6 | 904.72x |
-| 256 | `stable_points` | 124540.9 | `prefix_sum` | 129.9 | 958.87x |
-| 256 | `stable_ranges` | 135776.9 | `prefix_sum` | 157.9 | 860.03x |
+| 64 | `alternating_range_update` | 64490.6 | `sorted_array` | 591.6 | 109.00x |
+| 64 | `mixed_read_heavy` | 107158.0 | `sorted_array` | 717.1 | 149.43x |
+| 64 | `point_to_range` | 163600.6 | `prefix_sum` | 385.6 | 424.30x |
+| 64 | `stable_points` | 29906.7 | `sqrt_decomposition` | 181.2 | 165.09x |
+| 64 | `stable_ranges` | 83515.5 | `prefix_sum` | 339.5 | 245.98x |
+| 256 | `alternating_range_update` | 230678.4 | `fenwick` | 914.4 | 252.28x |
+| 256 | `mixed_read_heavy` | 267822.3 | `fenwick` | 706.1 | 379.32x |
+| 256 | `point_to_range` | 233399.9 | `prefix_sum` | 270.8 | 861.79x |
+| 256 | `stable_points` | 218735.5 | `prefix_sum` | 235.0 | 930.68x |
+| 256 | `stable_ranges` | 238456.7 | `prefix_sum` | 300.0 | 794.94x |
 
 # Compiler And CMake Integration
 
@@ -2545,4 +2869,4 @@ Scores use deterministic unit primitive costs. Native latency is evaluated separ
 
 ## 10. Вывод
 
-На текущем этапе CertiGap оформлен как воспроизводимый research-прототип: есть generalized exact solver, две независимые exact-рекуррентности, rational checker, proof trace, scalable anytime TV-DRO interval, C++ heuristic и matched-budget benchmark. Теоремы ещё не проходили внешнюю или машинную формальную проверку. Главный оставшийся теоретический шаг — получить более тесные large-instance bounds или approximation guarantee; главный внешний шаг — официальный YCSB/storage-engine эксперимент, независимое воспроизведение и production pilot.
+На текущем этапе CertiGap оформлен как воспроизводимый research-прототип: есть generalized exact solver, две независимые exact-рекуррентности, rational checker, proof trace, scalable anytime TV-DRO interval, C++ heuristic, matched-budget benchmark и отдельный прямой public event-trace test. Теоремы ещё не проходили внешнюю или машинную формальную проверку. Главный оставшийся теоретический шаг — получить более тесные large-instance bounds или approximation guarantee; главный внешний шаг — официальный YCSB/storage-engine эксперимент, независимое воспроизведение и production pilot.

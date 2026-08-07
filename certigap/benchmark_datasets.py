@@ -222,6 +222,35 @@ def _movielens(path: Path) -> list[float]:
     return normalize_weights([counts[key] for key in range(1, max(counts) + 1)])
 
 
+def load_movielens_100k_temporal_trace() -> tuple[list[tuple[int, int]], dict]:
+    """Return the original rating-event order as `(timestamp, movie_id)` rows.
+
+    Equal timestamps retain their original file order, so the function never
+    fabricates a request sequence from aggregate popularity counts.
+    """
+    path, record = _download("movielens_100k")
+    trace = _movielens_100k_temporal_trace(path)
+    return trace, {
+        **record,
+        "dataset_class": "timestamped_access_event_trace",
+        "event_count": len(trace),
+        "event_order": "ascending original Unix timestamp, then source-file order",
+        "key_definition": "MovieLens numeric movie identifier",
+    }
+
+
+def _movielens_100k_temporal_trace(path: Path) -> list[tuple[int, int]]:
+    """Parse the source chronology, resolving equal timestamps by file order."""
+    events: list[tuple[int, int, int]] = []
+    for ordinal, line in enumerate(
+        path.read_text(encoding="latin-1").splitlines()
+    ):
+        _, movie, _, timestamp = line.split("\t")
+        events.append((int(timestamp), ordinal, int(movie)))
+    events.sort()
+    return [(timestamp, movie) for timestamp, _, movie in events]
+
+
 def _xlsx_shared_strings(archive: zipfile.ZipFile) -> list[str]:
     try:
         root = ET.fromstring(archive.read("xl/sharedStrings.xml"))

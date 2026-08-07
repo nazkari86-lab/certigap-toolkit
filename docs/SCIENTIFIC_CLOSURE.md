@@ -9,6 +9,11 @@
 - A timestamped MovieLens early-to-late holdout over identical tuned
   portfolios. TV radii 0.1/0.2 reduce future maximum cost by 2--3 comparisons
   while increasing future average cost by 0.055--0.086 comparisons.
+- A direct, unaggregated MovieLens 100K chronological lookup trace: the first
+  80% of rating events selects a static tree and the untouched final 20% tests
+  actual movie-ID lookups, with the candidate-pruned C++ certificate replayed
+  independently. It is a static comparison-count result, not a database
+  latency claim.
 - Exact generalized DP for deterministic executable fallback profiles, including
   midpoint binary search, plus an integer-count/rational-eta evaluator.
 - Matched-budget C++ lookup comparisons that separate auxiliary and total bytes

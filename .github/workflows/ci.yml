@@ -58,6 +58,7 @@ jobs:
           python generate_direct_tv_validation.py
           python generate_uncertainty_validation.py
           python generate_online_adaptation.py
+          python generate_real_temporal_access.py
           python generate_autoindex_validation.py
           python generate_safe_autoindex_validation.py
           python generate_sequential_safe_validation.py

@@ -780,11 +780,13 @@ Generated artifacts live in [`results/`](results):
 - [`scientific_validation.md`](results/scientific_validation.md): exact cross-validation, BnB trace, and theorem-family artifacts
 - [`scaling_benchmark.md`](results/scaling_benchmark.md): median/p95 runtime and peak-memory scaling evidence
 - [`benchmark_provenance.json`](results/benchmark_provenance.json): dataset source, checksum, aggregation, and measurement plan
+- [`docs/DATA_EVIDENCE.md`](docs/DATA_EVIDENCE.md): strict separation of direct traces, real aggregates, and synthetic controls
 - [`cpp_pruned_scaling.md`](results/cpp_pruned_scaling.md): C++ pruned-beam measurements through 100,000 keys
 - [`cpp_lookup_latency.md`](results/cpp_lookup_latency.md): post-build lookup latency and routing-footprint microbenchmark
 - [`pruning_validation.md`](results/pruning_validation.md): candidate-limit ablation against the exact oracle
 - [`pruning_decomposition.md`](results/pruning_decomposition.md): exact separation of candidate-pruning and beam-truncation loss on the same proof-sized suite
 - [`temporal_holdout.md`](results/temporal_holdout.md): early-to-late MovieLens shift evaluation
+- [`real_temporal_access.md`](results/real_temporal_access.md): direct chronological MovieLens lookup trace with no generated queries
 - [`autodro_shift.md`](results/autodro_shift.md): fair TV-vs-nominal tuned-portfolio ablation
 - [`direct_tv_validation.md`](results/direct_tv_validation.md): complete-tree-space validation and strict separation witness
 - [`uncertainty_validation.md`](results/uncertainty_validation.md): 3,000 finite-sample i.i.d. coverage trials

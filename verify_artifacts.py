@@ -65,6 +65,7 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         "scaling_benchmark.csv": 450 if require_max_scaling else 1,
         "speed_quality.csv": 1_152,
         "temporal_holdout.csv": 9,
+        "real_temporal_access.csv": 3,
         "cpp_lookup_latency.csv": 40,
         "sosd_streaming.csv": 80,
         "autodro_shift.csv": 24,
@@ -791,6 +792,41 @@ def validate_artifacts(require_max_scaling: bool = True) -> dict[str, int]:
         for methods in temporal_groups.values()
     ):
         raise ValueError("temporal holdout matrix is incomplete")
+
+    real_trace_rows = csv_records("real_temporal_access.csv")
+    expected_real_trace_solvers = {
+        "certigap_pruned",
+        "balanced_budgeted",
+        "weighted_budgeted",
+    }
+    if (
+        {row["solver"] for row in real_trace_rows} != expected_real_trace_solvers
+        or any(
+            row["dataset"] != "movielens_100k"
+            or row["trace_source"] != "timestamped_rating_events"
+            or int(row["n"]) != 1682
+            or int(row["train_events"]) != 80000
+            or int(row["test_events"]) != 20000
+            or int(row["budget"]) != 6
+            or not 0 <= int(row["split_count"]) <= 6
+            or not all(
+                math.isfinite(float(row[field])) and float(row[field]) >= 0.0
+                for field in ("mean_event_cost", "p95_event_cost", "max_event_cost")
+            )
+            for row in real_trace_rows
+        )
+    ):
+        raise ValueError("real temporal MovieLens trace validation is invalid")
+    real_trace_artifact = json.loads(
+        (RESULTS / "real_temporal_access.json").read_text(encoding="utf-8")
+    )
+    pruned_real_trace = real_trace_artifact.get("certigap_pruned")
+    if not isinstance(pruned_real_trace, dict):
+        raise ValueError("real temporal trace certificate is missing")
+    if not verify_pruned_beam_certificate(
+        pruned_real_trace["weights"], pruned_real_trace
+    )["verified"]:
+        raise ValueError("real temporal trace certificate did not replay")
 
     uncertainty_rows = csv_records("uncertainty_validation.csv")
     if any(float(row["empirical_coverage"]) < 0.95 for row in uncertainty_rows):

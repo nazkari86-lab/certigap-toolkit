@@ -27,6 +27,7 @@ latency is measured separately and is never certified by a structural score.
 | Ordinary anytime search returns a full-grammar additive interval | Mathematical and replay-verified | Theorem R and `results/anytime_core_validation.csv` | The declared partial-search grammar and replayed finite frontier; not a fixed multiplicative ratio |
 | CertiGap-ML verifies finite checkpoint-selection arithmetic | Statistical and replay-certified | Theorem S, `docs/CERTIGAP_ML.md`, and `results/certigap_ml_validation.csv` | Predeclared online-logistic candidate/checkpoint programs, IID validation examples, submitted prediction vectors, and post-selection test evaluation; not general AutoML or future-training quality |
 | Candidate-pruned C++ beam returns a valid interval | Replay-certified | `certigap-pruned-beam-v1` and scaling artifacts | Feasible heuristic upper bound plus entropy/max-cost lower bound; no approximation ratio |
+| CertiGap improves modeled lookup cost on one direct held-out public event trace | Empirical, replay-certified structural comparison | `results/real_temporal_access.csv` and `results/real_temporal_access.json` | MovieLens 100K chronological 80/20 split, static numeric movie-ID lookup and six-split budget; comparison count only, not database latency, recommendation quality, or a general workload claim |
 | Online mean-cost regret is at most `g + 2 delta R` | Mathematical | Theorem I and `online_regret_certificate` tests | Mean modeled execution cost; excludes unmodeled DB and migration latency |
 | AutoIndex selects the minimum-score feasible candidate | Replay-certified | `results/autoindex_validation.csv` | The complete declared eight-candidate portfolio, not all data structures |
 | ProofCarryingSpec connects algebraic capabilities to complete selection and generated C++ | Typed replay-certified and differential | `results/dsl_validation.csv`, rehashed-tamper tests, generated C++ execution, and compile-fail undeclared-operation test | Canonical `sum/min/max`, fixed-size get/range/update contracts, and the declared eight-design grammar; laws are canonical model declarations, not machine proofs for arbitrary operators or IEEE-754 associativity |
@@ -72,6 +73,7 @@ The following statements must not appear as project conclusions:
 - A structural score is nanosecond latency.
 - CertiGap-H universally beats Fenwick, segment trees, or global prefix sums.
 - Public frequency-derived cases are real database query traces.
+- One MovieLens chronological lookup trace proves broad production or database performance.
 - The candidate-pruned C++ beam has an approximation ratio or a tight gap.
 - CertiGap-ML proves that a pruned model could not improve with more training.
 - CertiGap-ML is generally superior to Hyperband, Optuna, or full AutoML.
